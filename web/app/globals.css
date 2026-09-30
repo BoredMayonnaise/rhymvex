@@ -1,0 +1,367 @@
+@import "tailwindcss";
+
+/* Tailwind v4 auto-scans from this CSS file's directory (app/), which would
+   miss every class used in components/ and lib/. Declare them explicitly. */
+@source "../components";
+@source "../lib";
+
+/* Rhymvex design tokens — generated from brand/tokens/tokens.json. Do not edit by hand. */
+@import "./tokens.css";
+
+@theme inline {
+  /* Colour: sourced from the CSS custom properties so brand/tokens/tokens.json
+     stays the only place a hex value is written. Verified by scripts/build-tokens.mjs --check */
+  --color-rhymvex-black: var(--rhymvex-black);
+  --color-rhymvex-slate: var(--rhymvex-slate);
+  --color-rhymvex-white: var(--rhymvex-white);
+  --color-rhymvex-volt: var(--rhymvex-volt);
+  --color-rhymvex-ember: var(--rhymvex-ember);
+
+  /* Type.
+     Tailwind's font namespace is also --font-*, so the canonical token names
+     (--font-primary / --font-display, per DESIGN.md) are aliased under
+     -rhymvex- names. Aliasing avoids a self-referential @theme entry. */
+  --font-rhymvex-body: var(--font-primary);
+  --font-rhymvex-display: var(--font-display);
+
+  /* Fluid type scale. Every step is a clamp() so the layout stays legible
+     from 320px to 2560px with no breakpoint jumps. */
+  --text-display-1: clamp(2.5rem, 1.35rem + 5.1vw, 5.75rem);
+  --text-display-1--line-height: 1.02;
+  --text-display-1--letter-spacing: -0.035em;
+
+  --text-display-2: clamp(1.875rem, 1.22rem + 2.9vw, 3.25rem);
+  --text-display-2--line-height: 1.08;
+  --text-display-2--letter-spacing: -0.03em;
+
+  /* Subsection heading — for an h3 that needs real presence without
+     competing with the section h2 it sits under. */
+  --text-display-sub: clamp(1.5rem, 1.15rem + 1.55vw, 2.25rem);
+  --text-display-sub--line-height: 1.12;
+  --text-display-sub--letter-spacing: -0.025em;
+
+  --text-display-3: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  --text-display-3--line-height: 1.35;
+  --text-display-3--letter-spacing: -0.01em;
+
+  --text-lead: clamp(1rem, 0.94rem + 0.3vw, 1.1875rem);
+  --text-lead--line-height: 1.6;
+
+  /* Fluid vertical rhythm for section padding. */
+  --spacing-section: clamp(4rem, 2.4rem + 7vw, 8.5rem);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchor targets so the sticky header never covers a heading. */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--rhymvex-black);
+    color: var(--rhymvex-white);
+    font-family: var(--font-primary), sans-serif;
+    -webkit-font-smoothing: antialiased;
+    /* A wide child must never be able to force a sideways scroll. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: var(--rhymvex-volt);
+    color: var(--rhymvex-black);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--rhymvex-volt);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Reveal must never leave content hidden when motion is off. */
+    .rv-reveal {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+}
+
+@layer components {
+  /* Responsive page gutter — the single place horizontal rhythm is set. */
+  .rv-container {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 72rem;
+    padding-inline: clamp(1.25rem, 0.75rem + 2.2vw, 2.5rem);
+  }
+
+  /* 64px background grid — the brand texture. */
+  .rv-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--rhymvex-volt) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--rhymvex-volt) 5%, transparent) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  /* Volt rule that fades out — marks section eyebrows. */
+  .rv-rule {
+    background: linear-gradient(
+      to right,
+      var(--rhymvex-volt),
+      color-mix(in srgb, var(--rhymvex-volt) 0%, transparent)
+    );
+  }
+
+  /* Volt micro-label. Used sparingly — eyebrows only. */
+  .rv-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--rhymvex-volt);
+  }
+
+  /* Buttons: colour is the only state change. No lift, no shadow, no shine. */
+  .rv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.625rem;
+    padding: 0.8125rem 1.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .rv-btn-primary {
+    background-color: var(--rhymvex-volt);
+    color: var(--rhymvex-black);
+    border: 1px solid var(--rhymvex-volt);
+  }
+
+  .rv-btn-primary:hover {
+    background-color: var(--rhymvex-white);
+    border-color: var(--rhymvex-white);
+  }
+
+  .rv-btn-ghost {
+    background-color: transparent;
+    color: var(--rhymvex-white);
+    border: 1px solid color-mix(in srgb, var(--rhymvex-white) 22%, transparent);
+  }
+
+  .rv-btn-ghost:hover {
+    border-color: var(--rhymvex-volt);
+    color: var(--rhymvex-volt);
+  }
+
+  /* Surface: a hairline and a flat fill. Hover only strengthens the border —
+     no lift, no glow, so dense grids stay calm. */
+  .rv-card {
+    border-radius: 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--rhymvex-white) 10%, transparent);
+    background-color: color-mix(in srgb, var(--rhymvex-slate) 45%, transparent);
+    transition:
+      border-color 0.25s ease,
+      background-color 0.25s ease;
+  }
+
+  .rv-card:hover {
+    border-color: color-mix(in srgb, var(--rhymvex-volt) 42%, transparent);
+    background-color: color-mix(in srgb, var(--rhymvex-slate) 75%, transparent);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Motion. Deliberately narrow: the header is the one place with continuous
+   animation. Everything else is a single entrance or a hover.
+   -------------------------------------------------------------------------- */
+
+/* Header: one drop-in on load. */
+@keyframes rv-header-in {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hero copy: staggered rise. */
+@keyframes rv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* One pulse travelling the rhythm strip. */
+@keyframes rv-pulse {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 8px);
+    opacity: 0;
+  }
+}
+
+/* Brand ticker. Shifts by exactly one copy width, so the loop is seamless with
+   any number of copies — not just two. */
+@keyframes rv-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% / var(--rv-marquee-copies, 2)));
+  }
+}
+
+/* Waveform band: one travelling pulse across 29 bars. */
+@keyframes rv-wave {
+  0%,
+  100% {
+    transform: scaleY(0.26);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(var(--rv-wave-peak, 1));
+    opacity: 1;
+  }
+}
+
+.rv-header {
+  animation: rv-header-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rv-animate-rise {
+  animation: rv-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rv-pulse-dot {
+  animation: rv-pulse 3.4s cubic-bezier(0.4, 0, 0.2, 1) 0.7s both;
+}
+
+.rv-marquee-track {
+  animation: rv-marquee var(--rv-marquee-duration, 36s) linear infinite;
+}
+
+/* Phrases dissolve at the edges rather than being sliced by the clip. */
+.rv-marquee-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* A still row needs no fade, and must not sit frozen mid-travel. */
+  .rv-marquee-track {
+    animation: none !important;
+  }
+  .rv-marquee-mask {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/* Waveform ----------------------------------------------------------------
+   Each bar scales about its own centre, so the supplied artwork is reused
+   as-is. Paused off-screen; fully disabled under reduced motion. */
+.rv-wave-bar {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: rv-wave 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform, opacity;
+}
+
+[data-live="false"] .rv-wave-bar {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-wave-bar {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Reveal on scroll — section headers only.
+   Gated behind `html.rv-js` (set by an inline script in the root layout) so
+   content is never hidden when JS is unavailable. */
+html.rv-js .rv-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.rv-js .rv-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}

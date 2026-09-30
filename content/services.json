@@ -1,0 +1,187 @@
+{
+  "$comment": "Rhymvex service packages. Canonical source consumed by web/ and mirrored in docs/business/services-and-pricing.md. The site is client-first: each package leads with the client's situation (`situation`, `forWhen`, `body`) and what it helps them solve (`outcomes`), not with a list of deliverables. `price` is internal-only: the public site leads with scope and does not publish figures. `outcomes` items flagged core are always part of the engagement; the rest are only recommended when they genuinely help. `note` is the tempo glyph shown on the card. Copy rules: no em dashes in prose, no 'X, not Y' constructions, one triad per page at most, and every absolute negative replaced by the mechanism that makes it true. DRAFT pricing, revise before quoting.",
+  "meta": {
+    "status": "draft",
+    "currency": "EUR",
+    "publishedPricing": false,
+    "note": "Prices are proposed, not approved, and are not published on the site. Cards show the situation, the outcomes and the shape of the engagement; the figure is quoted in a written scope. Update here, then re-run node scripts/sync-content.mjs."
+  },
+  "intro": {
+    "eyebrow": "How we start",
+    "heading": "We don’t start with a package.",
+    "headingAccent": "We start with what’s getting in your way.",
+    "body": [
+      "Every business arrives at a different point. Sometimes the brand needs fixing. Sometimes the system needs building. Sometimes you need a reliable creative partner and nothing more.",
+      "We’ll work out which one you’re looking at, then shape the engagement around it."
+    ],
+    "prompt": "Not sure where to start?",
+    "promptAction": "Tell us what’s going on",
+    "primaryCta": "Tell us what you’re trying to solve",
+    "secondaryCta": "See how we work",
+    "secondaryHref": "#process"
+  },
+  "packages": [
+    {
+      "id": "brand-sprint",
+      "index": "01",
+      "name": "Brand Sprint",
+      "situation": "You need clarity",
+      "forWhen": "For when things feel unclear.",
+      "body": "There’s potential in the brand, but the positioning, the visual direction and the messaging don’t agree with each other. We find what’s pulling them apart and spend the next 30 days on the changes that count.",
+      "note": "music",
+      "price": 2400,
+      "duration": "2 weeks",
+      "engagement": "Focused engagement",
+      "priceNote": "Fixed scope",
+      "cta": "Let’s find the problem",
+      "featured": false,
+      "outcomes": [
+        {
+          "id": "gaps",
+          "label": "Find the gaps in your current brand",
+          "core": true
+        },
+        {
+          "id": "positioning",
+          "label": "Clarify positioning and messaging",
+          "core": true
+        },
+        {
+          "id": "direction",
+          "label": "Establish a focused visual direction",
+          "core": true
+        },
+        {
+          "id": "impact",
+          "label": "Fix the highest-impact brand problems",
+          "core": true
+        },
+        {
+          "id": "plan",
+          "label": "Leave you with a prioritised action plan",
+          "core": true
+        }
+      ]
+    },
+    {
+      "id": "brand-system",
+      "index": "02",
+      "name": "Brand System",
+      "situation": "You need a system that scales",
+      "forWhen": "When your brand needs to work without you.",
+      "body": "If every new asset needs another decision, more templates won’t help. What your team needs is a system. We build the foundation they can use, repeat and grow with.",
+      "note": "music2",
+      "price": 7800,
+      "duration": "6–8 weeks",
+      "engagement": "Collaborative project",
+      "priceNote": "Fixed scope",
+      "cta": "Build our system",
+      "featured": true,
+      "outcomes": [
+        {
+          "id": "identity",
+          "label": "Build a coherent identity system",
+          "core": true
+        },
+        {
+          "id": "messaging",
+          "label": "Define messaging and communication rules",
+          "core": true
+        },
+        {
+          "id": "components",
+          "label": "Create reusable production components",
+          "core": true
+        },
+        {
+          "id": "execution",
+          "label": "Make your brand easier for your team to execute",
+          "core": true
+        },
+        {
+          "id": "documented",
+          "label": "Document the system for future work",
+          "core": true
+        }
+      ]
+    },
+    {
+      "id": "retainer",
+      "index": "03",
+      "name": "Rhythm Retainer",
+      "situation": "You need ongoing momentum",
+      "forWhen": "For teams that need a partner, not another vendor.",
+      "body": "You’ve got the brand system. The hard part is keeping it moving. We sit alongside your team to decide what matters first, produce what’s needed, and keep the system current as the business changes.",
+      "note": "music4",
+      "price": 2400,
+      "duration": "3-month minimum",
+      "engagement": "Ongoing partnership",
+      "priceNote": "Monthly",
+      "cta": "Talk about what you need",
+      "featured": false,
+      "outcomes": [
+        {
+          "id": "prioritise",
+          "label": "Prioritise upcoming brand and creative needs",
+          "core": true
+        },
+        {
+          "id": "produce",
+          "label": "Produce work against an agreed cadence",
+          "core": true
+        },
+        {
+          "id": "review",
+          "label": "Review what’s working and what isn’t",
+          "core": true
+        },
+        {
+          "id": "improve",
+          "label": "Improve the system as new needs appear",
+          "core": true
+        },
+        {
+          "id": "access",
+          "label": "Provide priority access when something matters",
+          "core": true
+        }
+      ]
+    }
+  ],
+  "addOnsIntro": {
+    "heading": "Additional support when it makes sense",
+    "body": "Some projects need more than the core engagement. We’ll recommend one of these when it genuinely helps, and leave it out when it doesn’t."
+  },
+  "addOns": [
+    {
+      "id": "audit",
+      "name": "Brand Audit",
+      "price": 750,
+      "note": "A closer read on what’s working and what isn’t, when you need the detail before deciding anything."
+    },
+    {
+      "id": "handoff",
+      "name": "Design System Handoff",
+      "price": 1200,
+      "note": "Turns the system into something your developers and internal team can pick up and use."
+    },
+    {
+      "id": "templates",
+      "name": "Additional Templates",
+      "price": 400,
+      "note": "For when your team has a new channel, or the same layout keeps coming back by hand."
+    },
+    {
+      "id": "launch",
+      "name": "Launch Creative",
+      "price": 950,
+      "note": "Campaign-ready creative for when you’re ready to put the new system in front of people."
+    }
+  ],
+  "closing": "You don’t have to know what to buy. Tell us where you’re stuck and we’ll help work out the right engagement. If we don’t think you need one of these, we’ll say so. Every engagement is quoted as a fixed price in a written scope before any work starts, so the number is agreed against a defined scope. Retainers only begin once there’s a reason for one.",
+  "payment": {
+    "deposit": "50% to book, 50% on delivery",
+    "retainer": "Billed monthly in advance",
+    "currency": "EUR"
+  }
+}

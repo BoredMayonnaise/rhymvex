@@ -1,0 +1,12 @@
+/* GENERATED FILE — do not edit. Source: brand/tokens/tokens.json. Run: node scripts/sync-content.mjs */
+
+:root {
+  --rhymvex-black:  #0B0F14;
+  --rhymvex-slate:  #151B24;
+  --rhymvex-white:  #F5F7FA;
+  --rhymvex-volt:  #6EE7FF;
+  --rhymvex-ember:  #FF6B6B;
+
+  --font-primary: Inter, system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Sora', sans-serif;
+}
