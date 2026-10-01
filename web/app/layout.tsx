@@ -2,9 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { ArrowUp } from "lucide-react";
 import { RvMark } from "@/components/RvMark";
+import { LeadCaptureProvider } from "@/components/lead/LeadCaptureProvider";
 import { RvWordmark } from "@/components/RvWordmark";
 import { WaveformRhythm } from "@/components/WaveformRhythm";
-import { BOOK_URL, CONTACT_EMAIL } from "@/lib/services";
+import { enquiryUrl, CONTACT_EMAIL } from "@/lib/services";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
+import { localeCurrency } from "@/lib/currency-preference";
+import { getTranslator } from "@/lib/i18n";
+import { DEFAULT_LOCALE } from "@/lib/locales";
 import "./globals.css";
 
 const inter = Inter({
@@ -67,6 +73,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const year = new Date().getFullYear();
+  const t = getTranslator();
+  // The footer's currency switch needs a currency to start on. This is the
+  // default locale's, not the visitor's: the root layout is shared by every
+  // route including the workspaces, so it cannot read the preference without
+  // making all of them dynamic. The control corrects itself on the pages that
+  // read the cookie, which is where money is actually shown.
+  const currency = localeCurrency();
 
   return (
     // suppressHydrationWarning: the inline script below adds "rv-js" to <html>
@@ -87,12 +100,14 @@ export default function RootLayout({
 
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-rhymvex-volt focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-rhymvex-black"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-rhymvex-volt focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-rhymvex-black"
         >
           Skip to content
         </a>
 
-        {children}
+        {/* Wraps the whole site so any CTA can open the modal lead capture,
+            not just the ones on the home page. */}
+        <LeadCaptureProvider>{children}</LeadCaptureProvider>
 
         {/* ------------------------------------------------------------------
             Footer. No nav list — the closing section already carries the
@@ -123,16 +138,15 @@ export default function RootLayout({
               <div className="max-w-xl">
                 <RvMark className="h-9 w-auto sm:h-11" />
                 <p className="mt-7 font-display text-display-3 text-rhymvex-white">
-                  Build with rhythm.
+                  {t("footer.tagline")}
                 </p>
                 <p className="mt-4 text-sm leading-relaxed text-rhymvex-white/50">
-                  Brand &amp; product agency. We build the system behind your
-                  brand, then hand it over so your team can run it.
+                  {t("footer.body")}
                 </p>
               </div>
 
               <div className="shrink-0">
-                <p className="text-xs text-rhymvex-white/40">New projects</p>
+                <p className="text-xs text-rhymvex-white/40">{t("footer.newProjects")}</p>
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
                   className="mt-2 block break-words font-display text-lg text-rhymvex-volt transition-colors duration-200 hover:text-rhymvex-white sm:text-xl"
@@ -140,10 +154,10 @@ export default function RootLayout({
                   {CONTACT_EMAIL}
                 </a>
                 <a
-                  href={BOOK_URL}
+                  href={enquiryUrl()}
                   className="rv-btn rv-btn-ghost mt-6"
                 >
-                  Book a call
+                  {t("nav.bookCall")}
                 </a>
               </div>
             </div>
@@ -151,13 +165,15 @@ export default function RootLayout({
             {/* Legal rail */}
             <div className="mt-12 flex flex-col items-start gap-4 border-t border-rhymvex-white/10 pt-6 text-xs text-rhymvex-white/40 sm:flex-row sm:items-center sm:justify-between">
               <p>© {year} Rhymvex. All rights reserved.</p>
-              <div className="flex items-center gap-5">
-                <p className="hidden sm:block">Systems you can run.</p>
+              <div className="flex flex-wrap items-center gap-5">
+                <CurrencySwitcher currency={currency.code} locale={DEFAULT_LOCALE} />
+                <LocaleSwitcher />
+              <p className="hidden sm:block">{t("footer.systemsYouCanRun")}</p>
                 <a
                   href="#main"
                   className="inline-flex items-center gap-1.5 transition-colors duration-200 hover:text-rhymvex-volt"
                 >
-                  Back to top
+                  {t("footer.backToTop")}
                   <ArrowUp className="size-3.5" aria-hidden="true" />
                 </a>
               </div>

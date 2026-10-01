@@ -13,7 +13,7 @@ const works = [
   },
   {
     title: "SaaS Growth Playbook",
-    category: "Content & Go-to-market",
+    category: "Content & Go-to-locale",
     image: "linear-gradient(135deg, #151B24 0%, #05080A 100%)",
     stats: "+120% Inbound Leads",
   },

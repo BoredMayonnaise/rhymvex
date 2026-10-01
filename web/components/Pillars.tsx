@@ -53,7 +53,7 @@ export function Pillars() {
            Hidden below xl, where the heading fills the container and there is no
            margin to fill. The per-card tempo marks carry the motif at every
            size, so nothing is lost on small screens. */
-        <RhythmGlyph className="pointer-events-none absolute right-0 top-[110px] hidden h-[220px] w-auto max-w-none text-rhymvex-white opacity-[0.05] xl:block" />
+        <RhythmGlyph className="pointer-events-none absolute end-0 top-[110px] hidden h-[220px] w-auto max-w-none text-rhymvex-ember opacity-[0.08] xl:block" />
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">

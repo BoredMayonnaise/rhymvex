@@ -27,7 +27,7 @@ function Copy() {
   return (
     <>
       {PHRASES.map((phrase) => (
-        <span key={phrase} className="flex shrink-0 items-center gap-10 pr-10">
+        <span key={phrase} className="flex shrink-0 items-center gap-10 pe-10">
           <RvMark className="size-5 shrink-0 opacity-50" label={null} />
           <span className="whitespace-nowrap font-display text-base text-rhymvex-white/45">
             {phrase}

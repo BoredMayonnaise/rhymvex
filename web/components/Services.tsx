@@ -3,17 +3,17 @@ import { Reveal } from "@/components/Reveal";
 import { RisingStaff } from "@/components/RisingStaff";
 import { FlowingStaff } from "@/components/FlowingStaff";
 import { ScopeBuilder } from "@/components/ScopeBuilder";
+import { LeadCaptureButton } from "@/components/lead/LeadCaptureButton";
 import { Section } from "@/components/Section";
 import { TempoDivider, TempoMark, TempoPhrase } from "@/components/TempoMarks";
 import {
   addOns,
   addOnsIntro,
-  buildSituationMailto,
-  ENQUIRY_URL,
   services,
   servicesClosing,
   servicesIntro,
 } from "@/lib/services";
+import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
 
 /** The three package tempo marks in card order — the section's phrase. */
 const PHRASE = services.map((pkg) => pkg.note);
@@ -34,17 +34,19 @@ function Approach() {
 
       <div className="rv-card p-6 sm:p-7">
         <p className="text-sm text-rhymvex-white/55">{servicesIntro.prompt}</p>
-        <a
-          href={ENQUIRY_URL}
+        {/* Opens the capture in place. Someone who has read this far has
+            already decided something, and making them navigate to do it is a
+            pointless tax. */}
+        <LeadCaptureButton
           className="mt-3 flex items-center gap-2 font-display text-lg font-bold text-rhymvex-volt transition-colors hover:text-rhymvex-white"
         >
           {servicesIntro.promptAction}
           <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
-        </a>
+        </LeadCaptureButton>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <a href={ENQUIRY_URL} className="rv-btn rv-btn-primary sm:flex-1">
+          <LeadCaptureButton className="rv-btn rv-btn-primary sm:flex-1">
             {servicesIntro.primaryCta}
-          </a>
+          </LeadCaptureButton>
           <a href={servicesIntro.secondaryHref} className="rv-btn rv-btn-ghost sm:flex-1">
             {servicesIntro.secondaryCta}
           </a>
@@ -59,7 +61,13 @@ function Approach() {
  * them solve, then the facts. Deliverables stay in the written scope; the card
  * has to answer "do they understand where I am", not "what do I get".
  */
-function PackageCard({ pkg }: { pkg: (typeof services)[number] }) {
+function PackageCard({
+  pkg,
+  locale,
+}: {
+  pkg: (typeof services)[number];
+  locale: LocaleCode;
+}) {
   return (
     <article
       className={`group flex flex-col rounded-xl border p-6 sm:p-7 ${
@@ -164,17 +172,19 @@ function PackageCard({ pkg }: { pkg: (typeof services)[number] }) {
           ))}
         </dl>
 
-        <a
-          href={buildSituationMailto(pkg)}
+        {/* Carries the card's situation into the capture, so the visitor has
+            not chosen their package — only confirmed where they are. */}
+        <LeadCaptureButton
+          situation={pkg.situation}
           className={`rv-btn mt-5 w-full ${
             pkg.featured ? "rv-btn-primary" : "rv-btn-ghost"
           }`}
         >
           {pkg.cta}
-        </a>
+        </LeadCaptureButton>
 
         {/* Better way to do the same thing, where JS is available */}
-        <ScopeBuilder pkg={pkg} />
+        <ScopeBuilder pkg={pkg} locale={locale} />
       </div>
     </article>
   );
@@ -184,7 +194,7 @@ function PackageCard({ pkg }: { pkg: (typeof services)[number] }) {
  * Cards lead with the client's situation, not price. Figures stay internal — the
  * enquiry is where a number gets agreed, in writing, against a defined scope.
  */
-export function Services() {
+export function Services({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
   return (
     <Section
       id="services"
@@ -214,8 +224,8 @@ export function Services() {
            the surfaces without touching the copy. The rising sweep is also the
            right gesture here — the packages are a progression. */
         <>
-          <FlowingStaff className="pointer-events-none absolute -top-20 -right-[4%] w-[70%] max-w-none text-rhymvex-white opacity-[0.05] lg:w-[56%]" />
-          <RisingStaff className="pointer-events-none absolute left-[-14%] top-[24%] w-[128%] max-w-none text-rhymvex-white opacity-[0.04]" />
+          <FlowingStaff className="pointer-events-none absolute -top-20 -right-[4%] w-[70%] max-w-none text-rhymvex-ember opacity-[0.09] lg:w-[56%]" />
+          <RisingStaff className="pointer-events-none absolute left-[-14%] top-[24%] w-[128%] max-w-none text-rhymvex-ember opacity-[0.08]" />
         </>
       }
     >
@@ -223,7 +233,7 @@ export function Services() {
 
       <div className="grid gap-5 lg:grid-cols-3">
         {services.map((pkg) => (
-          <PackageCard key={pkg.id} pkg={pkg} />
+          <PackageCard key={pkg.id} pkg={pkg} locale={locale} />
         ))}
       </div>
 

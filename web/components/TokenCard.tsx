@@ -148,7 +148,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
             <li key={c.name} className="flex items-center gap-2.5">
               <span className={`size-3.5 shrink-0 rounded-sm ${c.swatch}`} />
               <span className="text-xs text-rhymvex-white/75">{c.name}</span>
-              <span className="ml-auto font-mono text-[10px] text-rhymvex-white/35">
+              <span className="ms-auto font-mono text-[10px] text-rhymvex-white/35">
                 {c.hex}
               </span>
             </li>

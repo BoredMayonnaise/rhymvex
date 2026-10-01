@@ -1,0 +1,204 @@
+{
+  "$comment": "Rhymvex currencies. Canonical source consumed by web/ via scripts/sync-content.mjs. A currency is its own preference, remembered in the `rv_currency` cookie, and is deliberately SEPARATE from the language in the URL: someone reading the site in English may be budgeting in yen, and someone reading it in Japanese may be quoted in pounds. One URL segment now carries the language only. Bands are AUTHORED per currency, never converted from EUR: an agency prices what a market will bear, there is no honest exchange rate between EUR and NGN for a retainer, and a rate table is a number that is wrong by the time it ships. The four boundaries keep the 1 : 2.6 : 5 shape of the EUR bands so the question asked is comparable across markets. `unsure` is absent on purpose: it is language, not money, and lives in the message catalogue as `form.notSureYet`. `symbol` is stored rather than derived: Intl renders USD as \"US$\" and CNY as \"CN¥\" for a reader in en-GB, which would contradict the $ and ¥ written in these bands, and one source of truth is what keeps the switcher label and the form agreeing. Adding a currency is one entry here, nothing in the app changes.",
+  "default": "EUR",
+  "currencies": [
+    {
+      "code": "EUR",
+      "symbol": "€",
+      "label": "Euro",
+      "budgetBands": {
+        "band_1": "Under €3,000",
+        "band_2": "€3,000 – €8,000",
+        "band_3": "€8,000 – €15,000",
+        "band_4": "Over €15,000"
+      }
+    },
+    {
+      "code": "GBP",
+      "symbol": "£",
+      "label": "United Kingdom",
+      "budgetBands": {
+        "band_1": "Under £3,000",
+        "band_2": "£3,000 – £8,000",
+        "band_3": "£8,000 – £15,000",
+        "band_4": "Over £15,000"
+      }
+    },
+    {
+      "code": "USD",
+      "symbol": "$",
+      "label": "United States",
+      "budgetBands": {
+        "band_1": "Under $3,000",
+        "band_2": "$3,000 – $8,000",
+        "band_3": "$8,000 – $15,000",
+        "band_4": "Over $15,000"
+      }
+    },
+    {
+      "code": "JPY",
+      "symbol": "¥",
+      "label": "Japan",
+      "budgetBands": {
+        "band_1": "Under ¥500,000",
+        "band_2": "¥500,000 – ¥1,300,000",
+        "band_3": "¥1,300,000 – ¥2,500,000",
+        "band_4": "Over ¥2,500,000"
+      }
+    },
+    {
+      "code": "AUD",
+      "symbol": "A$",
+      "label": "Australia",
+      "budgetBands": {
+        "band_1": "Under A$5,000",
+        "band_2": "A$5,000 – A$13,000",
+        "band_3": "A$13,000 – A$25,000",
+        "band_4": "Over A$25,000"
+      }
+    },
+    {
+      "code": "CAD",
+      "symbol": "C$",
+      "label": "Canada",
+      "budgetBands": {
+        "band_1": "Under C$5,000",
+        "band_2": "C$5,000 – C$12,000",
+        "band_3": "C$12,000 – C$23,000",
+        "band_4": "Over C$23,000"
+      }
+    },
+    {
+      "code": "CHF",
+      "symbol": "CHF",
+      "label": "Switzerland",
+      "budgetBands": {
+        "band_1": "Under CHF 5,000",
+        "band_2": "CHF 5,000 – CHF 13,000",
+        "band_3": "CHF 13,000 – CHF 25,000",
+        "band_4": "Over CHF 25,000"
+      }
+    },
+    {
+      "code": "SGD",
+      "symbol": "S$",
+      "label": "Singapore",
+      "budgetBands": {
+        "band_1": "Under S$6,000",
+        "band_2": "S$6,000 – S$15,000",
+        "band_3": "S$15,000 – S$28,000",
+        "band_4": "Over S$28,000"
+      }
+    },
+    {
+      "code": "AED",
+      "symbol": "AED",
+      "label": "United Arab Emirates",
+      "budgetBands": {
+        "band_1": "Under AED 18,000",
+        "band_2": "AED 18,000 – AED 50,000",
+        "band_3": "AED 50,000 – AED 100,000",
+        "band_4": "Over AED 100,000"
+      }
+    },
+    {
+      "code": "SAR",
+      "symbol": "SAR",
+      "label": "Saudi Arabia",
+      "budgetBands": {
+        "band_1": "Under SAR 20,000",
+        "band_2": "SAR 20,000 – SAR 60,000",
+        "band_3": "SAR 60,000 – SAR 120,000",
+        "band_4": "Over SAR 120,000"
+      }
+    },
+    {
+      "code": "INR",
+      "symbol": "₹",
+      "label": "India",
+      "budgetBands": {
+        "band_1": "Under ₹250,000",
+        "band_2": "₹250,000 – ₹650,000",
+        "band_3": "₹650,000 – ₹1,200,000",
+        "band_4": "Over ₹1,200,000"
+      }
+    },
+    {
+      "code": "CNY",
+      "symbol": "¥",
+      "label": "China",
+      "budgetBands": {
+        "band_1": "Under ¥30,000",
+        "band_2": "¥30,000 – ¥80,000",
+        "band_3": "¥80,000 – ¥150,000",
+        "band_4": "Over ¥150,000"
+      }
+    },
+    {
+      "code": "KRW",
+      "symbol": "₩",
+      "label": "South Korea",
+      "budgetBands": {
+        "band_1": "Under ₩4,000,000",
+        "band_2": "₩4,000,000 – ₩11,000,000",
+        "band_3": "₩11,000,000 – ₩20,000,000",
+        "band_4": "Over ₩20,000,000"
+      }
+    },
+    {
+      "code": "THB",
+      "symbol": "฿",
+      "label": "Thailand",
+      "budgetBands": {
+        "band_1": "Under ฿120,000",
+        "band_2": "฿120,000 – ฿320,000",
+        "band_3": "฿320,000 – ฿600,000",
+        "band_4": "Over ฿600,000"
+      }
+    },
+    {
+      "code": "MYR",
+      "symbol": "RM",
+      "label": "Malaysia",
+      "budgetBands": {
+        "band_1": "Under RM 15,000",
+        "band_2": "RM 15,000 – RM 40,000",
+        "band_3": "RM 40,000 – RM 75,000",
+        "band_4": "Over RM 75,000"
+      }
+    },
+    {
+      "code": "PHP",
+      "symbol": "₱",
+      "label": "Philippines",
+      "budgetBands": {
+        "band_1": "Under ₱150,000",
+        "band_2": "₱150,000 – ₱400,000",
+        "band_3": "₱400,000 – ₱800,000",
+        "band_4": "Over ₱800,000"
+      }
+    },
+    {
+      "code": "ZAR",
+      "symbol": "R",
+      "label": "South Africa",
+      "budgetBands": {
+        "band_1": "Under R 50,000",
+        "band_2": "R 50,000 – R 130,000",
+        "band_3": "R 130,000 – R 250,000",
+        "band_4": "Over R 250,000"
+      }
+    },
+    {
+      "code": "NGN",
+      "symbol": "₦",
+      "label": "Nigeria",
+      "budgetBands": {
+        "band_1": "Under ₦3,000,000",
+        "band_2": "₦3,000,000 – ₦8,000,000",
+        "band_3": "₦8,000,000 – ₦15,000,000",
+        "band_4": "Over ₦15,000,000"
+      }
+    }
+  ]
+}

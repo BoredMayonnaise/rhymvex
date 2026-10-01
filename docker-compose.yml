@@ -1,0 +1,31 @@
+# Local development database for the Rhymvex platform.
+# Development only. Production runs a managed Postgres and sets DATABASE_URL.
+#
+#   docker compose up -d
+#   npm run db:migrate   (from web/)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rhymvex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rhymvex
+      POSTGRES_PASSWORD: rhymvex_dev
+      POSTGRES_DB: rhymvex
+      # Intake stores submission IPs for rate limiting and abuse handling.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      # Loopback only, and on a non-default port to avoid clashing with any
+      # Postgres already running on the host.
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - rhymvex-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rhymvex -d rhymvex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rhymvex-pgdata:

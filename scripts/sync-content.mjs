@@ -3,6 +3,9 @@
  * Syncs canonical source files into the web app and verifies nothing has drifted.
  *
  *   content/services.json   (canonical)  ->  web/content/services.json
+ *   content/locales.json    (canonical)  ->  web/content/locales.json
+ *   content/currencies.json (canonical)  ->  web/content/currencies.json
+ *   content/messages/*.json (canonical)  ->  web/content/messages/*.json
  *   brand/tokens/tokens.json (canonical) ->  brand/tokens/tokens.css
  *                                          web/app/tokens.css
  *
@@ -14,7 +17,7 @@
  *   node scripts/sync-content.mjs --check  # exit 1 if anything is stale
  */
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -23,9 +26,16 @@ const rel = (p) => relative(root, join(root, p));
 
 const TOKENS_JSON = "brand/tokens/tokens.json";
 const SERVICES_JSON = "content/services.json";
+const LOCALES_JSON = "content/locales.json";
+const CURRENCIES_JSON = "content/currencies.json";
+const MESSAGES_DIR = "content/messages";
+const MESSAGES_TARGET_DIR = "web/content/messages";
 
 const TOKEN_CSS_TARGETS = ["brand/tokens/tokens.css", "web/app/tokens.css"];
 const SERVICES_TARGET = "web/content/services.json";
+const LOCALES_TARGET = "web/content/locales.json";
+const CURRENCIES_TARGET = "web/content/currencies.json";
+
 const GLOBALS_CSS = "web/app/globals.css";
 
 const BANNER =
@@ -66,6 +76,21 @@ async function main() {
   const check = process.argv.includes("--check");
   const tokens = JSON.parse(await readOrNull(TOKENS_JSON));
   const servicesRaw = await readOrNull(SERVICES_JSON);
+  const localesRaw = await readOrNull(LOCALES_JSON);
+  const currenciesRaw = await readOrNull(CURRENCIES_JSON);
+
+  // Every catalogue mirrors 1:1. Walk the canonical directory rather than
+  // listing filenames in the script, so adding a language is one new file in
+  // content/messages/ and nothing else.
+  const messageFiles = (await readdir(join(root, MESSAGES_DIR)).catch(() => []))
+    .filter((f) => f.endsWith(".json"))
+    .sort();
+  const messagePairs = await Promise.all(
+    messageFiles.map(async (f) => ({
+      path: `${MESSAGES_TARGET_DIR}/${f}`,
+      expected: await readOrNull(`${MESSAGES_DIR}/${f}`),
+    })),
+  );
 
   /** @type {{path: string, expected: string}[]} */
   const targets = [
@@ -74,6 +99,9 @@ async function main() {
       expected: renderTokenCss(tokens),
     })),
     { path: SERVICES_TARGET, expected: servicesRaw },
+    { path: LOCALES_TARGET, expected: localesRaw },
+    { path: CURRENCIES_TARGET, expected: currenciesRaw },
+    ...messagePairs,
   ];
 
   const drift = [];
@@ -108,7 +136,7 @@ async function main() {
     process.exit(1);
   }
 
-  if (check) console.log("Content in sync (tokens, services, web @theme).");
+  if (check) console.log("Content in sync (tokens, services, locales, currencies, messages, web @theme).");
 }
 
 main().catch((err) => {

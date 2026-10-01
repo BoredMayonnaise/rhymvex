@@ -5,22 +5,39 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:up": "docker compose -f ../docker-compose.yml up -d --wait",
+    "db:down": "docker compose -f ../docker-compose.yml down",
+    "db:migrate": "tsx lib/db/migrate.ts",
+    "db:seed": "tsx lib/db/seed.ts",
+    "db:reset": "docker compose -f ../docker-compose.yml down -v && npm run db:up && npm run db:migrate && npm run db:seed",
+    "verify": "bash scripts/verify.sh && tsx scripts/verify-invitations.ts && bash scripts/verify-workflow.sh",
+    "content": "node ../scripts/sync-content.mjs",
+    "content:check": "node ../scripts/sync-content.mjs --check",
+    "i18n": "node ../scripts/check-i18n.mjs",
+    "i18n:strict": "node ../scripts/check-i18n.mjs --strict"
   },
   "dependencies": {
     "framer-motion": "^13.4.6",
     "lenis": "^1.3.26",
     "lucide-react": "^1.49.0",
     "next": "16.3.7",
+    "nodemailer": "^10.0.13",
+    "pg": "^8.23.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

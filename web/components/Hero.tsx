@@ -1,11 +1,24 @@
 import { ArrowRight } from "lucide-react";
 import { RhythmGlyph } from "@/components/RhythmGlyph";
 import { TokenCard } from "@/components/TokenCard";
-import { ENQUIRY_URL } from "@/lib/services";
+import { LeadCaptureForm } from "@/components/lead/LeadCaptureForm";
+import { enquiryUrl } from "@/lib/services";
+import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
+import { getTranslator } from "@/lib/i18n";
 
-export function Hero() {
+/**
+ * Hero.
+ *
+ * The primary action is a form, not a link. Someone who arrives with a problem
+ * should be able to describe it without a second page, so the ask and the
+ * answer share one screen. The full intake form is still linked for anyone who
+ * would rather take it somewhere with room to think.
+ */
+export function Hero({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
+  const t = getTranslator(locale);
+
   return (
-    <section className="relative overflow-hidden px-6 pb-16 pt-16 sm:pb-24 sm:pt-24 lg:pb-28">
+    <section className="relative overflow-hidden px-6 pb-14 pt-14 sm:pb-20 sm:pt-20 lg:pb-24">
       {/* Brand texture plus the clef-and-staff motif — "rhythm", made literal.
           Decorative only; sits behind the copy and never overlaps it. */}
       <div
@@ -13,19 +26,19 @@ export function Hero() {
         aria-hidden="true"
       />
       <RhythmGlyph
-        className="pointer-events-none absolute -right-[18%] top-1/2 w-[125%] max-w-none -translate-y-1/2 text-rhymvex-white opacity-[0.05] sm:-right-[10%] sm:w-[85%] lg:-right-[4%] lg:w-[62%]"
+        className="pointer-events-none absolute -right-[18%] top-1/2 w-[125%] max-w-none -translate-y-1/2 text-rhymvex-ember opacity-[0.09] sm:-right-[10%] sm:w-[85%] lg:-right-[4%] lg:w-[62%]"
       />
 
       <div className="rv-container relative grid items-start gap-14 lg:grid-cols-[minmax(0,1fr)_clamp(17rem,25vw,22rem)] lg:gap-16">
-        {/* Copy */}
+        {/* Copy and capture */}
         <div className="min-w-0">
           <h1
             className="rv-animate-rise text-display-1"
             style={{ animationDelay: "0.05s" }}
           >
-            Your brand is a system.
+            {t("hero.line1")}
             <br />
-            <span className="text-rhymvex-volt">Build it like one.</span>
+            <span className="text-rhymvex-volt">{t("hero.line2")}</span>
           </h1>
 
           <span
@@ -35,33 +48,41 @@ export function Hero() {
           />
 
           <p
-            className="rv-animate-rise mt-8 max-w-xl text-lead text-rhymvex-white/70"
+            className="rv-animate-rise mt-7 max-w-xl text-lead text-rhymvex-white/70"
             style={{ animationDelay: "0.24s" }}
           >
-            Your team should be able to ship on-brand without us in the room.
-            That&rsquo;s what the system is for.
+            {t("hero.body")}
           </p>
 
           <div
-            className="rv-animate-rise mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
+            className="rv-animate-rise mt-7"
             style={{ animationDelay: "0.32s" }}
           >
-            {/* Consultative first: the visitor describes the problem before
-                anyone asks them to pick a package. */}
-            <a href={ENQUIRY_URL} className="rv-btn rv-btn-primary">
-              Tell us what you&rsquo;re trying to solve
+            <LeadCaptureForm variant="hero" />
+          </div>
+
+          <div
+            className="rv-animate-rise mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5"
+            style={{ animationDelay: "0.4s" }}
+          >
+            {/* Secondary routes, for anyone not ready to write anything down. */}
+            <a href="#process" className="rv-btn rv-btn-ghost">
+              {t("hero.seeHowWeWork")}
               <ArrowRight className="size-4" aria-hidden="true" />
             </a>
-            <a href="#process" className="rv-btn rv-btn-ghost">
-              See how we work
+            <a
+              href={enquiryUrl(locale)}
+              className="text-xs text-rhymvex-white/40 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
+            >
+              {t("hero.orFullForm")}
             </a>
           </div>
 
           <p
-            className="rv-animate-rise mt-10 text-sm text-rhymvex-white/35"
-            style={{ animationDelay: "0.4s" }}
+            className="rv-animate-rise mt-9 text-sm text-rhymvex-white/35"
+            style={{ animationDelay: "0.48s" }}
           >
-            Build with rhythm.
+            {t("footer.tagline")}
           </p>
         </div>
 

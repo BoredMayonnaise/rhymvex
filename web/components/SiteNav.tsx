@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Mail } from "lucide-react";
+import { ArrowUpRight, MessageSquareText } from "lucide-react";
 import { RvMark } from "@/components/RvMark";
-import { BOOK_URL, CONTACT_EMAIL } from "@/lib/services";
+import { useLeadCapture } from "@/components/lead/LeadCaptureProvider";
+import { enquiryUrl } from "@/lib/services";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
+import { getTranslator } from "@/lib/i18n";
 
 /**
  * Site header.
@@ -17,9 +21,11 @@ import { BOOK_URL, CONTACT_EMAIL } from "@/lib/services";
  *   - a Volt line along its bottom edge tracks reading position.
  * Hover states are colour swaps only.
  */
-export function SiteNav() {
+export function SiteNav({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
   const [condensed, setCondensed] = useState(false);
   const progressRef = useRef<HTMLSpanElement>(null);
+  const { open: openLeadCapture } = useLeadCapture();
+  const t = getTranslator(locale);
 
   useEffect(() => {
     let frame = 0;
@@ -74,20 +80,28 @@ export function SiteNav() {
             />
           </a>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              aria-label="Email Rhymvex"
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {/* Prices differ by locale, so which one is showing has to be
+                visible and changeable from every page. */}
+            <LocaleSwitcher />
+
+            {/* Opens the modal capture. Not a mailto: that would drop the
+                request outside the platform, with no lead record and no
+                assignment. */}
+            <button
+              type="button"
+              onClick={() => openLeadCapture()}
+              aria-label={t("nav.tellUs")}
               className="hidden size-10 items-center justify-center rounded-lg border border-rhymvex-white/15 text-rhymvex-white/70 transition-colors duration-200 hover:border-rhymvex-volt hover:text-rhymvex-volt sm:inline-flex"
             >
-              <Mail className="size-4" aria-hidden="true" />
-            </a>
+              <MessageSquareText className="size-4" aria-hidden="true" />
+            </button>
 
             <a
-              href={BOOK_URL}
+              href={enquiryUrl(locale)}
               className="rv-btn rv-btn-primary group/cta px-4 sm:px-5"
             >
-              <span className="whitespace-nowrap">Book a call</span>
+              <span className="whitespace-nowrap">{t("nav.bookCall")}</span>
               <ArrowUpRight
                 className="size-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5"
                 aria-hidden="true"

@@ -11,8 +11,9 @@ import {
 } from "react";
 import { Check, X } from "lucide-react";
 import { NOTES, type NoteName } from "@/lib/notes";
-import { addOns, buildScopeMailto } from "@/lib/services";
+import { addOns, buildScopeIntake } from "@/lib/services";
 import type { ServicePackage } from "@/lib/services";
+import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
 
 /**
  * Scope conversation starter.
@@ -25,7 +26,14 @@ import type { ServicePackage } from "@/lib/services";
  * Progressive enhancement: the card's own mailto CTA stays a plain link, so the
  * journey works with JS off. This only adds a better way to do the same thing.
  */
-export function ScopeBuilder({ pkg }: { pkg: ServicePackage }) {
+export function ScopeBuilder({
+  pkg,
+  locale = DEFAULT_LOCALE,
+}: {
+  pkg: ServicePackage;
+  /** Market the drafted scope is sent to, so the intake page opens priced in it. */
+  locale?: LocaleCode;
+}) {
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<Record<string, boolean>>({});
   const [extras, setExtras] = useState<Record<string, boolean>>({});
@@ -58,10 +66,11 @@ export function ScopeBuilder({ pkg }: { pkg: ServicePackage }) {
     triggerRef.current?.focus();
   }, []);
 
-  const href = buildScopeMailto(
+  const href = buildScopeIntake(
     pkg,
     chosenOptional.map((s) => s.id),
     chosenExtras.map((a) => a.id),
+    locale,
   );
 
   // --- Dialog behaviour: escape, focus trap, scroll lock -------------------
@@ -165,7 +174,7 @@ export function ScopeBuilder({ pkg }: { pkg: ServicePackage }) {
                 type="button"
                 onClick={close}
                 aria-label="Close"
-                className="-mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-rhymvex-white/60 transition-colors hover:bg-rhymvex-white/10 hover:text-rhymvex-white"
+                className="-me-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-rhymvex-white/60 transition-colors hover:bg-rhymvex-white/10 hover:text-rhymvex-white"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>

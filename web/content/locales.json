@@ -1,0 +1,62 @@
+{
+  "$comment": "Rhymvex locales. Canonical source consumed by web/ via scripts/sync-content.mjs. One URL segment carries the LANGUAGE. The pricing deliberately does not: a currency is a preference the visitor makes and it is remembered in a cookie, so English can be read in pounds or in yen. `currency` here is only the fallback for a visitor who has never chosen, which is what keeps /en-GB priced in pounds on a first visit. This is keyed by BCP-47 language tag, not market code: en-GB and en-US are the same language, ar and th-TH are different languages in different scripts. `default` is served at the un-prefixed URL so every existing link keeps working. Budget bands are NOT here: they belong to the currency and live in content/currencies.json. Adding a language is one entry here plus one catalogue in content/messages/; adding a currency is one entry there. Copy rules still apply in every language: no em dashes in prose, no (X, not Y) constructions, one triad per page maximum.",
+  "default": "en-IE",
+  "locales": [
+    {
+      "code": "en-IE",
+      "language": "English",
+      "label": "Europe",
+      "dir": "ltr",
+      "script": "latin",
+      "currency": "EUR"
+    },
+    {
+      "code": "en-GB",
+      "language": "English",
+      "label": "United Kingdom",
+      "dir": "ltr",
+      "script": "latin",
+      "currency": "GBP"
+    },
+    {
+      "code": "en-US",
+      "language": "English",
+      "label": "United States",
+      "dir": "ltr",
+      "script": "latin",
+      "currency": "USD"
+    },
+    {
+      "code": "fil-PH",
+      "language": "Filipino",
+      "label": "Pilipinas",
+      "dir": "ltr",
+      "script": "latin",
+      "currency": "PHP"
+    },
+    {
+      "code": "ar",
+      "language": "العربية",
+      "label": "الشرق الأوسط",
+      "dir": "rtl",
+      "script": "arabic",
+      "currency": "SAR"
+    },
+    {
+      "code": "zh-CN",
+      "language": "中文",
+      "label": "中国",
+      "dir": "ltr",
+      "script": "cjk",
+      "currency": "CNY"
+    },
+    {
+      "code": "th-TH",
+      "language": "ไทย",
+      "label": "ประเทศไทย",
+      "dir": "ltr",
+      "script": "thai",
+      "currency": "THB"
+    }
+  ]
+}
