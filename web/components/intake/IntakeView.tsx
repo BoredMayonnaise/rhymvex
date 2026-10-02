@@ -90,11 +90,20 @@ export default async function IntakeView({
             <RvMark label={null} className="size-6" />
             <span className="font-display font-semibold tracking-tight">Rhymvex</span>
           </Link>
+          {/* The only navigation this page has, so it is sized like a control
+              rather than like fine print. It measured 89x16px, which fails the
+              24px minimum target in WCAG 2.5.8, and it sat at text-xs and 50%
+              white — quieter than the logo beside it, on the one page where
+              somebody part-way through a form most wants a way out.
+
+              py-2 takes the hit area to 32px without growing the bar: the
+              header's own py-5 is what sets its height, so this sits inside the
+              space that padding already occupies. */}
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
+            className="-my-2 flex items-center gap-2 rounded px-2 py-2 text-sm text-rhymvex-white/70 transition-colors hover:text-rhymvex-volt"
           >
-            <ArrowLeft className="size-3.5" aria-hidden="true" />
+            <ArrowLeft className="size-4" aria-hidden="true" />
             {t("nav.backToSite")}
           </Link>
         </div>
