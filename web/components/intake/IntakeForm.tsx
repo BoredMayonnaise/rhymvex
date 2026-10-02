@@ -242,7 +242,13 @@ export function IntakeForm({
         />
       </div>
 
-      <p className="text-xs leading-relaxed text-rhymvex-white/50">
+      {/* The most load-bearing sentence in the form: it says which fields are
+          required and that everything after them is not. It was set as `text-xs`
+          at 50% white, which made it the quietest thing on the page and left it
+          reading as a stray caption under the rule rather than as the form's
+          lead-in. Promoted to the same register as the page lede so the
+          hierarchy matches the importance. */}
+      <p className="-mt-1 max-w-md text-sm leading-relaxed text-rhymvex-white/70">
         {t("form.intro")}
       </p>
 
@@ -323,7 +329,7 @@ export function IntakeForm({
           <textarea
             id="message"
             name="message"
-            rows={6}
+            rows={4}
             defaultValue={initialMessage}
             placeholder={t("form.messagePlaceholder")}
             className="rv-textarea"
@@ -348,7 +354,7 @@ export function IntakeForm({
 
       {/* Who we are talking to. */}
       <fieldset className="flex flex-col gap-4 border-t border-rhymvex-white/8 pt-7">
-        <legend className="rv-eyebrow mb-1 text-rhymvex-white/50">{t("form.aboutYou")}</legend>
+        <legend className="rv-eyebrow mb-1">{t("form.aboutYou")}</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("form.yourName")} name="name" error={fields.name} required autoComplete="name" />
