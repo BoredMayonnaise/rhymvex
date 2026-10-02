@@ -129,8 +129,13 @@ function LeadCaptureModal({
 
     // Move focus in, so a keyboard user is inside the dialog immediately.
     requestAnimationFrame(() => {
+      // The first real field, not the first focusable thing. A selector list
+      // matches in document order and the close button precedes the form, so the
+      // previous query focused the one control whose effect is to dismiss the
+      // dialog — the most likely accidental first keystroke. Buttons are left out
+      // entirely, and tabindex="-1" keeps the honeypot out of it as well.
       const target = panelRef.current?.querySelector<HTMLElement>(
-        "input, textarea, select, button:not([disabled])",
+        "input:not([tabindex='-1']), textarea, select",
       );
       target?.focus();
     });

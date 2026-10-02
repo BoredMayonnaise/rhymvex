@@ -199,6 +199,12 @@ export function LeadCaptureForm({
             }
             className="rv-select"
             aria-invalid={fields.situation ? "true" : undefined}
+            // Same wiring the message and name fields below already have: without
+            // an id on the error and a describedby on the control, the message is
+            // drawn but never announced.
+            aria-describedby={
+              fields.situation ? `lc-${variant}-situation-error` : undefined
+            }
           >
             <option value="">Pick the closest fit</option>
             {SITUATIONS.map((situation) => (
@@ -207,7 +213,11 @@ export function LeadCaptureForm({
               </option>
             ))}
           </select>
-          {fields.situation ? <p className="rv-error">{fields.situation}</p> : null}
+          {fields.situation ? (
+            <p id={`lc-${variant}-situation-error`} className="rv-error">
+              {fields.situation}
+            </p>
+          ) : null}
         </div>
       </div>
 

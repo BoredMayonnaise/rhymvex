@@ -25,6 +25,9 @@ export type ClientRecord = {
   notes: string | null;
   status: string;
   account_manager: string | null;
+  // Joined from staff so the page can show a person rather than the uuid. The
+  // raw id stays on the record because a form may still need to post it back.
+  account_manager_name: string | null;
   lead_id: string | null;
   lead_reference: string | null;
   created_at: Date;

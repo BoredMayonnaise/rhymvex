@@ -454,7 +454,11 @@ export default async function ClientDetailPage({
               ) : null}
               {client.phone ? <Field label="Phone">{client.phone}</Field> : null}
               {client.address ? <Field label="Address">{client.address}</Field> : null}
-              <Field label="Manager">{client.account_manager ?? "—"}</Field>
+              {/* The name, not `account_manager`, which is the uuid. The query
+                  already joins staff for exactly this. */}
+              <Field label="Manager">
+                {client.account_manager_name ?? "Unassigned"}
+              </Field>
               {client.lead_id && client.lead_reference ? (
                 <Field label="From lead">
                   <Link

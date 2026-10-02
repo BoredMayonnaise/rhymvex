@@ -263,6 +263,13 @@ export function IntakeForm({
           </p>
           <div
             className="mt-3 grid gap-2.5 sm:grid-cols-2"
+            // role="radiogroup" is what makes the two attributes below do
+            // anything. aria-describedby is only surfaced on roles that support a
+            // description, and aria-invalid is not a global attribute, so on a
+            // bare div both were inert: a screen reader reached the four radios
+            // hearing only the legend, never the question and never the error.
+            role="radiogroup"
+            aria-required="true"
             aria-describedby={
               fields.situation ? "situation-question situation-error" : "situation-question"
             }

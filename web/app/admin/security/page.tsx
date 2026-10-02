@@ -5,6 +5,7 @@ import { EmptyState, Panel, Stat, StatusPill } from "@/components/ui/primitives"
 import { recentAudit, describeAuditAction } from "@/lib/audit";
 import { listInvitations } from "@/lib/auth/invitations";
 import { smtpConfigured } from "@/lib/mail/smtp";
+import { envInt } from "@/lib/env";
 import { invitationStatusTone } from "@/components/ui/primitives";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,27 @@ export const dynamic = "force-dynamic";
  * trail. It reports the state of the system rather than letting anyone change
  * it from a page, so there is no privileged action here to get wrong.
  */
+/**
+ * The intake rate limit's window in words, from the env var the limiter uses.
+ *
+ * The page used to say "per hour" unconditionally, which is only true while the
+ * window is left at its 3600-second default. Someone who tuned it to a day was
+ * being told something untrue on the page that exists to tell the truth about
+ * the deployment's controls.
+ */
+function rateWindowDescription(): string {
+  const seconds = envInt("INTAKE_RATE_WINDOW_SECONDS", 3600);
+  if (seconds % 3600 === 0) {
+    const hours = seconds / 3600;
+    return hours === 1 ? "hour" : `${hours} hours`;
+  }
+  if (seconds % 60 === 0) {
+    const minutes = seconds / 60;
+    return minutes === 1 ? "minute" : `${minutes} minutes`;
+  }
+  return `${seconds} seconds`;
+}
+
 export default async function SecurityPage() {
   await requireStaffPermission("security.read");
 
@@ -72,7 +94,12 @@ export default async function SecurityPage() {
     { label: "Audit immutability", value: "Append-only, enforced by database trigger", ok: true },
     {
       label: "Intake rate limit",
-      value: `${process.env.INTAKE_RATE_LIMIT ?? 5} per hour per IP`,
+      // Reads the same env vars the limiter reads, and states the resolved
+      // budget. The previous version interpolated the raw variable name and its
+      // value into this page, which put internal configuration naming into the
+      // product surface, and it hard-coded "per hour" while the window is
+      // whatever INTAKE_RATE_WINDOW_SECONDS actually says.
+      value: `${envInt("INTAKE_RATE_LIMIT", 5)} per ${rateWindowDescription()}, per IP`,
       ok: true,
     },
     { label: "Spam protection", value: "Honeypot field and minimum fill time", ok: true },
