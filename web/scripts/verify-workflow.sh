@@ -26,7 +26,29 @@ qerr() { "${PSQL[@]}" "$1" 2>&1; }
 STAMP=$(date +%s)
 EMAIL="workflow-$STAMP@acmecoffee.test"
 
+# The SLA is a real setting an admin can configure, and the seed deliberately
+# leaves it alone (`ON CONFLICT DO NOTHING`), so it can legitimately be set on a
+# developer's machine. This test is about the *no promise* path, so it clears the
+# value itself and puts back whatever was there. Reading the ambient value and
+# asserting it is null is what made this fail for reasons unrelated to the code.
+SAVED_SLA=$(q "SELECT coalesce(response_sla_minutes::text,'') FROM org_settings WHERE id = true")
+
+restore_sla() {
+  if [ -z "$SAVED_SLA" ]; then
+    "${PSQL[@]}" "UPDATE org_settings SET response_sla_minutes = NULL WHERE id = true" >/dev/null 2>&1
+  else
+    "${PSQL[@]}" "UPDATE org_settings SET response_sla_minutes = $SAVED_SLA WHERE id = true" >/dev/null 2>&1
+  fi
+}
+
+# Cleared here, before the first intake submission rather than at the assertion
+# that happens to need it. The confirmation email is rendered during step 1, so
+# clearing it later leaves the email already carrying a promise and the check
+# fails for a reason that has nothing to do with the code under test.
+"${PSQL[@]}" "UPDATE org_settings SET response_sla_minutes = NULL WHERE id = true" >/dev/null 2>&1
+
 cleanup() {
+  restore_sla
   "${PSQL[@]}" "DELETE FROM audit_log WHERE actor_label LIKE 'Workflow $STAMP%'" >/dev/null 2>&1
   "${PSQL[@]}" "DELETE FROM client_sessions WHERE client_user_id IN (SELECT id FROM client_users WHERE email LIKE 'workflow-$STAMP%')" >/dev/null 2>&1
   "${PSQL[@]}" "DELETE FROM client_users WHERE email LIKE 'workflow-$STAMP%'" >/dev/null 2>&1
@@ -101,6 +123,12 @@ SLA=$(q "SELECT coalesce(response_sla_minutes::text,'none') FROM org_settings WH
 check "SLA is unset" "$SLA" none
 n=$(contains "$(timeout 25 curl -s "$BASE/intake")" 'No response-time promise')
 check "intake page says no promise is made" "$([ "$n" -ge 1 ] && echo 1 || echo 0)" 1
+
+# And the other half of the contract: with an SLA set, the page does promise.
+"${PSQL[@]}" "UPDATE org_settings SET response_sla_minutes = 30 WHERE id = true" >/dev/null 2>&1
+n=$(contains "$(timeout 25 curl -s "$BASE/intake")" 'No response-time promise')
+check "intake drops the disclaimer when an SLA exists" "$([ "$n" -eq 0 ] && echo 1 || echo 0)" 1
+restore_sla
 
 echo
 echo "=== 7. Spam controls ==="
