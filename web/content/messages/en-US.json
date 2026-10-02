@@ -1,5 +1,5 @@
 {
-  "$comment": "American English catalogue. Copy is identical to en-IE for now; this file is where spelling and wording variants belong. Kept as a real file rather than aliased in code so a variant is a visible edit and a missing one cannot be silent.",
+  "$comment": "American English catalogue. Copy matches en-IE except where American usage differs: enquiry is inquiry here, and any future -ise/-our or vocabulary variant belongs in this file too. Kept as a real file rather than aliased in code so a variant is a visible edit and a missing one cannot be silent.",
   "nav": {
     "bookCall": "Book a call",
     "backToSite": "Back to site",
@@ -21,7 +21,7 @@
     "line2": "Build it like one.",
     "body": "Your team should be able to ship on-brand without us in the room. That's what the system is for.",
     "seeHowWeWork": "See how we work",
-    "orFullForm": "Or open the full enquiry form"
+    "orFullForm": "Or open the full inquiry form"
   },
   "intake": {
     "title": "Tell us what you're trying to solve",
