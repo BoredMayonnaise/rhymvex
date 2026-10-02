@@ -21,6 +21,31 @@ import { stripLocalePrefix } from "@/lib/locales";
 
 const STAFF_COOKIE = "rv_staff_session";
 const CLIENT_COOKIE = "rv_client_session";
+const RETIRED_CURRENCY_COOKIE = "rv_currency";
+
+/**
+ * Expires the retired `rv_currency` cookie.
+ *
+ * The currency switcher and the detection layer that used to write this are
+ * gone, so nothing can refresh it any more. Left alone, a cookie set during that
+ * period overrides the language's own currency forever: a visitor in the
+ * Philippines holding a leftover `rv_currency=SAR` saw Saudi riyals on /fil-PH.
+ *
+ * Dropped here rather than left to expire on its own so the fix reaches people
+ * who already have it, instead of only people who happen to clear their cookies.
+ * The currency now comes from the language in the URL, which means the right
+ * prices do not depend on this cookie being absent — clearing it only removes a
+ * stale value that is no longer read.
+ */
+function expireRetiredCurrencyCookie(
+  request: NextRequest,
+  response: NextResponse,
+): NextResponse {
+  if (request.cookies.get(RETIRED_CURRENCY_COOKIE)?.value) {
+    response.cookies.set(RETIRED_CURRENCY_COOKIE, "", { path: "/", maxAge: 0 });
+  }
+  return response;
+}
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -40,7 +65,9 @@ export function proxy(request: NextRequest) {
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isPortalRoute = pathname === "/portal" || pathname.startsWith("/portal/");
 
-  if (!isAdminRoute && !isPortalRoute) return NextResponse.next();
+  if (!isAdminRoute && !isPortalRoute) {
+    return expireRetiredCurrencyCookie(request, NextResponse.next());
+  }
 
   if (isAdminRoute) {
     if (!request.cookies.get(STAFF_COOKIE)?.value) {
@@ -64,7 +91,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return expireRetiredCurrencyCookie(request, NextResponse.next());
 }
 
 export const config = {
