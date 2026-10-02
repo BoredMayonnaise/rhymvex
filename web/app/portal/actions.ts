@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { query } from "@/lib/db/client";
+import { query, tx } from "@/lib/db/client";
 import { getClientSession, csrfValid } from "@/lib/auth/session";
 import { recordAudit } from "@/lib/audit";
 import { requestMeta } from "@/lib/ratelimit";
@@ -147,24 +147,59 @@ export async function changePasswordAction(
     return { ok: false, error: strength, fields: { new_password: strength } };
   }
 
-  await query(
-    "UPDATE client_users SET password_hash = $1, updated_at = now() WHERE id = $2 AND client_id = $3",
-    [await hashPassword(next), session.clientUserId, session.clientId],
-  );
-
   const meta = await requestMeta();
-  await recordAudit(
-    { type: "client", id: session.clientUserId, label: session.name },
-    {
-      action: "settings.updated",
-      entityType: "client_user",
-      entityId: session.clientUserId,
-      metadata: { changed: "password" },
-      ...meta,
-    },
-  );
+  const revoked = await tx(async (client) => {
+    await client.query(
+      "UPDATE client_users SET password_hash = $1, updated_at = now() WHERE id = $2 AND client_id = $3",
+      [await hashPassword(next), session.clientUserId, session.clientId],
+    );
+
+    // Every other session for this person dies with the old password.
+    //
+    // Without this, a cookie stolen before the change keeps working for the full
+    // CLIENT_TTL_MS — seven days — which is exactly the window somebody is trying
+    // to close by changing their password. Rotating on the credential is the
+    // point of rotating on the credential.
+    //
+    // The current session is spared so the person who just changed their password
+    // is not logged out of the tab they are using. Its CSRF token is untouched,
+    // so the form they are holding stays valid.
+    //
+    // In the same transaction as the hash write: if the delete failed and the
+    // update committed, the old sessions would outlive the change that was meant
+    // to kill them, and nobody would notice.
+    // Scoped by client_user_id alone. client_sessions has no client_id column —
+    // the user id is already the tenant boundary, since a client_user belongs to
+    // exactly one client — so filtering on client_id here would not compile.
+    const killed = await client.query(
+      "DELETE FROM client_sessions WHERE client_user_id = $1 AND id <> $2 RETURNING id",
+      [session.clientUserId, session.id],
+    );
+
+    await recordAudit(
+      { type: "client", id: session.clientUserId, label: session.name },
+      {
+        action: "settings.updated",
+        entityType: "client_user",
+        entityId: session.clientUserId,
+        metadata: { changed: "password", sessionsRevoked: killed.rowCount ?? 0 },
+        ...meta,
+      },
+      client,
+    );
+
+    return killed.rowCount ?? 0;
+  });
 
   revalidatePath("/portal/settings");
 
-  return { ok: true, message: "Password changed." };
+  return {
+    ok: true,
+    message:
+      revoked > 0
+        ? `Password changed. Signed out of ${revoked} other ${
+            revoked === 1 ? "device" : "devices"
+          }.`
+        : "Password changed.",
+  };
 }

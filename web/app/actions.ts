@@ -22,7 +22,7 @@ export async function signOutAction(): Promise<void> {
   if (client) {
     await recordAudit(
       { type: "client", id: client.clientUserId, label: client.name },
-      { action: "portal.login", entityType: "client_user", entityId: client.clientUserId, ...meta },
+      { action: "portal.logout", entityType: "client_user", entityId: client.clientUserId, ...meta },
     );
     await destroyClientSession();
   }

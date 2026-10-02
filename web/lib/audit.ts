@@ -47,11 +47,13 @@ export type AuditAction =
   | "task.updated"
   | "staff.invited"
   | "staff.invite_revoked"
+  | "staff.access_changed"
   | "staff.role_changed"
   | "staff.login"
   | "staff.login_failed"
   | "staff.logout"
   | "portal.login"
+  | "portal.logout"
   | "invitation.accepted"
   | "settings.updated"
   | "intake.rejected";
@@ -188,11 +190,13 @@ export function describeAuditAction(action: string): string {
     "task.updated": "Task updated",
     "staff.invited": "Team member invited",
     "staff.invite_revoked": "Team invitation revoked",
+    "staff.access_changed": "Team access changed",
     "staff.role_changed": "Role changed",
     "staff.login": "Signed in",
     "staff.login_failed": "Failed sign-in attempt",
     "staff.logout": "Signed out",
     "portal.login": "Client signed in",
+    "portal.logout": "Client signed out",
     "invitation.accepted": "Invitation accepted",
     "settings.updated": "Settings updated",
     "intake.rejected": "Intake submission rejected",

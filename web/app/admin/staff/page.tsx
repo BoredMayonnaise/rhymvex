@@ -7,6 +7,7 @@ import { EmptyState, Panel, Stat, StatusPill, invitationStatusTone } from "@/com
 import { describeRole, ROLES } from "@/lib/auth/rbac";
 import { InviteStaffForm } from "./InviteStaffForm";
 import { RevokeInviteButton } from "./RevokeInviteButton";
+import { StaffAccessControl } from "./StaffAccessControl";
 
 export const dynamic = "force-dynamic";
 
@@ -108,17 +109,18 @@ export default async function StaffPage() {
                     {member.last_login_at ? relativeTime(member.last_login_at) : "never"}
                   </td>
                   <td className="text-right">
-                    {/* Marks your own row and nothing else.
-                        This used to render the word "manage" for anyone holding
-                        `staff.manage`, which read as a control. There is no
-                        role-change or deactivate action behind it, so it
-                        promised something the page cannot do. Changing a role
-                        also has to rotate that person's sessions, which is a
-                        deliberate piece of work rather than a label — until it
-                        exists, this cell says only what is true. Revoking a
-                        pending invitation below is a real action and stays. */}
+                    {/* Your own row is marked, never editable: the action refuses
+                        a self-change, so a control here would only ever fail. */}
                     {member.id === session.staffId ? (
                       <span className="text-[11px] text-rhymvex-volt">You</span>
+                    ) : canManage ? (
+                      <StaffAccessControl
+                        memberId={member.id}
+                        memberName={member.name}
+                        role={member.role}
+                        active={member.active}
+                        csrfToken={session.csrfToken}
+                      />
                     ) : (
                       <span className="text-[11px] text-rhymvex-white/50">—</span>
                     )}

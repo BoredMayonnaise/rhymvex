@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query, queryOne, tx } from "@/lib/db/client";
 import { csrfValid, getStaffSession } from "@/lib/auth/session";
+import { ROLES } from "@/lib/auth/rbac";
+import { isRecordId } from "@/lib/db/ids";
 import { recordAudit } from "@/lib/audit";
 import { humanise } from "@/lib/format";
 import { requestMeta } from "@/lib/ratelimit";
@@ -652,6 +654,132 @@ export async function inviteToPortalAction(
     console.error("portal invitation failed:", error);
     return { ok: false, error: "Could not create the invitation. Try again." };
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team access                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Change a team member's role, or disable their account.
+ *
+ * Two lockouts are guarded against, and both are the kind that end with nobody
+ * able to reach the workspace:
+ *
+ *   You cannot change your own role or disable yourself. An admin who promotes
+ *   themselves to DESIGNER has just removed their own route back.
+ *
+ *   You cannot remove the last active ADMIN. Demoting or disabling the only
+ *   administrator leaves a workspace whose remaining members cannot grant the
+ *   permission back to anybody.
+ *
+ * Sessions are only cleared on deactivation. A role change does not need them:
+ * `getStaffSession` reads `role` and `extra_permissions` from staff on every
+ * request and recomputes the permission set, so the new permissions apply on the
+ * next request without anyone being signed out. Disabling does clear them,
+ * because the account is gone and a row that can only ever fail its lookup is
+ * just litter.
+ */
+export async function updateStaffAccessAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await getStaffSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+  if (!session.permissions.has("staff.manage")) {
+    return { ok: false, error: "Your role cannot change team access." };
+  }
+  if (!csrfValid(session, formData.get("csrf"))) {
+    return { ok: false, error: "Your session expired. Reload the page and try again." };
+  }
+
+  const staffId = String(formData.get("staff_id") ?? "");
+  const nextRole = String(formData.get("role") ?? "");
+  const nextActive = String(formData.get("active") ?? "") === "true";
+
+  if (!isRecordId(staffId)) {
+    return { ok: false, error: "Unknown team member." };
+  }
+  if (!(ROLES as readonly string[]).includes(nextRole)) {
+    return { ok: false, error: "Unknown role." };
+  }
+
+  if (staffId === session.staffId) {
+    return {
+      ok: false,
+      error: "You cannot change your own role or disable your own account.",
+    };
+  }
+
+  const target = await queryOne<{
+    id: string;
+    name: string;
+    role: string;
+    active: boolean;
+  }>("SELECT id, name, role, active FROM staff WHERE id = $1", [staffId]);
+
+  if (!target) return { ok: false, error: "That team member no longer exists." };
+
+  // Losing admin is only allowed while another one remains.
+  const losesAdmin = target.role === "ADMIN" && (nextRole !== "ADMIN" || !nextActive);
+  if (losesAdmin) {
+    const others = await queryOne<{ count: number }>(
+      "SELECT count(*)::int AS count FROM staff WHERE role = 'ADMIN' AND active AND id <> $1",
+      [staffId],
+    );
+    if ((others?.count ?? 0) === 0) {
+      return {
+        ok: false,
+        error: "That is the last active admin. Promote somebody else first.",
+      };
+    }
+  }
+
+  const roleChanged = target.role !== nextRole;
+  const activeChanged = target.active !== nextActive;
+  if (!roleChanged && !activeChanged) {
+    return { ok: true, message: "Nothing to change." };
+  }
+
+  const meta = await requestMeta();
+
+  await tx(async (client) => {
+    await client.query(
+      "UPDATE staff SET role = $1, active = $2 WHERE id = $3",
+      [nextRole, nextActive, staffId],
+    );
+
+    if (activeChanged && !nextActive) {
+      await client.query("DELETE FROM sessions WHERE staff_id = $1", [staffId]);
+    }
+
+    await recordAudit(
+      { type: "staff", id: session.staffId, label: session.name },
+      {
+        action: "staff.access_changed",
+        entityType: "staff",
+        entityId: staffId,
+        metadata: {
+          member: target.name,
+          fromRole: target.role,
+          toRole: nextRole,
+          fromActive: target.active,
+          toActive: nextActive,
+        },
+        ...meta,
+      },
+      client,
+    );
+  });
+
+  revalidatePath("/admin/staff");
+
+  return {
+    ok: true,
+    message: activeChanged && !nextActive
+      ? `${target.name} can no longer sign in.`
+      : `${target.name} is now ${humanise(nextRole)}.`,
+  };
 }
 
 export async function revokeInvitationAction(
