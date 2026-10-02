@@ -64,7 +64,7 @@ export default async function PortalOverviewPage() {
 
                 <div>
                   <div className="mb-2 flex items-center justify-between text-xs">
-                    <span className="text-rhymvex-white/45">
+                    <span className="text-rhymvex-white/55">
                       {primary.phase ?? humanise(primary.status)}
                     </span>
                     <span className="rv-table-num text-rhymvex-volt">{primary.progress}%</span>
@@ -77,7 +77,7 @@ export default async function PortalOverviewPage() {
                         filled={milestones.filter((m) => m.completed_at).length}
                         label={`${milestones.filter((m) => m.completed_at).length} of ${milestones.length} stages complete`}
                       />
-                      <span className="text-[11px] text-rhymvex-white/35">
+                      <span className="text-[11px] text-rhymvex-white/50">
                         {milestones.filter((m) => m.completed_at).length} of {milestones.length}{" "}
                         stages complete
                       </span>
@@ -91,7 +91,7 @@ export default async function PortalOverviewPage() {
                     <p className="rv-panel-title mb-1.5">Next step</p>
                     <p className="m-0 text-sm font-medium text-rhymvex-white">{primary.next_step}</p>
                     {primary.next_step_due ? (
-                      <p className="mt-1 text-xs text-rhymvex-white/45">
+                      <p className="mt-1 text-xs text-rhymvex-white/55">
                         {formatDate(primary.next_step_due)}
                         {primary.next_step_due && new Date(primary.next_step_due).getTime() > Date.now()
                           ? ` · ${untilTime(primary.next_step_due)}`
@@ -167,7 +167,7 @@ export default async function PortalOverviewPage() {
                           <span className="block truncate text-sm text-rhymvex-white">
                             {project.name}
                           </span>
-                          <span className="block text-[11px] text-rhymvex-white/35">
+                          <span className="block text-[11px] text-rhymvex-white/50">
                             {project.phase ?? humanise(project.status)}
                           </span>
                         </span>
@@ -194,7 +194,7 @@ export default async function PortalOverviewPage() {
                 <p className="text-sm text-rhymvex-volt">
                   {formatDateTime(overview.nextBooking.scheduled_for)}
                 </p>
-                <p className="text-[11px] text-rhymvex-white/40">
+                <p className="text-[11px] text-rhymvex-white/50">
                   {overview.nextBooking.duration_mins} min
                   {overview.nextBooking.host_name ? ` · with ${overview.nextBooking.host_name}` : ""}
                   {overview.nextBooking.location ? ` · ${overview.nextBooking.location}` : ""}
@@ -219,15 +219,15 @@ export default async function PortalOverviewPage() {
                     key={item.id}
                     className="flex items-start gap-2.5 border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0"
                   >
-                    <span className="mt-0.5 shrink-0 text-rhymvex-white/30">
+                    <span className="mt-0.5 shrink-0 text-rhymvex-white/50">
                       <ActivityIcon kind={item.kind} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium text-rhymvex-white">{item.title}</p>
                       {item.detail ? (
-                        <p className="truncate text-[11px] text-rhymvex-white/40">{item.detail}</p>
+                        <p className="truncate text-[11px] text-rhymvex-white/50">{item.detail}</p>
                       ) : null}
-                      <p className="mt-0.5 text-[10px] text-rhymvex-white/25">
+                      <p className="mt-0.5 text-[10px] text-rhymvex-white/50">
                         {relativeTime(item.occurred_at)}
                       </p>
                     </div>
@@ -271,9 +271,9 @@ function ActionRow({
         <Icon className="size-4 shrink-0 text-rhymvex-volt" aria-hidden="true" />
         <span className="min-w-0 flex-1">
           <span className="block text-xs font-medium text-rhymvex-white">{title}</span>
-          <span className="block text-[11px] text-rhymvex-white/40">{detail}</span>
+          <span className="block text-[11px] text-rhymvex-white/50">{detail}</span>
         </span>
-        <ArrowUpRight className="size-3.5 shrink-0 text-rhymvex-white/25" aria-hidden="true" />
+        <ArrowUpRight className="size-3.5 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
       </Link>
     </li>
   );

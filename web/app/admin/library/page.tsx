@@ -61,7 +61,7 @@ export default async function LibraryPage() {
                           {item.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="rounded-full border border-rhymvex-white/10 px-2 py-0.5 text-[10px] text-rhymvex-white/40"
+                              className="rounded-full border border-rhymvex-white/10 px-2 py-0.5 text-[10px] text-rhymvex-white/50"
                             >
                               {tag}
                             </span>
@@ -69,7 +69,7 @@ export default async function LibraryPage() {
                         </div>
                       ) : null}
                     </div>
-                    <div className="shrink-0 text-right text-[10px] text-rhymvex-white/25">
+                    <div className="shrink-0 text-right text-[10px] text-rhymvex-white/50">
                       {item.client_name ? (
                         <p className="mb-0.5 text-rhymvex-volt">{item.client_name}</p>
                       ) : null}

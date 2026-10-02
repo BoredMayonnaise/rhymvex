@@ -82,7 +82,7 @@ export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; i
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[10px] text-rhymvex-white/30">
+                <p className="mt-1 text-[10px] text-rhymvex-white/50">
                   {describeRole(role)}
                 </p>
               </div>
@@ -125,7 +125,7 @@ export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; i
               </div>
             </fieldset>
 
-            <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/35">
+            <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/50">
               The invitation link works once, expires on its own, and cannot be used to sign in
               until the recipient sets a password. Only the link&apos;s hash is stored.
             </p>
@@ -149,7 +149,7 @@ export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; i
               ) : null}
             </div>
 
-            <p className="m-0 text-[11px] text-rhymvex-white/25">Invited by {invitedBy}</p>
+            <p className="m-0 text-[11px] text-rhymvex-white/50">Invited by {invitedBy}</p>
           </form>
         </div>
       ) : null}

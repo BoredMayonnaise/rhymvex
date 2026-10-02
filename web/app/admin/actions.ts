@@ -977,6 +977,16 @@ export async function updateProposalStatusAction(
     return { ok: false, error: "Invalid status change." };
   }
 
+  // Sending is the commercial gate, and it is separate from editing on purpose:
+  // OPERATIONS can move a proposal through DRAFT/WITHDRAWN but only an account
+  // manager can put pricing and scope in front of a client. The UI already
+  // disables the transition on `canSend`, which is a usability affordance and not
+  // a boundary, so the target status has to be checked here against the real
+  // permission rather than against the blanket `proposals.write` above.
+  if (status === "SENT" && !session.permissions.has("proposals.send")) {
+    return { ok: false, error: "Your role cannot send proposals." };
+  }
+
   const meta = await requestMeta();
 
   const proposal = await queryOne<{

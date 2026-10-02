@@ -65,7 +65,7 @@ export default async function TasksPage() {
                       <td>
                         <p className="font-medium text-rhymvex-white">{task.title}</p>
                         {task.detail ? (
-                          <p className="mt-0.5 max-w-md truncate text-[11px] text-rhymvex-white/35">
+                          <p className="mt-0.5 max-w-md truncate text-[11px] text-rhymvex-white/50">
                             {task.detail}
                           </p>
                         ) : null}
@@ -90,7 +90,7 @@ export default async function TasksPage() {
                       </td>
                       <td
                         className={`whitespace-nowrap ${
-                          isOverdue ? "text-rhymvex-ember" : "text-rhymvex-white/45"
+                          isOverdue ? "text-rhymvex-ember" : "text-rhymvex-white/55"
                         }`}
                       >
                         {task.due_at ? formatDate(task.due_at) : "—"}

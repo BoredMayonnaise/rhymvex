@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import IntakeView from "@/components/intake/IntakeView";
 import { preferredCurrency } from "@/lib/currency-preference";
 import { getTranslator } from "@/lib/i18n";
+import { intakeHref, intakeAlternates } from "@/lib/locales";
+import { SITE_ORIGIN } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,13 @@ export async function generateMetadata({
     title: t("intake.title"),
     description: t("intake.description"),
     robots: { index: true, follow: true },
-    alternates: { canonical: `/${locale}/intake` },
+    // Canonical via `intakeHref` so the default locale resolves to `/intake`
+    // rather than `/en-IE/intake`, matching the un-prefixed page and the
+    // sitemap. See the note on the locale home page.
+    alternates: {
+      canonical: intakeHref(locale),
+      languages: intakeAlternates(SITE_ORIGIN),
+    },
     openGraph: {
       title: t("intake.title"),
       description: t("intake.description"),

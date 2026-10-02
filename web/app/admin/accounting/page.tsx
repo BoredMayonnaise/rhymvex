@@ -102,12 +102,12 @@ export default async function AccountingPage() {
                         invoice.currency || currency,
                       )}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(invoice.issued_at)}
                     </td>
                     <td
                       className={`whitespace-nowrap ${
-                        invoice.status === "OVERDUE" ? "text-rhymvex-ember" : "text-rhymvex-white/45"
+                        invoice.status === "OVERDUE" ? "text-rhymvex-ember" : "text-rhymvex-white/55"
                       }`}
                     >
                       {formatDate(invoice.due_at)}

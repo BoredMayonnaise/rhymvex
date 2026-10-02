@@ -40,7 +40,7 @@ export default async function PortalProfilePage() {
               {profile?.last_login_at ? relativeTime(profile.last_login_at) : "This is your first session"}
             </Field>
           </dl>
-          <p className="mt-3 text-[11px] leading-relaxed text-rhymvex-white/30">
+          <p className="mt-3 text-[11px] leading-relaxed text-rhymvex-white/50">
             Your email address is what we use to send your confirmations and project updates. To
             change it, ask your Rhymvex contact.
           </p>

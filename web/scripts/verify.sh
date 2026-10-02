@@ -125,9 +125,16 @@ for f in 'name="name"' 'name="email"' 'name="situation"' 'name="message"'; do
   n=$(printf '%s' "$form" | grep -c -- "$f")
   check "intake form renders $f" "$n" 1
 done
+# A fresh address per run, and the bucket is dropped afterwards. The intake
+# endpoint rate-limits per IP, so a fixed probe address makes this suite
+# unrepeatable: the fifth run in an hour is rejected as spam and the test fails
+# for a reason that has nothing to do with the code. Same approach as the rate
+# limit section of verify-workflow.sh.
+PROBE_IP="198.51.100.$(( (RANDOM % 200) + 20 ))"
 live=$(timeout 25 curl -s -X POST "$BASE/api/intake" -H 'Content-Type: application/json' \
-  -H "X-Forwarded-For: 198.51.100.200" \
+  -H "X-Forwarded-For: $PROBE_IP" \
   -d "{\"name\":\"Verify Probe\",\"email\":\"verify@probe.test\",\"situation\":\"Something specific\",\"message\":\"checking the intake endpoint end to end\",\"startedAt\":$(( $(date +%s) * 1000 - 20000 ))}")
+"${PSQL[@]}" "DELETE FROM rate_limit_buckets WHERE bucket_key = 'intake:$PROBE_IP'" >/dev/null 2>&1
 if printf '%s' "$live" | grep -q '"ok":true'; then
   ok "POST /api/intake accepts a real submission"
 else

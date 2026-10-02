@@ -55,7 +55,7 @@ export default async function LeadDetailPage({
       <div>
         <Link
           href="/admin/leads"
-          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/40 transition-colors hover:text-rhymvex-volt"
+          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           All leads
@@ -123,7 +123,7 @@ export default async function LeadDetailPage({
                   </div>
                 ) : null}
               </div>
-              <p className="border-t border-rhymvex-white/7 pt-3 text-[11px] text-rhymvex-white/30">
+              <p className="border-t border-rhymvex-white/7 pt-3 text-[11px] text-rhymvex-white/50">
                 Received {formatDateTime(lead.submitted_at)} · {relativeTime(lead.submitted_at)} ·
                 source {lead.source}
               </p>
@@ -159,7 +159,7 @@ export default async function LeadDetailPage({
                       </span>
                       <time
                         dateTime={new Date(note.created_at).toISOString()}
-                        className="text-[10px] text-rhymvex-white/30"
+                        className="text-[10px] text-rhymvex-white/50"
                       >
                         {relativeTime(note.created_at)}
                       </time>
@@ -192,7 +192,7 @@ export default async function LeadDetailPage({
             <dl className="rv-dl">
               <Field label="Name">
                 <span className="flex items-center gap-1.5">
-                  <User className="size-3 shrink-0 text-rhymvex-white/30" aria-hidden="true" />
+                  <User className="size-3 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                   {lead.name}
                 </span>
               </Field>
@@ -228,7 +228,7 @@ export default async function LeadDetailPage({
                 <div>
                   <p className="text-sm font-medium text-rhymvex-white">{lead.company}</p>
                   {lead.role_title ? (
-                    <p className="mt-0.5 text-xs text-rhymvex-white/45">{lead.role_title}</p>
+                    <p className="mt-0.5 text-xs text-rhymvex-white/55">{lead.role_title}</p>
                   ) : null}
                 </div>
               </div>
@@ -288,13 +288,13 @@ export default async function LeadDetailPage({
                       </span>{" "}
                       {describeAuditAction(entry.action).toLowerCase()}
                     </p>
-                    <p className="mt-0.5 text-[10px] text-rhymvex-white/30">
+                    <p className="mt-0.5 text-[10px] text-rhymvex-white/50">
                       {formatDateTime(entry.occurred_at)}
                       {entry.ip_address ? ` · ${entry.ip_address}` : ""}
                     </p>
                     {Object.keys(entry.metadata ?? {}).length > 0 ? (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[10px] text-rhymvex-white/30 hover:text-rhymvex-volt">
+                        <summary className="cursor-pointer text-[10px] text-rhymvex-white/50 hover:text-rhymvex-volt">
                           Metadata
                         </summary>
                         <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all rounded border border-rhymvex-white/8 bg-rhymvex-black/40 p-2 font-mono text-[10px] text-rhymvex-white/50">

@@ -69,7 +69,7 @@ export default async function SettingsPage() {
                     : "No promise is made. The confirmation says a real person will be in touch, without saying when."}
                 </p>
               </div>
-              <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/35">
+              <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/50">
                 Setting an SLA is a commitment. Leaving it empty is the honest default: the
                 success screen will not invent a timeframe the team has not agreed to.
               </p>
@@ -95,7 +95,7 @@ export default async function SettingsPage() {
                 {process.env.INTERNAL_NOTIFICATION_EMAIL ?? settings.notification_email}
               </dd>
             </dl>
-            <p className="mt-3 text-[11px] leading-relaxed text-rhymvex-white/30">
+            <p className="mt-3 text-[11px] leading-relaxed text-rhymvex-white/50">
               Secrets are read from the environment only. SMTP_PASSWORD and SESSION_SECRET are
               never written to the database or displayed here.
             </p>
@@ -104,7 +104,7 @@ export default async function SettingsPage() {
       </div>
 
       <Panel title="Email outbox" flush>
-        <p className="border-b border-rhymvex-white/5 px-4 py-2 text-[11px] text-rhymvex-white/35">
+        <p className="border-b border-rhymvex-white/5 px-4 py-2 text-[11px] text-rhymvex-white/50">
           Every message the platform produced, whether delivered or written to the outbox because
           SMTP is unconfigured.
         </p>
@@ -121,7 +121,7 @@ export default async function SettingsPage() {
                   <span className="block truncate text-xs text-rhymvex-white/75">
                     {email.subject}
                   </span>
-                  <span className="block truncate text-[10px] text-rhymvex-white/30">
+                  <span className="block truncate text-[10px] text-rhymvex-white/50">
                     {humanise(email.kind)} → {email.to_address}
                   </span>
                 </span>
@@ -134,13 +134,13 @@ export default async function SettingsPage() {
                       ? "border-rhymvex-ember/40 text-rhymvex-ember"
                       : email.delivery === "sent"
                         ? "border-rhymvex-volt/35 text-rhymvex-volt"
-                        : "border-rhymvex-white/15 text-rhymvex-white/40"
+                        : "border-rhymvex-white/15 text-rhymvex-white/50"
                   }`}
                 >
                   {email.delivery === "dev" ? "outbox only" : email.delivery}
                 </span>
                 <span
-                  className="shrink-0 text-[10px] text-rhymvex-white/25"
+                  className="shrink-0 text-[10px] text-rhymvex-white/50"
                   title={formatDateTime(email.created_at)}
                 >
                   {relativeTime(email.created_at)}

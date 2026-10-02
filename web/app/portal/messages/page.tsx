@@ -51,7 +51,7 @@ export default async function PortalMessagesPage() {
                         className={`rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${
                           fromStaff
                             ? "border-rhymvex-volt/40 text-rhymvex-volt"
-                            : "border-rhymvex-white/15 text-rhymvex-white/45"
+                            : "border-rhymvex-white/15 text-rhymvex-white/55"
                         }`}
                       >
                         {fromStaff ? "Rhymvex" : "You"}
@@ -67,7 +67,7 @@ export default async function PortalMessagesPage() {
                     </div>
                     <time
                       dateTime={new Date(message.created_at).toISOString()}
-                      className="text-[10px] text-rhymvex-white/30"
+                      className="text-[10px] text-rhymvex-white/50"
                       title={formatDateTime(message.created_at)}
                     >
                       {relativeTime(message.created_at)}
@@ -76,7 +76,7 @@ export default async function PortalMessagesPage() {
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-rhymvex-white/70">
                     {message.body}
                   </p>
-                  <p className="mt-1.5 text-[10px] text-rhymvex-white/25">
+                  <p className="mt-1.5 text-[10px] text-rhymvex-white/50">
                     {message.from_staff ?? message.from_client}
                   </p>
                 </li>

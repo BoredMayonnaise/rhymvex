@@ -62,7 +62,7 @@ export default async function ClientsPage() {
                       >
                         {client.name}
                       </Link>
-                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/30">
+                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/50">
                         {client.reference}
                         {client.industry ? ` · ${client.industry}` : ""}
                       </p>
@@ -81,7 +81,7 @@ export default async function ClientsPage() {
                     </td>
                     <td className="rv-table-num text-right text-rhymvex-white/70">
                       {client.portal_users || (
-                        <span className="text-rhymvex-white/25">none</span>
+                        <span className="text-rhymvex-white/50">none</span>
                       )}
                     </td>
                     <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
@@ -89,7 +89,7 @@ export default async function ClientsPage() {
                         ? formatMoney(client.outstanding, settings.currency)
                         : "—"}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(client.created_at)}
                     </td>
                     <td className="text-right">

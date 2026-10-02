@@ -76,7 +76,7 @@ export default async function ReportsPage() {
                     <span className="rv-meter-track">
                       <span className="rv-meter-fill" style={{ width: `${Math.max(2, width)}%` }} />
                     </span>
-                    <span className="rv-table-num text-right text-rhymvex-white/40">{row.count}</span>
+                    <span className="rv-table-num text-right text-rhymvex-white/50">{row.count}</span>
                   </div>
                 );
               })}

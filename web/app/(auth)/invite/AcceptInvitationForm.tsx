@@ -158,7 +158,7 @@ export function AcceptInvitationForm({
           {errors?.password ? (
             <p className="rv-error">{errors.password}</p>
           ) : (
-            <p id="password-help" className="mt-1.5 text-xs text-rhymvex-white/35">
+            <p id="password-help" className="mt-1.5 text-xs text-rhymvex-white/50">
               At least 10 characters, with an uppercase letter, a lowercase letter and a number.
             </p>
           )}

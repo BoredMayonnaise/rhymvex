@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import IntakeView from "@/components/intake/IntakeView";
 import { preferredCurrency } from "@/lib/currency-preference";
+import { intakeAlternates } from "@/lib/locales";
+import { SITE_ORIGIN } from "@/lib/services";
 
 /**
  * Root intake metadata. Europe, as it has always been, and the currency follows
@@ -14,6 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       "Tell us the situation and we'll understand it before recommending anything. No package required, no sales call to get a sales call.",
     robots: { index: true, follow: true },
+    alternates: {
+      canonical: "/intake",
+      languages: intakeAlternates(SITE_ORIGIN),
+    },
     other: { "price:currency": currency.code } as Record<string, string>,
   };
 }

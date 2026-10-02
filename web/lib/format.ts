@@ -99,11 +99,24 @@ export function formatMoney(
   if (amount === null || amount === undefined) return "—";
   const value = typeof amount === "string" ? Number(amount) : amount;
   if (!Number.isFinite(value)) return "—";
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
-  }).format(value);
+
+  // A malformed currency code makes `Intl` throw a RangeError, and this function
+  // is called from every page that shows money. Relying on validation alone
+  // would leave any value that predates the constraint, or arrives via a restored
+  // backup, able to 500 a page that has nothing wrong with it. Degrade to the
+  // same em dash used for other unrenderable values rather than inventing a
+  // currency: on an accounting or invoice screen a wrong symbol is worse than a
+  // missing one. `settingsSchema` and the `org_settings_currency_known` check
+  // constraint are what actually keep the stored value valid.
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+    }).format(value);
+  } catch {
+    return "—";
+  }
 }
 
 /* -------------------------------------------------------------------------- */

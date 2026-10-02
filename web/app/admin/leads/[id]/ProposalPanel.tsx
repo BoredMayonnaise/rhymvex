@@ -36,14 +36,14 @@ export function ProposalPanel({
                       href={`/admin/proposals/${proposal.id}`}
                       className="flex items-center gap-1.5 text-xs font-semibold text-rhymvex-white hover:text-rhymvex-volt"
                     >
-                      <FileText className="size-3.5 shrink-0 text-rhymvex-white/35" aria-hidden="true" />
+                      <FileText className="size-3.5 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                       {proposal.title}
                     </Link>
-                    <p className="mt-1 font-mono text-[10px] text-rhymvex-white/30">
+                    <p className="mt-1 font-mono text-[10px] text-rhymvex-white/50">
                       {proposal.reference}
                       {proposal.model ? ` · ${humanise(proposal.model)}` : ""}
                     </p>
-                    <p className="mt-1 text-[11px] text-rhymvex-white/35">
+                    <p className="mt-1 text-[11px] text-rhymvex-white/50">
                       {proposal.sent_at
                         ? `Sent ${formatDate(proposal.sent_at)}`
                         : `Drafted ${relativeTime(proposal.created_at)}`}

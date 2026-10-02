@@ -67,7 +67,7 @@ export default async function ProposalDetailPage({
       <div>
         <Link
           href="/admin/proposals"
-          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/40 transition-colors hover:text-rhymvex-volt"
+          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           All proposals
@@ -222,7 +222,7 @@ export default async function ProposalDetailPage({
                       </span>{" "}
                       {describeAuditAction(entry.action).toLowerCase()}
                     </p>
-                    <p className="text-[10px] text-rhymvex-white/25">
+                    <p className="text-[10px] text-rhymvex-white/50">
                       {formatDateTime(entry.occurred_at)}
                     </p>
                   </li>

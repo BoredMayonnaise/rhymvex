@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import { envInt } from "@/lib/env";
 
@@ -88,6 +89,64 @@ export async function checkIntakeRateLimit(ip: string | null): Promise<RateLimit
   // Scope by IP. An absent IP falls back to a shared bucket rather than
   // bypassing the limit entirely.
   return consumeRateLimit(`intake:${ip ?? "unknown"}`, limit, window);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sign-in throttling                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The wording shown for every throttled attempt, wherever it came from.
+ *
+ * Deliberately identical to the bad-credentials message and to the message a
+ * never-existed account gets. A distinct "too many attempts" only on real
+ * accounts would turn the limit back into an account-enumeration oracle, which
+ * would undo the point of `fakeVerifyDelay`.
+ */
+export const SIGN_IN_THROTTLED_MESSAGE =
+  "Too many attempts. Wait a few minutes and try again.";
+
+/**
+ * Throttle the attempt itself, by IP.
+ *
+ * Consumed on every attempt, successful or not, which is what caps how many
+ * password hashes an attacker can make the server compute. The budget is
+ * deliberately loose: this bucket is aimed at credential spraying across many
+ * accounts from one address, and a shared office or a NAT'd network can put
+ * several real people behind one IP. `signInFailureBudget` is the tighter limit.
+ */
+export async function consumeSignInAttempt(
+  scope: "staff" | "client",
+  ip: string | null,
+): Promise<RateLimitResult> {
+  const limit = envInt("SIGN_IN_IP_LIMIT", 20);
+  const window = envInt("SIGN_IN_WINDOW_SECONDS", 900);
+  return consumeRateLimit(`signin:${scope}:ip:${ip ?? "unknown"}`, limit, window);
+}
+
+/**
+ * Throttle repeated failures against one account, whatever the source address.
+ *
+ * This is the bucket that actually stops guessing, because it is keyed on the
+ * account rather than the caller, so rotating IPs does not reset it. The email
+ * is hashed rather than stored in the bucket key: the key is a durable row, and
+ * a password-reset flow should not have to treat the rate-limit table as another
+ * place holding addresses in the clear.
+ *
+ * Only consumed on failure, so a real user signing in repeatedly is never locked
+ * out by their own successful logins.
+ */
+export async function consumeSignInFailure(
+  scope: "staff" | "client",
+  email: string,
+): Promise<RateLimitResult> {
+  const limit = envInt("SIGN_IN_ACCOUNT_LIMIT", 5);
+  const window = envInt("SIGN_IN_WINDOW_SECONDS", 900);
+  const digest = createHash("sha256")
+    .update(`${scope}:${email.trim().toLowerCase()}`)
+    .digest("hex")
+    .slice(0, 32);
+  return consumeRateLimit(`signin:${scope}:account:${digest}`, limit, window);
 }
 
 /** Drop windows that are long past, so the table does not grow forever. */

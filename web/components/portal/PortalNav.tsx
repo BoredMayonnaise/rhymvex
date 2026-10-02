@@ -80,7 +80,7 @@ export function PortalNav({
             <span className="font-display text-sm font-bold tracking-tight text-rhymvex-white">
               {clientName}
             </span>
-            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/30">
+            <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
               Client portal
             </span>
           </span>
@@ -121,13 +121,13 @@ export function PortalNav({
 
       <div className="mx-4 mt-2 rounded-lg border border-rhymvex-white/8 p-3">
         <p className="truncate text-xs font-semibold text-rhymvex-white">{userName}</p>
-        <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-rhymvex-white/35">
+        <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-rhymvex-white/50">
           Client
         </p>
         <form action={signOutAction} className="mt-2.5">
           <button
             type="submit"
-            className="flex items-center gap-1.5 text-[11px] text-rhymvex-white/45 transition-colors hover:text-rhymvex-volt"
+            className="flex items-center gap-1.5 text-[11px] text-rhymvex-white/55 transition-colors hover:text-rhymvex-volt"
           >
             <LogOut className="size-3" aria-hidden="true" />
             Sign out

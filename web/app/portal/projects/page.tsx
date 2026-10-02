@@ -46,7 +46,7 @@ export default async function PortalProjectsPage() {
                   <h2 className="font-display text-base font-bold text-rhymvex-white">
                     {project.name}
                   </h2>
-                  <p className="mt-0.5 text-[11px] text-rhymvex-white/35">
+                  <p className="mt-0.5 text-[11px] text-rhymvex-white/50">
                     {project.phase ?? humanise(project.status)}
                     {project.target_date ? ` · target ${formatDate(project.target_date)}` : ""}
                   </p>
@@ -65,7 +65,7 @@ export default async function PortalProjectsPage() {
 
               <div className="mt-auto pt-4">
                 <div className="mb-1.5 flex items-center justify-between text-[11px]">
-                  <span className="text-rhymvex-white/35">Progress</span>
+                  <span className="text-rhymvex-white/50">Progress</span>
                   <span className="rv-table-num text-rhymvex-volt">{project.progress}%</span>
                 </div>
                 <Track percent={project.progress} label={`${project.name} progress`} />

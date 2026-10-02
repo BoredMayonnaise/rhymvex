@@ -34,7 +34,7 @@ export default async function PortalProjectPage({
       <div>
         <Link
           href="/portal/projects"
-          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/40 transition-colors hover:text-rhymvex-volt"
+          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           All projects
@@ -68,7 +68,7 @@ export default async function PortalProjectPage({
             <div className="flex flex-col gap-4">
               <div>
                 <div className="mb-2 flex items-center justify-between text-xs">
-                  <span className="text-rhymvex-white/45">Overall</span>
+                  <span className="text-rhymvex-white/55">Overall</span>
                   <span className="rv-table-num text-rhymvex-volt">{project.progress}%</span>
                 </div>
                 <Track percent={project.progress} label={`${project.name} progress`} />
@@ -92,7 +92,7 @@ export default async function PortalProjectPage({
                                 ? "border-rhymvex-volt bg-rhymvex-volt text-rhymvex-black"
                                 : isNext
                                   ? "border-rhymvex-volt text-rhymvex-volt"
-                                  : "border-rhymvex-white/15 text-rhymvex-white/30"
+                                  : "border-rhymvex-white/15 text-rhymvex-white/50"
                             }`}
                           >
                             {complete ? <Check className="size-3" strokeWidth={3} /> : index + 1}
@@ -126,7 +126,7 @@ export default async function PortalProjectPage({
                             </p>
                           ) : null}
                           {complete && milestone.completed_at ? (
-                            <p className="mt-1 text-[10px] text-rhymvex-white/30">
+                            <p className="mt-1 text-[10px] text-rhymvex-white/50">
                               Completed {formatDate(milestone.completed_at)}
                             </p>
                           ) : null}

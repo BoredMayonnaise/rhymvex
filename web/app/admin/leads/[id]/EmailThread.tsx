@@ -77,13 +77,13 @@ export function EmailThread({
                       </span>
                     ) : null}
                     <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
-                    <span className="text-[10px] text-rhymvex-white/30" title={formatDateTime(email.created_at)}>
+                    <span className="text-[10px] text-rhymvex-white/50" title={formatDateTime(email.created_at)}>
                       {relativeTime(email.created_at)}
                     </span>
-                    <ChevronDown className="size-3.5 shrink-0 text-rhymvex-white/25" aria-hidden="true" />
+                    <ChevronDown className="size-3.5 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                   </summary>
                   <div className="border-t border-rhymvex-white/8 px-3.5 py-3">
-                    <p className="mb-2 text-[11px] text-rhymvex-white/40">
+                    <p className="mb-2 text-[11px] text-rhymvex-white/50">
                       From {email.from_address} · To {email.to_addresses.join(", ")}
                       {email.cc_addresses.length ? ` · Cc ${email.cc_addresses.join(", ")}` : ""}
                     </p>
@@ -166,7 +166,7 @@ function Compose({
           </p>
         ) : null}
         {state?.ok ? (
-          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white">
+          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white">
             Close
           </button>
         ) : null}

@@ -83,7 +83,7 @@ export default async function ClientDetailPage({
       <div>
         <Link
           href="/admin/clients"
-          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/40 transition-colors hover:text-rhymvex-volt"
+          className="inline-flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           All clients
@@ -165,7 +165,7 @@ export default async function ClientDetailPage({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-rhymvex-white">{engagement.name}</p>
-                        <p className="mt-0.5 text-xs text-rhymvex-white/45">
+                        <p className="mt-0.5 text-xs text-rhymvex-white/55">
                           {humanise(engagement.model)}
                           {engagement.billing_cycle ? ` · ${humanise(engagement.billing_cycle)}` : ""}
                         </p>
@@ -200,7 +200,7 @@ export default async function ClientDetailPage({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-rhymvex-white">{project.name}</p>
-                        <p className="mt-0.5 text-xs text-rhymvex-white/45">
+                        <p className="mt-0.5 text-xs text-rhymvex-white/55">
                           {project.phase ?? humanise(project.status)}
                           {project.lead_staff_name ? ` · ${project.lead_staff_name}` : ""}
                           {project.target_date ? ` · target ${formatDate(project.target_date)}` : ""}
@@ -327,7 +327,7 @@ export default async function ClientDetailPage({
                         <td className="rv-table-num text-right text-rhymvex-white/55">
                           {formatMoney(invoice.amount_paid, invoice.currency || settings.currency)}
                         </td>
-                        <td className="whitespace-nowrap text-rhymvex-white/45">
+                        <td className="whitespace-nowrap text-rhymvex-white/55">
                           {formatDate(invoice.due_at)}
                         </td>
                       </tr>
@@ -351,7 +351,7 @@ export default async function ClientDetailPage({
                     >
                       <div className="min-w-0">
                         <p className="truncate text-xs text-rhymvex-white/75">{file.name}</p>
-                        <p className="text-[10px] text-rhymvex-white/30">
+                        <p className="text-[10px] text-rhymvex-white/50">
                           {file.uploader_name ?? "Rhymvex"} · {relativeTime(file.uploaded_at)}
                           {file.project_name ? ` · ${file.project_name}` : ""}
                         </p>
@@ -360,7 +360,7 @@ export default async function ClientDetailPage({
                         className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] ${
                           file.client_visible
                             ? "border-rhymvex-volt/30 text-rhymvex-volt"
-                            : "border-rhymvex-white/15 text-rhymvex-white/35"
+                            : "border-rhymvex-white/15 text-rhymvex-white/50"
                         }`}
                       >
                         {file.client_visible ? "Shared" : "Internal"}
@@ -384,10 +384,10 @@ export default async function ClientDetailPage({
                       <p className="truncate text-xs font-medium text-rhymvex-white">
                         {message.subject || "(no subject)"}
                       </p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] text-rhymvex-white/40">
+                      <p className="mt-0.5 line-clamp-2 text-[11px] text-rhymvex-white/50">
                         {message.body}
                       </p>
-                      <p className="mt-1 text-[10px] text-rhymvex-white/25">
+                      <p className="mt-1 text-[10px] text-rhymvex-white/50">
                         {message.from_staff ?? message.from_client} ·{" "}
                         {relativeTime(message.created_at)}
                       </p>
@@ -421,7 +421,7 @@ export default async function ClientDetailPage({
                       </span>
                     ) : null}
                     <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
-                    <span className="text-[10px] text-rhymvex-white/25">
+                    <span className="text-[10px] text-rhymvex-white/50">
                       {relativeTime(email.created_at)}
                     </span>
                   </li>
@@ -491,9 +491,9 @@ export default async function ClientDetailPage({
                         </span>
                       ) : null}
                     </p>
-                    <p className="truncate text-[11px] text-rhymvex-white/40">{contact.email}</p>
+                    <p className="truncate text-[11px] text-rhymvex-white/50">{contact.email}</p>
                     {contact.role_title ? (
-                      <p className="text-[11px] text-rhymvex-white/30">{contact.role_title}</p>
+                      <p className="text-[11px] text-rhymvex-white/50">{contact.role_title}</p>
                     ) : null}
                   </li>
                 ))}
@@ -513,8 +513,8 @@ export default async function ClientDetailPage({
                   >
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-rhymvex-white">{user.name}</p>
-                      <p className="truncate text-[11px] text-rhymvex-white/40">{user.email}</p>
-                      <p className="text-[10px] text-rhymvex-white/25">
+                      <p className="truncate text-[11px] text-rhymvex-white/50">{user.email}</p>
+                      <p className="text-[10px] text-rhymvex-white/50">
                         {user.last_login_at
                           ? `last in ${relativeTime(user.last_login_at)}`
                           : `invited ${formatDate(user.created_at)}`}
@@ -542,9 +542,9 @@ export default async function ClientDetailPage({
                   >
                     <p className="text-xs text-rhymvex-white/75">{item.title}</p>
                     {item.detail ? (
-                      <p className="text-[11px] text-rhymvex-white/40">{item.detail}</p>
+                      <p className="text-[11px] text-rhymvex-white/50">{item.detail}</p>
                     ) : null}
-                    <p className="text-[10px] text-rhymvex-white/25">
+                    <p className="text-[10px] text-rhymvex-white/50">
                       {formatDateTime(item.occurred_at)}
                     </p>
                   </li>
@@ -569,7 +569,7 @@ export default async function ClientDetailPage({
                       </span>{" "}
                       {describeAuditAction(entry.action).toLowerCase()}
                     </p>
-                    <p className="text-[10px] text-rhymvex-white/25">
+                    <p className="text-[10px] text-rhymvex-white/50">
                       {formatDateTime(entry.occurred_at)}
                     </p>
                   </li>

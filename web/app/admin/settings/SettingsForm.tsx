@@ -85,7 +85,7 @@ export function SettingsForm({
               aria-describedby="notify-help"
               className="rv-input"
             />
-            <p id="notify-help" className="mt-1 text-[10px] text-rhymvex-white/30">
+            <p id="notify-help" className="mt-1 text-[10px] text-rhymvex-white/50">
               New-lead alerts and the workspace link are only ever sent here.
             </p>
             {fields?.notification_email ? (
@@ -118,7 +118,7 @@ export function SettingsForm({
               aria-describedby="sla-help"
               className="rv-input"
             />
-            <p id="sla-help" className="mt-1 text-[10px] text-rhymvex-white/30">
+            <p id="sla-help" className="mt-1 text-[10px] text-rhymvex-white/50">
               {slaMinutes
                 ? "Clients are told a person replies within this window."
                 : "Empty: the confirmation makes no response-time promise."}

@@ -58,7 +58,7 @@ export default async function DeniedPage({
       </div>
 
       <div className="mt-6 rounded-lg border border-rhymvex-white/8 bg-rhymvex-slate/30 p-4">
-        <p className="m-0 text-xs leading-relaxed text-rhymvex-white/45">
+        <p className="m-0 text-xs leading-relaxed text-rhymvex-white/55">
           This is a deliberate boundary, not a broken page. Roles are enforced on the server for
           every action, so a link being visible would not have gained you anything.
           {permission ? (
@@ -70,7 +70,7 @@ export default async function DeniedPage({
           ) : null}
         </p>
         {role ? (
-          <p className="mt-2.5 mb-0 text-xs leading-relaxed text-rhymvex-white/45">
+          <p className="mt-2.5 mb-0 text-xs leading-relaxed text-rhymvex-white/55">
             If you need this as part of your work, ask an administrator to change your role in{" "}
             <span className="text-rhymvex-white/65">Staff &amp; Access</span>.
           </p>
@@ -80,7 +80,7 @@ export default async function DeniedPage({
       <div className="mt-6">
         <p className="rv-panel-title mb-2">Where you can go</p>
         {reachable.length === 0 ? (
-          <p className="m-0 text-xs text-rhymvex-white/40">
+          <p className="m-0 text-xs text-rhymvex-white/50">
             Your role has no sections open yet. An administrator needs to update your access.
           </p>
         ) : (
@@ -89,7 +89,7 @@ export default async function DeniedPage({
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="inline-block rounded-full border border-rhymvex-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-rhymvex-white/45 transition-colors hover:border-rhymvex-volt/45 hover:text-rhymvex-volt"
+                  className="inline-block rounded-full border border-rhymvex-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-rhymvex-white/55 transition-colors hover:border-rhymvex-volt/45 hover:text-rhymvex-volt"
                 >
                   {item.label}
                 </Link>
@@ -101,7 +101,7 @@ export default async function DeniedPage({
 
       <Link
         href="/admin"
-        className="mt-6 inline-flex items-center gap-1.5 self-start text-xs text-rhymvex-white/45 transition-colors hover:text-rhymvex-volt"
+        className="mt-6 inline-flex items-center gap-1.5 self-start text-xs text-rhymvex-white/55 transition-colors hover:text-rhymvex-volt"
       >
         <ArrowLeft className="size-3.5" aria-hidden="true" />
         Back to a page you can open

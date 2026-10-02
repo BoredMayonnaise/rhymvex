@@ -66,7 +66,7 @@ export function Pillars() {
               />
               <TempoMark
                 note={pillar.note}
-                className="size-4 text-rhymvex-white/40"
+                className="size-4 text-rhymvex-white/50"
               />
             </div>
             <h3 className="text-display-3">{pillar.title}</h3>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import {
@@ -10,6 +11,7 @@ import {
   hrefForLocale,
   isLocalizedPath,
   localeFromPathname,
+  rememberLocale,
   type LocaleCode,
 } from "@/lib/locales";
 import { getTranslator } from "@/lib/i18n";
@@ -48,9 +50,12 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
   // visitor is not on.
   const current = localized ? localeFromPathname(pathname) : DEFAULT_LOCALE;
   const t = getTranslator(current);
+  // Drives the confirmation line under the control. Kept as state rather than
+  // derived from the URL so the message survives the navigation it describes.
+  const [announced, setAnnounced] = useState<string | null>(null);
 
   return (
-    <label className={`flex items-center gap-2 text-xs text-rhymvex-white/45 ${className}`}>
+    <label className={`flex items-center gap-2 text-xs text-rhymvex-white/55 ${className}`}>
       <Globe className="size-3.5 shrink-0" aria-hidden="true" />
       <span className="sr-only">{t("nav.markets")}</span>
       <select
@@ -60,9 +65,22 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
         onChange={(event) => {
           const next = event.target.value as LocaleCode;
           if (next === current) return;
+          // Recorded before navigating. The URL change is what switches the page;
+          // this is what tells `proxy.ts` the visitor has decided, so detection
+          // does not undo the choice the moment they return to `/`.
+          rememberLocale(next);
+          setAnnounced(
+            `${LOCALES[next].language} · ${LOCALES[next].label}`,
+          );
           router.push(hrefForLocale(pathname, next));
         }}
-        className="rv-select cursor-pointer border-0 bg-transparent py-1 pe-6 ps-0 text-xs text-rhymvex-white/70 hover:text-rhymvex-white focus:text-rhymvex-white"
+        // `border-0 bg-transparent` are utilities, so they win over the
+        // `.rv-select:focus` border and fill and leave nothing to see. The
+        // focus ring is therefore restated here as a focus-visible utility,
+        // which lands in @layer utilities and is not defeated by the component
+        // layer. Without it these are the only two controls on every page and
+        // neither shows where the keyboard is.
+        className="rv-select cursor-pointer border-0 bg-transparent py-1 pe-6 ps-0 text-xs text-rhymvex-white/75 hover:text-rhymvex-white focus-visible:text-rhymvex-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rhymvex-volt"
       >
         {LOCALE_CODES.map((code) => (
           <option key={code} value={code}>
@@ -72,6 +90,15 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
           </option>
         ))}
       </select>
+
+      {/* The confirmation a sighted visitor gets from the page visibly changing
+          language, restated for anyone who does not get that cue. `aria-live`
+          on a region that is always in the DOM and only has its text swapped,
+          because a live region mounted together with its content does not
+          announce. */}
+      <span aria-live="polite" className="sr-only">
+        {announced ?? ""}
+      </span>
     </label>
   );
 }

@@ -101,7 +101,7 @@ export function LeadCaptureForm({
                 className={
                   step.done
                     ? "text-sm font-medium text-rhymvex-white"
-                    : "text-sm text-rhymvex-white/45"
+                    : "text-sm text-rhymvex-white/55"
                 }
               >
                 {step.label}
@@ -117,13 +117,13 @@ export function LeadCaptureForm({
             Check your email for a confirmation.
           </p>
           {reference ? (
-            <p className="m-0 font-mono text-xs text-rhymvex-white/30">Reference {reference}</p>
+            <p className="m-0 font-mono text-xs text-rhymvex-white/50">Reference {reference}</p>
           ) : null}
           {onComplete ? (
             <button
               type="button"
               onClick={onComplete}
-              className="self-start text-xs text-rhymvex-white/35 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
+              className="self-start text-xs text-rhymvex-white/50 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
             >
               Close
             </button>
@@ -233,7 +233,7 @@ export function LeadCaptureForm({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 text-xs leading-relaxed text-rhymvex-white/35">
+        <p className="m-0 text-xs leading-relaxed text-rhymvex-white/50">
           We&rsquo;ll email you to confirm we received this.
         </p>
         <button

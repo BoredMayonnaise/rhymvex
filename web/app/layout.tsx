@@ -5,12 +5,9 @@ import { RvMark } from "@/components/RvMark";
 import { LeadCaptureProvider } from "@/components/lead/LeadCaptureProvider";
 import { RvWordmark } from "@/components/RvWordmark";
 import { WaveformRhythm } from "@/components/WaveformRhythm";
-import { enquiryUrl, CONTACT_EMAIL } from "@/lib/services";
+import { enquiryUrl, CONTACT_EMAIL, SITE_ORIGIN } from "@/lib/services";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { CurrencySwitcher } from "@/components/CurrencySwitcher";
-import { localeCurrency } from "@/lib/currency-preference";
 import { getTranslator } from "@/lib/i18n";
-import { DEFAULT_LOCALE } from "@/lib/locales";
 import "./globals.css";
 
 const inter = Inter({
@@ -25,7 +22,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rhymvex.com";
+const SITE_URL = SITE_ORIGIN;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -59,8 +56,18 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Rhymvex — Build with rhythm.",
     description: "Brand and product agency. We build the system behind your brand, then hand it over.",
+    // `opengraph-image.png` is picked up automatically for og:image, but Twitter
+    // does not read that. Without an explicit image the card silently degrades
+    // from a large image to a bare text card, which is the most-shared surface
+    // the brand has.
+    images: ["/opengraph-image.png"],
   },
-  alternates: { canonical: "/" },
+  // No blanket `alternates.canonical` here. This layout wraps every route
+  // including the workspaces, so a canonical of "/" was being inherited by all
+  // 31 admin and portal pages, telling a crawler the client portal is a
+  // duplicate of the home page. Each public page states its own canonical and
+  // its own hreflang set; pages with no canonical are self-canonical by default,
+  // which is correct for the noindex ones.
   robots: { index: true, follow: true },
 };
 
@@ -74,12 +81,6 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const year = new Date().getFullYear();
   const t = getTranslator();
-  // The footer's currency switch needs a currency to start on. This is the
-  // default locale's, not the visitor's: the root layout is shared by every
-  // route including the workspaces, so it cannot read the preference without
-  // making all of them dynamic. The control corrects itself on the pages that
-  // read the cookie, which is where money is actually shown.
-  const currency = localeCurrency();
 
   return (
     // suppressHydrationWarning: the inline script below adds "rv-js" to <html>
@@ -146,7 +147,7 @@ export default function RootLayout({
               </div>
 
               <div className="shrink-0">
-                <p className="text-xs text-rhymvex-white/40">{t("footer.newProjects")}</p>
+                <p className="text-xs text-rhymvex-white/50">{t("footer.newProjects")}</p>
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
                   className="mt-2 block break-words font-display text-lg text-rhymvex-volt transition-colors duration-200 hover:text-rhymvex-white sm:text-xl"
@@ -163,12 +164,18 @@ export default function RootLayout({
             </div>
 
             {/* Legal rail */}
-            <div className="mt-12 flex flex-col items-start gap-4 border-t border-rhymvex-white/10 pt-6 text-xs text-rhymvex-white/40 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-12 flex flex-col items-start gap-4 border-t border-rhymvex-white/10 pt-6 text-xs text-rhymvex-white/50 sm:flex-row sm:items-center sm:justify-between">
               <p>© {year} Rhymvex. All rights reserved.</p>
               <div className="flex flex-wrap items-center gap-5">
-                <CurrencySwitcher currency={currency.code} locale={DEFAULT_LOCALE} />
+                {/* Language only, no currency control. The currency preference is
+                    detected on arrival and it only changes figures on the intake
+                    page, which carries its own switcher in its own header. This
+                    footer is on every route including the home pages, where there
+                    are no figures at all, so a currency switch here would repaint
+                    the page and alter nothing — which reads as broken rather than
+                    as unnecessary. */}
                 <LocaleSwitcher />
-              <p className="hidden sm:block">{t("footer.systemsYouCanRun")}</p>
+                <p className="hidden sm:block">{t("footer.systemsYouCanRun")}</p>
                 <a
                   href="#main"
                   className="inline-flex items-center gap-1.5 transition-colors duration-200 hover:text-rhymvex-volt"

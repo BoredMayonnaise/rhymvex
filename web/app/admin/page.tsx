@@ -116,14 +116,14 @@ export default async function AdminOverviewPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rv-eyebrow">New lead</span>
-                          <span className="text-[11px] text-rhymvex-white/30">
+                          <span className="text-[11px] text-rhymvex-white/50">
                             {relativeTime(lead.submitted_at)}
                           </span>
                         </div>
                         <p className="mt-1.5 text-sm font-semibold text-rhymvex-white">
                           {lead.name}
                         </p>
-                        <p className="text-xs text-rhymvex-white/45">
+                        <p className="text-xs text-rhymvex-white/55">
                           {lead.company ?? "No company given"}
                         </p>
                         <p className="mt-1.5 text-xs text-rhymvex-white/55">{lead.situation}</p>
@@ -157,7 +157,7 @@ export default async function AdminOverviewPage() {
                           style={{ width: `${Math.max(3, (row.value / pipelineMax) * 100)}%` }}
                         />
                       </span>
-                      <span className="rv-table-num text-right text-rhymvex-white/40">
+                      <span className="rv-table-num text-right text-rhymvex-white/50">
                         {row.count}
                       </span>
                     </div>
@@ -193,7 +193,7 @@ export default async function AdminOverviewPage() {
                           style={{ width: `${Math.min(100, owner.active * 22)}%` }}
                         />
                       </span>
-                      <span className="rv-table-num text-right text-rhymvex-white/40">
+                      <span className="rv-table-num text-right text-rhymvex-white/50">
                         {owner.active}
                       </span>
                     </div>
@@ -231,7 +231,7 @@ export default async function AdminOverviewPage() {
                           <>
                             {" "}
                             ·{" "}
-                            <span className="font-mono text-[11px] text-rhymvex-white/35">
+                            <span className="font-mono text-[11px] text-rhymvex-white/50">
                               {humanise(item.entity_type)} {item.entity_id.slice(0, 8)}
                             </span>
                           </>
@@ -240,7 +240,7 @@ export default async function AdminOverviewPage() {
                     </div>
                     <time
                       dateTime={new Date(item.occurred_at).toISOString()}
-                      className="shrink-0 text-[11px] text-rhymvex-white/30"
+                      className="shrink-0 text-[11px] text-rhymvex-white/50"
                     >
                       {relativeTime(item.occurred_at)}
                     </time>
@@ -271,12 +271,12 @@ export default async function AdminOverviewPage() {
                         <span className="block truncate text-xs font-medium text-rhymvex-white">
                           {item.title}
                         </span>
-                        <span className="block truncate text-[11px] text-rhymvex-white/40">
+                        <span className="block truncate text-[11px] text-rhymvex-white/50">
                           {item.meta}
                         </span>
                       </span>
                       {item.when ? (
-                        <span className="shrink-0 text-[10px] text-rhymvex-white/30">
+                        <span className="shrink-0 text-[10px] text-rhymvex-white/50">
                           {untilTime(item.when)}
                         </span>
                       ) : null}
@@ -302,7 +302,7 @@ export default async function AdminOverviewPage() {
                         <p className="truncate text-xs font-medium text-rhymvex-white">
                           {booking.title}
                         </p>
-                        <p className="mt-0.5 truncate text-[11px] text-rhymvex-white/40">
+                        <p className="mt-0.5 truncate text-[11px] text-rhymvex-white/50">
                           {booking.client_name ?? booking.lead_name ?? "Internal"} ·{" "}
                           {booking.duration_mins} min
                           {booking.host_name ? ` · ${booking.host_name}` : ""}
@@ -333,15 +333,15 @@ export default async function AdminOverviewPage() {
           <Panel title="Reference">
             <dl className="flex flex-col gap-2.5 text-xs">
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-rhymvex-white/40">Open leads</dt>
+                <dt className="text-rhymvex-white/50">Open leads</dt>
                 <dd className="rv-table-num text-rhymvex-white">{overview.openLeadCount}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-rhymvex-white/40">Active projects</dt>
+                <dt className="text-rhymvex-white/50">Active projects</dt>
                 <dd className="rv-table-num text-rhymvex-white">{overview.activeProjectCount}</dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-rhymvex-white/40">Clients</dt>
+                <dt className="text-rhymvex-white/50">Clients</dt>
                 <dd className="rv-table-num text-rhymvex-white">
                   <Link href="/admin/clients" className="hover:text-rhymvex-volt">
                     view
@@ -349,7 +349,7 @@ export default async function AdminOverviewPage() {
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <dt className="text-rhymvex-white/40">Response SLA</dt>
+                <dt className="text-rhymvex-white/50">Response SLA</dt>
                 <dd className="text-rhymvex-white/70">
                   {settings.response_sla_minutes
                     ? `${settings.response_sla_minutes} min`
@@ -377,7 +377,7 @@ function PulseRow({ label, value, tone }: { label: string; value: number; tone: 
 }
 
 function FocusIcon({ kind }: { kind: string }) {
-  const className = "mt-0.5 size-3.5 shrink-0 text-rhymvex-white/35";
+  const className = "mt-0.5 size-3.5 shrink-0 text-rhymvex-white/50";
   if (kind === "booking") return <CalendarDays className={className} aria-hidden="true" />;
   if (kind === "task") return <CheckCircle2 className={className} aria-hidden="true" />;
   if (kind === "proposal") return <Coins className={className} aria-hidden="true" />;

@@ -44,7 +44,7 @@ export default async function PortalContractsPage() {
                     <span className="block text-sm font-semibold text-rhymvex-white">
                       {contract.title}
                     </span>
-                    <span className="block text-[11px] text-rhymvex-white/35">
+                    <span className="block text-[11px] text-rhymvex-white/50">
                       {contract.reference}
                       {contract.signed_at ? ` · signed ${formatDate(contract.signed_at)}` : ""}
                     </span>

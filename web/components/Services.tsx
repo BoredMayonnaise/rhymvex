@@ -77,7 +77,7 @@ function PackageCard({
       {/* Index, recommendation and tempo mark share one row so every card's
           headline starts on the same line — the grid has to stay calm. */}
       <div className="flex items-center justify-between gap-3">
-        <p className="font-display text-xs text-rhymvex-white/25">{pkg.index}</p>
+        <p className="font-display text-xs text-rhymvex-white/50">{pkg.index}</p>
         <div className="flex items-center gap-2">
           {pkg.featured && (
             <span className="rounded-full border border-rhymvex-volt/30 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-rhymvex-volt">
@@ -111,9 +111,9 @@ function PackageCard({
       {/* What this helps you solve — the substance of the offer. The count is
           inline rather than a flex sibling so it wraps with the label instead of
           orphaning onto its own line on narrow screens. */}
-      <p className="rv-eyebrow mt-7 text-rhymvex-white/40">
+      <p className="rv-eyebrow mt-7 text-rhymvex-white/50">
         What we&rsquo;ll help you solve{" "}
-        <span className="font-normal normal-case tracking-normal text-rhymvex-white/25">
+        <span className="font-normal normal-case tracking-normal text-rhymvex-white/50">
           {pkg.outcomes.filter((o) => o.core).length} included
         </span>
       </p>
@@ -127,7 +127,7 @@ function PackageCard({
               />
             ) : (
               <Plus
-                className="mt-0.5 size-4 shrink-0 text-rhymvex-volt/45"
+                className="mt-0.5 size-4 shrink-0 text-rhymvex-volt/70"
                 aria-hidden="true"
               />
             )}
@@ -135,7 +135,7 @@ function PackageCard({
               className={
                 item.core
                   ? "text-rhymvex-white/65"
-                  : "text-rhymvex-white/40"
+                  : "text-rhymvex-white/50"
               }
             >
               {item.label}
@@ -148,7 +148,7 @@ function PackageCard({
       {/* Facts and actions pinned to the bottom so they align across
           cards of different lengths. */}
       <div className="mt-auto pt-7">
-        <p className="rv-eyebrow text-rhymvex-white/40">Engagement</p>
+        <p className="rv-eyebrow text-rhymvex-white/50">Engagement</p>
         {/* Three-up from sm, stacked below it: at phone widths the cells get
             narrower than the longest term, and a wrapped micro-label is worse
             than a taller block. */}
@@ -162,7 +162,7 @@ function PackageCard({
               key={fact.term}
               className="min-h-[3.5rem] bg-rhymvex-slate/70 px-3 py-2.5"
             >
-              <dt className="text-[9px] font-semibold uppercase tracking-[0.14em] text-rhymvex-white/35">
+              <dt className="text-[9px] font-semibold uppercase tracking-[0.14em] text-rhymvex-white/50">
                 {fact.term}
               </dt>
               <dd className="mt-1 text-[11px] leading-snug text-rhymvex-white/80">
@@ -262,7 +262,7 @@ export function Services({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
               className="border-b border-rhymvex-white/5 pb-4"
             >
               <dt className="text-sm font-medium">{addOn.name}</dt>
-              <dd className="mt-1 text-xs leading-relaxed text-rhymvex-white/45">
+              <dd className="mt-1 text-xs leading-relaxed text-rhymvex-white/55">
                 {addOn.note}
               </dd>
             </div>
@@ -272,7 +272,7 @@ export function Services({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
 
       {/* The phrase again, reversed, as a closing cadence. */}
       <div className="mt-10 flex flex-wrap items-end justify-between gap-8">
-        <p className="max-w-2xl text-sm leading-relaxed text-rhymvex-white/45">
+        <p className="max-w-2xl text-sm leading-relaxed text-rhymvex-white/55">
           {servicesClosing}
         </p>
         <TempoPhrase

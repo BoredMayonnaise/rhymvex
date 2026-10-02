@@ -242,7 +242,7 @@ export function IntakeForm({
         />
       </div>
 
-      <p className="text-xs leading-relaxed text-rhymvex-white/40">
+      <p className="text-xs leading-relaxed text-rhymvex-white/50">
         {t("form.intro")}
       </p>
 
@@ -323,11 +323,11 @@ export function IntakeForm({
             aria-invalid={fields.message ? "true" : undefined}
             aria-describedby={`message-hint${fields.message ? " message-error" : ""}`}
           />
-          <p id="message-hint" className="mt-1.5 text-xs text-rhymvex-white/30">
+          <p id="message-hint" className="mt-1.5 text-xs text-rhymvex-white/50">
             {t("form.messageHint", { n: MIN_MESSAGE_CHARS })}
           </p>
           {initialMessage ? (
-            <p className="mt-2 text-xs text-rhymvex-white/35">
+            <p className="mt-2 text-xs text-rhymvex-white/50">
               {t("form.prefilled")}
             </p>
           ) : null}
@@ -341,7 +341,7 @@ export function IntakeForm({
 
       {/* Who we are talking to. */}
       <fieldset className="flex flex-col gap-4 border-t border-rhymvex-white/8 pt-7">
-        <legend className="rv-eyebrow mb-1 text-rhymvex-white/40">{t("form.aboutYou")}</legend>
+        <legend className="rv-eyebrow mb-1 text-rhymvex-white/50">{t("form.aboutYou")}</legend>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("form.yourName")} name="name" error={fields.name} required autoComplete="name" />
@@ -368,9 +368,9 @@ export function IntakeForm({
           qualification form, which is the opposite of what this page promises.
           Opening it is the visitor saying they want to give us more. */}
       <details className="group border-t border-rhymvex-white/8 pt-7">
-        <summary className="rv-eyebrow -mx-3 flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-rhymvex-white/45 transition-colors duration-200 hover:bg-rhymvex-white/4 hover:text-rhymvex-white [&::-webkit-details-marker]:hidden">
+        <summary className="rv-eyebrow -mx-3 flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-rhymvex-white/55 transition-colors duration-200 hover:bg-rhymvex-white/4 hover:text-rhymvex-white [&::-webkit-details-marker]:hidden">
           {t("form.aLittleContext")}
-          <span className="flex items-center gap-2 text-[0.6875rem] font-medium tracking-normal text-rhymvex-white/35 normal-case">
+          <span className="flex items-center gap-2 text-[0.6875rem] font-medium tracking-normal text-rhymvex-white/50 normal-case">
             {t("form.optional")}
             <ChevronDown
               className="size-3.5 transition-transform duration-200 group-open:rotate-180"
@@ -380,7 +380,7 @@ export function IntakeForm({
         </summary>
 
         <div className="mt-5 flex flex-col gap-5">
-          <p className="-mt-1 text-xs text-rhymvex-white/35">
+          <p className="-mt-1 text-xs text-rhymvex-white/50">
             {t("form.contextHelp")}
           </p>
 
@@ -411,7 +411,7 @@ export function IntakeForm({
       </details>
 
       <div className="flex flex-col gap-4 border-t border-rhymvex-white/8 pt-7 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 max-w-sm text-xs leading-relaxed text-rhymvex-white/40">
+        <p className="m-0 max-w-sm text-xs leading-relaxed text-rhymvex-white/50">
           {t("form.consent")}
         </p>
         <button
@@ -433,7 +433,7 @@ export function IntakeForm({
         </button>
       </div>
 
-      <p className="flex items-center justify-center gap-2 text-xs text-rhymvex-white/30">
+      <p className="flex items-center justify-center gap-2 text-xs text-rhymvex-white/50">
         <RvMark label={null} className="size-4" />
         Rhymvex
       </p>

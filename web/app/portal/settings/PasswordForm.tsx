@@ -48,7 +48,7 @@ export function PasswordForm({ csrfToken }: { csrfToken: string }) {
           {fields?.new_password ? (
             <p className="rv-error">{fields.new_password}</p>
           ) : (
-            <p id="new-password-help" className="mt-1 text-[10px] text-rhymvex-white/30">
+            <p id="new-password-help" className="mt-1 text-[10px] text-rhymvex-white/50">
               At least 10 characters, with an uppercase letter, a lowercase letter and a number.
             </p>
           )}

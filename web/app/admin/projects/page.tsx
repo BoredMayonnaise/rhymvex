@@ -51,7 +51,7 @@ export default async function ProjectsPage() {
                 <div className="min-w-0">
                   <Link
                     href={`/admin/clients/${project.client_id}`}
-                    className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-volt"
+                    className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-volt"
                   >
                     {project.client_name}
                   </Link>
@@ -65,7 +65,7 @@ export default async function ProjectsPage() {
 
               <div className="mt-4">
                 <div className="mb-1.5 flex items-center justify-between text-[11px]">
-                  <span className="text-rhymvex-white/40">
+                  <span className="text-rhymvex-white/50">
                     {project.phase ?? humanise(project.status)}
                   </span>
                   <span className="rv-table-num text-rhymvex-volt">{project.progress}%</span>
@@ -80,7 +80,7 @@ export default async function ProjectsPage() {
                 </p>
               ) : null}
 
-              <div className="mt-auto flex items-center justify-between gap-2 border-t border-rhymvex-white/7 pt-3 text-[10px] text-rhymvex-white/30">
+              <div className="mt-auto flex items-center justify-between gap-2 border-t border-rhymvex-white/7 pt-3 text-[10px] text-rhymvex-white/50">
                 <span>{project.lead_staff_name ?? "Unassigned"}</span>
                 <span>{project.target_date ? `target ${formatDate(project.target_date)}` : "no target"}</span>
               </div>

@@ -343,7 +343,15 @@ export const settingsSchema = z.object({
   notification_email: z.string().trim().toLowerCase().email(),
   response_sla_minutes: z.coerce.number().int().min(0).max(100000).nullable().optional(),
   timezone: trimmed(80).min(1),
-  currency: trimmed(8).min(1),
+  // Must be a currency the catalogue knows. This is org-wide money formatting,
+  // so an unrecognised code does not fail here and fail there: `Intl` throws a
+  // RangeError on a malformed code, and `formatMoney` is called by every admin
+  // and portal page. One bad save would otherwise take down the whole workspace
+  // rather than this form. Checked against the same `isCurrency` the intake
+  // schema uses, so the two cannot drift.
+  currency: z.string().trim().toUpperCase().refine(isCurrency, {
+    message: "Unknown currency code.",
+  }),
 });
 
 export const milestoneSchema = z.object({

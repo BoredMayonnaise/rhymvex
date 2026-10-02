@@ -84,7 +84,7 @@ function BookingTable({
                     <td className="whitespace-nowrap text-rhymvex-white/60">
                       {booking.client_name ?? booking.lead_name ?? "—"}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {humanise(booking.kind)}
                     </td>
                     <td>
@@ -141,7 +141,7 @@ async function UpcomingLoad() {
                 style={{ width: `${Math.max(4, (row.minutes / max) * 100)}%` }}
               />
             </span>
-            <span className="rv-table-num text-right text-rhymvex-white/45">
+            <span className="rv-table-num text-right text-rhymvex-white/55">
               {Math.round((row.minutes / 60) * 10) / 10}h
             </span>
           </div>

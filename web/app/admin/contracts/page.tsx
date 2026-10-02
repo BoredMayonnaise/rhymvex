@@ -54,7 +54,7 @@ export default async function ContractsPage() {
                   <tr key={contract.id}>
                     <td>
                       <p className="font-medium text-rhymvex-white">{contract.title}</p>
-                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/30">
+                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/50">
                         {contract.reference}
                       </p>
                     </td>
@@ -73,7 +73,7 @@ export default async function ContractsPage() {
                     <td className="whitespace-nowrap text-rhymvex-white/50">
                       {formatDate(contract.signed_at)}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(contract.created_at)}
                     </td>
                   </tr>

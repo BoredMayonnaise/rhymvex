@@ -47,7 +47,7 @@ export default async function LeadsPage({
           {status ? <input type="hidden" name="status" value={status} /> : null}
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-rhymvex-white/30"
+              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-rhymvex-white/50"
               aria-hidden="true"
             />
             <input
@@ -109,7 +109,7 @@ export default async function LeadsPage({
                       >
                         {lead.name}
                       </Link>
-                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/30">
+                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/50">
                         {lead.reference}
                       </p>
                     </td>
@@ -129,7 +129,7 @@ export default async function LeadsPage({
                         : "—"}
                     </td>
                     <td
-                      className="whitespace-nowrap text-rhymvex-white/45"
+                      className="whitespace-nowrap text-rhymvex-white/55"
                       title={formatDateTime(lead.submitted_at)}
                     >
                       {relativeTime(lead.submitted_at)}
@@ -162,7 +162,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
       className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors ${
         active
           ? "border-rhymvex-volt/50 bg-rhymvex-volt/10 text-rhymvex-volt"
-          : "border-rhymvex-white/10 text-rhymvex-white/45 hover:border-rhymvex-white/25 hover:text-rhymvex-white/75"
+          : "border-rhymvex-white/10 text-rhymvex-white/55 hover:border-rhymvex-white/25 hover:text-rhymvex-white/75"
       }`}
     >
       {label}

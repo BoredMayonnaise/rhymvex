@@ -183,7 +183,7 @@ export function ScopeBuilder({
             {/* Body */}
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
               <fieldset>
-                <legend className="rv-eyebrow text-rhymvex-white/40">
+                <legend className="rv-eyebrow text-rhymvex-white/50">
                   What this engagement covers
                 </legend>
                 <ul className="mt-4 space-y-2.5">
@@ -195,7 +195,7 @@ export function ScopeBuilder({
 
               {optional.length > 0 && (
                 <fieldset className="mt-6">
-                  <legend className="rv-eyebrow text-rhymvex-white/40">
+                  <legend className="rv-eyebrow text-rhymvex-white/50">
                     If it would genuinely help
                   </legend>
                   <ul className="mt-4 space-y-2.5">
@@ -212,7 +212,7 @@ export function ScopeBuilder({
               )}
 
               <fieldset className="mt-6">
-                <legend className="rv-eyebrow text-rhymvex-white/40">
+                <legend className="rv-eyebrow text-rhymvex-white/50">
                   Additional support
                 </legend>
                 <ul className="mt-4 space-y-2.5">
@@ -231,7 +231,7 @@ export function ScopeBuilder({
 
             {/* Footer */}
             <div className="border-t border-rhymvex-white/10 px-5 py-4 sm:px-6">
-              <p className="flex items-center gap-2 text-xs text-rhymvex-white/45">
+              <p className="flex items-center gap-2 text-xs text-rhymvex-white/55">
                 <TempoGlyph name={pkg.note} className="size-3.5 text-rhymvex-volt" />
                 {total} item{total === 1 ? "" : "s"} noted. We come back with a
                 recommendation and a price, in writing.
@@ -278,7 +278,7 @@ function Row({
   return (
     <li>
       <label
-        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-rhymvex-volt ${
           locked
             ? "cursor-default border-rhymvex-white/5 bg-rhymvex-black/20"
             : checked
@@ -286,6 +286,10 @@ function Row({
               : "border-rhymvex-white/10 hover:border-rhymvex-white/25"
         }`}
       >
+        {/* `sr-only` clips the input to a 1px box, so the global ring would be
+            drawn around something invisible. Moving the ring onto the wrapping
+            label via has-[:focus-visible] is what makes it visible; the same
+            pattern the situation radios already use in IntakeForm. */}
         <input
           type="checkbox"
           className="sr-only"
@@ -310,13 +314,13 @@ function Row({
             {label}
           </span>
           {hint && (
-            <span className="mt-1 block text-xs leading-relaxed text-rhymvex-white/40">
+            <span className="mt-1 block text-xs leading-relaxed text-rhymvex-white/50">
               {hint}
             </span>
           )}
         </span>
         {locked && (
-          <span className="mt-0.5 shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-rhymvex-white/30">
+          <span className="mt-0.5 shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-rhymvex-white/50">
             Included
           </span>
         )}

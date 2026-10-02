@@ -61,7 +61,7 @@ export function SendEmailForm({
                   aria-describedby="biz-to-help"
                   className="rv-input"
                 />
-                <p id="biz-to-help" className="mt-1 text-[10px] text-rhymvex-white/30">
+                <p id="biz-to-help" className="mt-1 text-[10px] text-rhymvex-white/50">
                   Separate multiple addresses with commas.
                 </p>
               </div>
@@ -88,7 +88,7 @@ export function SendEmailForm({
               />
             </div>
 
-            <p className="m-0 text-[11px] text-rhymvex-white/30">
+            <p className="m-0 text-[11px] text-rhymvex-white/50">
               Sending as {actorName} · {replyTo}
             </p>
 

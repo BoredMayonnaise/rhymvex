@@ -134,6 +134,25 @@
 }
 
 @layer components {
+  /* ---------------------------------------------------------------------------
+     Text opacity floor — read before picking a `color-mix` percentage.
+
+     Muted text is expressed as white at reduced alpha over a dark surface. The
+     percentages that read as "quiet" on screen are not quiet to a contrast
+     checker: measured against #0B0F14, white/50 is 5.05:1 and white/45 is
+     4.28:1, so anything below /50 fails WCAG AA for normal text. The same floor
+     holds on the tinted slate surfaces, which is why it is stated once here
+     rather than per component.
+
+     So: /50 is the floor for text, /55 for text small enough to need the margin.
+     Volt clears 4.5:1 from /60 and Ember from /100, so neither takes a
+     reduced alpha as text.
+
+     Lower percentages are still correct for things no one has to read: hairlines,
+     grid texture, and glyphs inside an aria-hidden subtree such as TempoMarks.
+     Those are the only remaining uses below /50.
+     --------------------------------------------------------------------------- */
+
   /* Responsive page gutter — the single place horizontal rhythm is set. */
   .rv-container {
     width: 100%;
@@ -446,7 +465,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 28%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   .rv-nav-link {
@@ -510,7 +529,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
   .rv-page-sub {
     margin: 0.25rem 0 0;
     font-size: 0.8125rem;
-    color: color-mix(in srgb, var(--rhymvex-white) 45%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 55%, transparent);
   }
 
   /* Section heading inside a workspace panel. */
@@ -520,7 +539,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 40%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   /* --- Data surfaces --- */
@@ -565,7 +584,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 35%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
     white-space: nowrap;
   }
 
@@ -605,7 +624,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 42%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 55%, transparent);
   }
 
   .rv-input,
@@ -628,7 +647,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
 
   .rv-input::placeholder,
   .rv-textarea::placeholder {
-    color: color-mix(in srgb, var(--rhymvex-white) 26%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   .rv-input:hover,
@@ -637,10 +656,20 @@ html.rv-js .rv-reveal[data-visible="true"] {
     border-color: color-mix(in srgb, var(--rhymvex-white) 24%, transparent);
   }
 
+  /* Focus.
+     `:focus` handles the surface treatment only — border and fill, which are
+     decoration around the field. The ring itself is left to the global
+     `:focus-visible` rule in @layer base, which sits in an EARLIER layer, so
+     this block must not set `outline` at all.
+
+     The previous `outline: none` here silently killed the ring on every input
+     in the product. @layer components is declared after @layer base, so it wins
+     on layer order regardless of the fact that the base selector looks more
+     specific. Anything that needs to suppress the ring has to do it with
+     focus-visible, not focus. */
   .rv-input:focus,
   .rv-select:focus,
   .rv-textarea:focus {
-    outline: none;
     border-color: var(--rhymvex-volt);
     background-color: color-mix(in srgb, var(--rhymvex-black) 75%, transparent);
   }
@@ -796,7 +825,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 38%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   .rv-stat-value {
@@ -813,7 +842,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
   .rv-stat-meta {
     margin-top: 0.25rem;
     font-size: 0.6875rem;
-    color: color-mix(in srgb, var(--rhymvex-white) 40%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   /* --- Meters: a dense bar read, for pipeline mix and delivery load --- */
@@ -864,7 +893,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
   }
 
   .rv-step[data-done="false"] .rv-step-mark {
-    color: color-mix(in srgb, var(--rhymvex-white) 30%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   /* --- Capture surfaces (public) ---
@@ -892,7 +921,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
 
   .rv-capture .rv-input::placeholder,
   .rv-capture .rv-textarea::placeholder {
-    color: color-mix(in srgb, var(--rhymvex-white) 32%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
   }
 
   .rv-capture .rv-textarea {
@@ -912,7 +941,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--rhymvex-white) 36%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
     padding-top: 0.125rem;
   }
 
@@ -927,7 +956,7 @@ html.rv-js .rv-reveal[data-visible="true"] {
   .rv-empty {
     padding: 2.5rem 1.5rem;
     text-align: center;
-    color: color-mix(in srgb, var(--rhymvex-white) 40%, transparent);
+    color: color-mix(in srgb, var(--rhymvex-white) 50%, transparent);
     font-size: 0.8125rem;
   }
 

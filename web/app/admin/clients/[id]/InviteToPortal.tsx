@@ -69,7 +69,7 @@ export function InviteToPortal({
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close"
-              className="text-rhymvex-white/40 hover:text-rhymvex-white"
+              className="text-rhymvex-white/50 hover:text-rhymvex-white"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -121,7 +121,7 @@ export function InviteToPortal({
               </div>
             </div>
 
-            <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/35">
+            <p className="m-0 text-[11px] leading-relaxed text-rhymvex-white/50">
               The link works once and then stops. The recipient chooses their own password.
             </p>
 
@@ -161,7 +161,7 @@ export function InviteToPortal({
                       <span className="block truncate text-[11px] text-rhymvex-white/70">
                         {invitation.name ?? "—"} · {invitation.email}
                       </span>
-                      <span className="block text-[10px] text-rhymvex-white/25">
+                      <span className="block text-[10px] text-rhymvex-white/50">
                         {invitation.status === "PENDING"
                           ? `expires ${formatDateTime(invitation.expires_at)}`
                           : invitation.status === "ACCEPTED" && invitation.accepted_at
@@ -201,7 +201,7 @@ function RevokeButton({ invitationId, csrfToken }: { invitationId: string; csrfT
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex items-center gap-1 text-[10px] text-rhymvex-white/35 transition-colors hover:text-rhymvex-ember"
+        className="inline-flex items-center gap-1 text-[10px] text-rhymvex-white/50 transition-colors hover:text-rhymvex-ember"
       >
         {pending ? (
           <Loader2 className="size-3 animate-spin" aria-hidden="true" />

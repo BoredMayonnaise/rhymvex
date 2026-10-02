@@ -27,13 +27,13 @@ export function BookingPanel({ bookings }: { bookings: LeadBooking[] }) {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-rhymvex-white">
-                      <CalendarDays className="size-3.5 shrink-0 text-rhymvex-white/35" aria-hidden="true" />
+                      <CalendarDays className="size-3.5 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                       {booking.title}
                     </p>
                     <p className="mt-1 text-[11px] text-rhymvex-volt">
                       {formatDateTime(booking.scheduled_for)} · {booking.duration_mins} min
                     </p>
-                    <p className="mt-0.5 text-[11px] text-rhymvex-white/35">
+                    <p className="mt-0.5 text-[11px] text-rhymvex-white/50">
                       {humanise(booking.kind)}
                       {booking.host_name ? ` · ${booking.host_name}` : ""}
                       {booking.location ? ` · ${booking.location}` : ""}
@@ -54,7 +54,7 @@ export function BookingPanel({ bookings }: { bookings: LeadBooking[] }) {
                       value={humanise(booking.status)}
                       tone={bookingStatusTone(booking.status)}
                     />
-                    <span className="text-[10px] text-rhymvex-white/25">
+                    <span className="text-[10px] text-rhymvex-white/50">
                       {relativeTime(booking.scheduled_for)}
                     </span>
                   </div>

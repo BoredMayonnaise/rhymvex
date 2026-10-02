@@ -45,7 +45,7 @@ export default async function PortalProposalsPage() {
                     <span className="block text-sm font-semibold text-rhymvex-white">
                       {proposal.title}
                     </span>
-                    <span className="block text-[11px] text-rhymvex-white/35">
+                    <span className="block text-[11px] text-rhymvex-white/50">
                       {proposal.model ? `${humanise(proposal.model)} · ` : ""}
                       {proposal.sent_at ? `sent ${formatDate(proposal.sent_at)}` : "draft"}
                     </span>
@@ -95,7 +95,7 @@ export default async function PortalProposalsPage() {
                       <p className="rv-panel-title mb-1.5">Not included</p>
                       <ul className="flex flex-col gap-1">
                         {proposal.exclusions.map((item) => (
-                          <li key={item} className="flex gap-2 text-xs text-rhymvex-white/45">
+                          <li key={item} className="flex gap-2 text-xs text-rhymvex-white/55">
                             <span
                               className="mt-1.5 size-1 shrink-0 rounded-full bg-rhymvex-white/25"
                               aria-hidden="true"
@@ -108,12 +108,12 @@ export default async function PortalProposalsPage() {
                   ) : null}
 
                   {proposal.timeline ? (
-                    <p className="mt-4 text-xs text-rhymvex-white/45">
+                    <p className="mt-4 text-xs text-rhymvex-white/55">
                       Timeline: {proposal.timeline}
                     </p>
                   ) : null}
 
-                  <p className="mt-4 border-t border-rhymvex-white/8 pt-3 text-[11px] text-rhymvex-white/30">
+                  <p className="mt-4 border-t border-rhymvex-white/8 pt-3 text-[11px] text-rhymvex-white/50">
                     Reference {proposal.reference}. Reply to the email that sent this to talk it
                     through — a real person reads it.
                   </p>

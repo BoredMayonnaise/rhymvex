@@ -41,7 +41,7 @@ export default async function PortalBookingsPage() {
                   <p className="mt-0.5 text-xs text-rhymvex-volt">
                     {formatDateTime(booking.scheduled_for)}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-rhymvex-white/40">
+                  <p className="mt-0.5 text-[11px] text-rhymvex-white/50">
                     {booking.duration_mins} min
                     {booking.host_name ? ` · with ${booking.host_name}` : ""}
                     {booking.location ? ` · ${booking.location}` : ""}
@@ -72,7 +72,7 @@ export default async function PortalBookingsPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-xs text-rhymvex-white/70">{booking.title}</p>
-                  <p className="text-[10px] text-rhymvex-white/30">
+                  <p className="text-[10px] text-rhymvex-white/50">
                     {formatDateTime(booking.scheduled_for)}
                     {booking.host_name ? ` · ${booking.host_name}` : ""}
                   </p>

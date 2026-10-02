@@ -72,14 +72,14 @@ export function Hero({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
             </a>
             <a
               href={enquiryUrl(locale)}
-              className="text-xs text-rhymvex-white/40 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
+              className="text-xs text-rhymvex-white/50 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
             >
               {t("hero.orFullForm")}
             </a>
           </div>
 
           <p
-            className="rv-animate-rise mt-9 text-sm text-rhymvex-white/35"
+            className="rv-animate-rise mt-9 text-sm text-rhymvex-white/50"
             style={{ animationDelay: "0.48s" }}
           >
             {t("footer.tagline")}

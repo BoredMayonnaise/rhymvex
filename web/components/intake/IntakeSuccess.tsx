@@ -99,7 +99,7 @@ export function IntakeSuccess({
                 className={
                   done
                     ? "text-sm font-medium text-rhymvex-white"
-                    : "text-sm text-rhymvex-white/45"
+                    : "text-sm text-rhymvex-white/55"
                 }
               >
                 {key ? t(key) : step.label}
@@ -117,7 +117,7 @@ export function IntakeSuccess({
         </div>
 
         {reference ? (
-          <p className="m-0 font-mono text-xs text-rhymvex-white/30">
+          <p className="m-0 font-mono text-xs text-rhymvex-white/50">
             {t("success.reference", { ref: reference })}
           </p>
         ) : null}
@@ -144,7 +144,7 @@ export function IntakeSuccess({
         <button
           type="button"
           onClick={onReset}
-          className="self-start text-xs text-rhymvex-white/35 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
+          className="self-start text-xs text-rhymvex-white/50 underline underline-offset-4 transition-colors hover:text-rhymvex-volt"
         >
           {t("success.sendAnother")}
         </button>

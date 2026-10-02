@@ -191,7 +191,11 @@ export async function getPortalOverview(session: ClientSession): Promise<PortalO
 /* Client-safe collections                                                    */
 /* -------------------------------------------------------------------------- */
 
-export async function listPortalProposals(session: ClientSession) {
+export async function listPortalProposals(
+  session: ClientSession,
+  limit = 200,
+  offset = 0,
+) {
   return query<{
     id: string;
     reference: string;
@@ -211,8 +215,9 @@ export async function listPortalProposals(session: ClientSession) {
             timeline, investment, currency, status, sent_at
        FROM proposals
       WHERE client_id = $1 AND status <> 'DRAFT'
-      ORDER BY sent_at DESC NULLS LAST, created_at DESC`,
-    [session.clientId],
+      ORDER BY sent_at DESC NULLS LAST, created_at DESC
+      LIMIT $2 OFFSET $3`,
+    [session.clientId, limit, offset],
   );
 }
 
@@ -239,7 +244,11 @@ export async function getPortalProposal(session: ClientSession, proposalId: stri
   );
 }
 
-export async function listPortalContracts(session: ClientSession) {
+export async function listPortalContracts(
+  session: ClientSession,
+  limit = 200,
+  offset = 0,
+) {
   return query<{
     id: string;
     reference: string;
@@ -253,12 +262,17 @@ export async function listPortalContracts(session: ClientSession) {
   }>(
     `SELECT id, reference, title, body, status, value_total, currency, sent_at, signed_at
        FROM contracts WHERE client_id = $1 AND status <> 'DRAFT'
-      ORDER BY sent_at DESC NULLS LAST, created_at DESC`,
-    [session.clientId],
+      ORDER BY sent_at DESC NULLS LAST, created_at DESC
+      LIMIT $2 OFFSET $3`,
+    [session.clientId, limit, offset],
   );
 }
 
-export async function listPortalBookings(session: ClientSession) {
+export async function listPortalBookings(
+  session: ClientSession,
+  limit = 200,
+  offset = 0,
+) {
   return query<{
     id: string;
     title: string;
@@ -274,12 +288,17 @@ export async function listPortalBookings(session: ClientSession) {
             b.location, b.agenda, s.name AS host_name
        FROM bookings b LEFT JOIN staff s ON s.id = b.host_id
       WHERE b.client_id = $1
-      ORDER BY b.scheduled_for DESC`,
-    [session.clientId],
+      ORDER BY b.scheduled_for DESC
+      LIMIT $2 OFFSET $3`,
+    [session.clientId, limit, offset],
   );
 }
 
-export async function listPortalInvoices(session: ClientSession) {
+export async function listPortalInvoices(
+  session: ClientSession,
+  limit = 200,
+  offset = 0,
+) {
   return query<{
     id: string;
     reference: string;
@@ -295,13 +314,18 @@ export async function listPortalInvoices(session: ClientSession) {
     `SELECT id, reference, description, amount, amount_paid, currency, status,
             issued_at, due_at, paid_at
        FROM invoices WHERE client_id = $1 AND status <> 'DRAFT'
-      ORDER BY created_at DESC`,
-    [session.clientId],
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3`,
+    [session.clientId, limit, offset],
   );
 }
 
 /** Only files explicitly marked client_visible. Internal files never appear. */
-export async function listPortalFiles(session: ClientSession) {
+export async function listPortalFiles(
+  session: ClientSession,
+  limit = 200,
+  offset = 0,
+) {
   return query<{
     id: string;
     name: string;
@@ -315,8 +339,9 @@ export async function listPortalFiles(session: ClientSession) {
             p.name AS project_name
        FROM files f LEFT JOIN projects p ON p.id = f.project_id
       WHERE f.client_id = $1 AND f.client_visible = true
-      ORDER BY f.uploaded_at DESC`,
-    [session.clientId],
+      ORDER BY f.uploaded_at DESC
+      LIMIT $2 OFFSET $3`,
+    [session.clientId, limit, offset],
   );
 }
 

@@ -110,7 +110,11 @@ export async function requireStaffPermission(permission: Permission): Promise<St
 /** Client portal page guard. */
 export async function requireClientSession(): Promise<ClientSession> {
   const session = await getClientSession();
-  if (!session) redirect("/portal/sign-in");
+  // The sign-in route lives in the `(auth)` group as `/portal-sign-in`. This
+  // guard is the real boundary, so it fires on every session death — expiry, a
+  // deactivated portal user, a churned client — and has to name a route that
+  // exists. `proxy.ts` covers the cold request; this covers the live one.
+  if (!session) redirect("/portal-sign-in");
   return session;
 }
 

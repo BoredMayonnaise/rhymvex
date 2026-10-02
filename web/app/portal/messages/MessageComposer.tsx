@@ -81,7 +81,7 @@ export function MessageComposer({ csrfToken }: { csrfToken: string }) {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white"
+            className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white"
           >
             Cancel
           </button>

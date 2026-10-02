@@ -52,7 +52,7 @@ export function ProposalActions({
   return (
     <div className="flex flex-col items-end gap-2">
       {options.length === 0 ? (
-        <p className="text-[11px] text-rhymvex-white/30">No further action available.</p>
+        <p className="text-[11px] text-rhymvex-white/50">No further action available.</p>
       ) : (
         <form action={formAction} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="csrf" value={csrfToken} />

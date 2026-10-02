@@ -52,7 +52,7 @@ export default async function EmailPage({
           {direction ? <input type="hidden" name="dir" value={direction} /> : null}
           <div className="relative">
             <Mail
-              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-rhymvex-white/30"
+              className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-rhymvex-white/50"
               aria-hidden="true"
             />
             <input
@@ -144,7 +144,7 @@ export default async function EmailPage({
                         <span className="block truncate text-xs font-medium text-rhymvex-white">
                           {email.subject}
                         </span>
-                        <span className="block truncate text-[11px] text-rhymvex-white/35">
+                        <span className="block truncate text-[11px] text-rhymvex-white/50">
                           {email.direction === "OUTBOUND"
                             ? `to ${email.to_addresses.join(", ")}`
                             : `from ${email.from_address}`}
@@ -161,7 +161,7 @@ export default async function EmailPage({
                         tone={emailStatusTone(email.status)}
                       />
                       <span
-                        className="shrink-0 text-[10px] text-rhymvex-white/25"
+                        className="shrink-0 text-[10px] text-rhymvex-white/50"
                         title={formatDateTime(email.created_at)}
                       >
                         {relativeTime(email.created_at)}
@@ -199,7 +199,7 @@ function DirChip({ href, label, active }: { href: string; label: string; active:
       className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors ${
         active
           ? "border-rhymvex-volt/50 bg-rhymvex-volt/10 text-rhymvex-volt"
-          : "border-rhymvex-white/10 text-rhymvex-white/45 hover:border-rhymvex-white/25 hover:text-rhymvex-white/75"
+          : "border-rhymvex-white/10 text-rhymvex-white/55 hover:border-rhymvex-white/25 hover:text-rhymvex-white/75"
       }`}
     >
       {label}

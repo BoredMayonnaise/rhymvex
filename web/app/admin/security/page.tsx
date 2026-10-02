@@ -124,7 +124,7 @@ export default async function SecurityPage() {
             >
               <span className="text-xs font-medium text-rhymvex-white/80">{control.label}</span>
               <span className="flex items-center gap-2.5">
-                <span className="text-[11px] text-rhymvex-white/45">{control.value}</span>
+                <span className="text-[11px] text-rhymvex-white/55">{control.value}</span>
                 <StatusPill
                   value={control.ok ? "Active" : "Not configured"}
                   tone={control.ok ? "done" : "warn"}
@@ -164,7 +164,7 @@ export default async function SecurityPage() {
                     {invitation.role ? humanise(invitation.role) : "—"}
                   </td>
                   <td className="text-rhymvex-white/50">{invitation.client_name ?? "—"}</td>
-                  <td className="whitespace-nowrap text-rhymvex-white/45">
+                  <td className="whitespace-nowrap text-rhymvex-white/55">
                     {formatDateTime(invitation.expires_at)}
                   </td>
                   <td>
@@ -197,7 +197,7 @@ export default async function SecurityPage() {
                     </span>{" "}
                     {describeAuditAction(entry.action).toLowerCase()}
                   </p>
-                  <p className="text-[10px] text-rhymvex-white/25">
+                  <p className="text-[10px] text-rhymvex-white/50">
                     {formatDateTime(entry.occurred_at)} · {relativeTime(entry.occurred_at)}
                     {entry.ip_address ? ` · ${entry.ip_address}` : ""}
                   </p>
@@ -208,7 +208,7 @@ export default async function SecurityPage() {
         </Panel>
 
         <Panel title="Full audit trail" flush>
-          <p className="border-b border-rhymvex-white/5 px-4 py-2 text-[11px] text-rhymvex-white/35">
+          <p className="border-b border-rhymvex-white/5 px-4 py-2 text-[11px] text-rhymvex-white/50">
             {auditCount?.count ?? 0} entries. Newest first. Entries cannot be edited or deleted.
           </p>
           {audit.length === 0 ? (
@@ -226,14 +226,14 @@ export default async function SecurityPage() {
                     </span>{" "}
                     {describeAuditAction(entry.action).toLowerCase()}
                     {entry.entity_type ? (
-                      <span className="text-rhymvex-white/25">
+                      <span className="text-rhymvex-white/50">
                         {" "}
                         · {entry.entity_type}
                         {entry.entity_id ? ` ${entry.entity_id.slice(0, 8)}` : ""}
                       </span>
                     ) : null}
                   </p>
-                  <p className="text-[10px] text-rhymvex-white/25">
+                  <p className="text-[10px] text-rhymvex-white/50">
                     {formatDateTime(entry.occurred_at)}
                   </p>
                 </li>

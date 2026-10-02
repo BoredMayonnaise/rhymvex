@@ -41,15 +41,15 @@ export default async function PortalFilesPage() {
                 key={file.id}
                 className="flex items-start gap-3 border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0"
               >
-                <FileText className="mt-0.5 size-4 shrink-0 text-rhymvex-white/30" aria-hidden="true" />
+                <FileText className="mt-0.5 size-4 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-rhymvex-white">{file.name}</p>
                   {file.description ? (
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-rhymvex-white/45">
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-rhymvex-white/55">
                       {file.description}
                     </p>
                   ) : null}
-                  <p className="mt-0.5 text-[10px] text-rhymvex-white/25">
+                  <p className="mt-0.5 text-[10px] text-rhymvex-white/50">
                     {readableSize(file.size_bytes)} · {relativeTime(file.uploaded_at)}
                     {file.project_name ? ` · ${file.project_name}` : ""}
                     {` · ${formatDate(file.uploaded_at)}`}

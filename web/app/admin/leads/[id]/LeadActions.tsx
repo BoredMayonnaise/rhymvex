@@ -151,7 +151,7 @@ export function LeadActions({
               type="button"
               onClick={() => setPanel(null)}
               aria-label="Close panel"
-              className="text-rhymvex-white/40 hover:text-rhymvex-white"
+              className="text-rhymvex-white/50 hover:text-rhymvex-white"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -283,7 +283,7 @@ function StatusForm({
           Save
         </button>
         {state?.ok ? (
-          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white">
+          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white">
             Close
           </button>
         ) : null}
@@ -478,7 +478,7 @@ function BookingForm({
           Schedule
         </button>
         {state?.ok ? (
-          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white">
+          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white">
             Close
           </button>
         ) : null}
@@ -557,7 +557,7 @@ function ProposalForm({
           Create draft
         </button>
         {state?.ok ? (
-          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white">
+          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white">
             Close
           </button>
         ) : null}
@@ -627,7 +627,7 @@ function EmailForm({
           Send
         </button>
         {state?.ok ? (
-          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/40 hover:text-rhymvex-white">
+          <button type="button" onClick={onDone} className="text-[11px] text-rhymvex-white/50 hover:text-rhymvex-white">
             Close
           </button>
         ) : null}

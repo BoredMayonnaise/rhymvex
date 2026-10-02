@@ -45,7 +45,7 @@ export function ProfileForm({
         <div>
           <label htmlFor="profile-email" className="rv-label">Email</label>
           <input id="profile-email" type="email" value={email} disabled className="rv-input opacity-60" />
-          <p className="mt-1 text-[10px] text-rhymvex-white/30">
+          <p className="mt-1 text-[10px] text-rhymvex-white/50">
             Contact your Rhymvex lead to change this.
           </p>
         </div>

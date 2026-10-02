@@ -33,7 +33,7 @@ export function RevokeInviteButton({
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex items-center gap-1 text-[10px] text-rhymvex-white/35 transition-colors hover:text-rhymvex-ember"
+        className="inline-flex items-center gap-1 text-[10px] text-rhymvex-white/50 transition-colors hover:text-rhymvex-ember"
       >
         {pending ? (
           <Loader2 className="size-3 animate-spin" aria-hidden="true" />

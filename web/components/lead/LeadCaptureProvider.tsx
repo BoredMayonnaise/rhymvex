@@ -168,7 +168,7 @@ function LeadCaptureModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mt-1 -me-1 shrink-0 rounded-lg p-1.5 text-rhymvex-white/40 transition-colors hover:bg-rhymvex-white/5 hover:text-rhymvex-white"
+            className="-mt-1 -me-1 shrink-0 rounded-lg p-1.5 text-rhymvex-white/50 transition-colors hover:bg-rhymvex-white/5 hover:text-rhymvex-white"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

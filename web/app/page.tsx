@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
 import { HomeView } from "@/components/site/HomeView";
+import { homeAlternates } from "@/lib/locales";
+import { SITE_ORIGIN } from "@/lib/services";
 
 export const metadata: Metadata = {
   title: "Rhymvex — Build with rhythm.",
   description:
     "Brand and product agency. We build the system behind your brand, then hand it over so your team can run it.",
+  // This is the default locale's URL and its own canonical. `languages` names the
+  // six translations of this same page, so a crawler that lands on any one of
+  // them can find the rest instead of treating seven home pages as seven
+  // unrelated competitors for the same query.
+  alternates: {
+    canonical: "/",
+    languages: homeAlternates(SITE_ORIGIN),
+  },
 };
 
 /**

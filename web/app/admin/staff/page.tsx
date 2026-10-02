@@ -80,9 +80,9 @@ export default async function StaffPage() {
                 <tr key={member.id}>
                   <td>
                     <p className="font-medium text-rhymvex-white">{member.name}</p>
-                    <p className="mt-0.5 text-[11px] text-rhymvex-white/35">{member.email}</p>
+                    <p className="mt-0.5 text-[11px] text-rhymvex-white/50">{member.email}</p>
                     {member.title ? (
-                      <p className="text-[11px] text-rhymvex-white/25">{member.title}</p>
+                      <p className="text-[11px] text-rhymvex-white/50">{member.title}</p>
                     ) : null}
                   </td>
                   <td>
@@ -104,16 +104,16 @@ export default async function StaffPage() {
                   <td className="rv-table-num text-right text-rhymvex-white/70">
                     {member.open_tasks}
                   </td>
-                  <td className="whitespace-nowrap text-rhymvex-white/45">
+                  <td className="whitespace-nowrap text-rhymvex-white/55">
                     {member.last_login_at ? relativeTime(member.last_login_at) : "never"}
                   </td>
                   <td className="text-right">
                     {member.id === session.staffId ? (
                       <span className="text-[11px] text-rhymvex-volt">You</span>
                     ) : canManage ? (
-                      <span className="text-[11px] text-rhymvex-white/30">manage</span>
+                      <span className="text-[11px] text-rhymvex-white/50">manage</span>
                     ) : (
-                      <span className="text-[11px] text-rhymvex-white/20">—</span>
+                      <span className="text-[11px] text-rhymvex-white/50">—</span>
                     )}
                   </td>
                 </tr>
@@ -137,7 +137,7 @@ export default async function StaffPage() {
                   <p className="truncate text-xs font-medium text-rhymvex-white">
                     {invitation.name} · {invitation.email}
                   </p>
-                  <p className="text-[11px] text-rhymvex-white/35">
+                  <p className="text-[11px] text-rhymvex-white/50">
                     {humanise(invitation.role)} · invited by {invitation.created_by_name ?? "an admin"}{" "}
                     · expires {formatDate(invitation.expires_at)}
                   </p>
@@ -167,7 +167,7 @@ export default async function StaffPage() {
                   <p className="truncate text-xs text-rhymvex-white/70">
                     {invitation.name ?? "—"} · {invitation.email}
                   </p>
-                  <p className="text-[10px] text-rhymvex-white/25">
+                  <p className="text-[10px] text-rhymvex-white/50">
                     {invitation.role ? `${humanise(invitation.role)} · ` : ""}
                     invited {relativeTime(invitation.created_at)}
                   </p>
@@ -183,7 +183,7 @@ export default async function StaffPage() {
       ) : null}
 
       <Panel title="What each role can do">
-        <p className="mb-3 text-[11px] leading-relaxed text-rhymvex-white/35">
+        <p className="mb-3 text-[11px] leading-relaxed text-rhymvex-white/50">
           Permissions are resolved on the server for every action. Hiding a link is a
           convenience, not the control.
         </p>
@@ -191,7 +191,7 @@ export default async function StaffPage() {
           {ROLES.map((role) => (
             <li key={role} className="border-b border-rhymvex-white/5 pb-2.5 last:border-b-0 last:pb-0">
               <p className="text-xs font-semibold text-rhymvex-volt">{humanise(role)}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-rhymvex-white/45">
+              <p className="mt-0.5 text-[11px] leading-relaxed text-rhymvex-white/55">
                 {describeRole(role)}
               </p>
             </li>

@@ -78,6 +78,27 @@ export function currencyLabel(currency: Currency): string {
   return `${currency.label} (${currency.symbol})`;
 }
 
+/**
+ * The short form, for the switcher.
+ *
+ * A `<select>` is as wide as its widest option, so "United Kingdom (£)" made the
+ * control a 190px block sitting in the intake header next to a logo. The symbol
+ * is what a person scans for and the code is what is unambiguous, so the country
+ * name is what goes: six characters instead of nineteen, and the option list
+ * becomes scannable at a glance.
+ *
+ * The full name is still what the option means, so it stays in `aria-label` on
+ * the control rather than in the option text, where a screen reader would read
+ * out "United Kingdom" before every single one.
+ */
+export function currencyCompactLabel(currency: Currency): string {
+  // CHF, AED and SAR have no distinct symbol, so the catalogue stores the code
+  // as the symbol. Printing both would render "CHF CHF".
+  return currency.symbol === currency.code
+    ? currency.code
+    : `${currency.symbol} ${currency.code}`;
+}
+
 /* --------------------------------------------------------------------------
    Remembering the choice
 

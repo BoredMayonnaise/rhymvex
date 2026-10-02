@@ -58,7 +58,7 @@ export default async function ProposalsPage() {
                       >
                         {proposal.title}
                       </Link>
-                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/30">
+                      <p className="mt-0.5 font-mono text-[11px] text-rhymvex-white/50">
                         {proposal.reference}
                       </p>
                     </td>
@@ -79,7 +79,7 @@ export default async function ProposalsPage() {
                         ? formatMoney(proposal.investment, proposal.currency || settings.currency)
                         : "—"}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {proposal.sent_at ? formatDate(proposal.sent_at) : relativeTime(proposal.created_at)}
                     </td>
                     <td className="text-right">

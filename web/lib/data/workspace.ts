@@ -292,7 +292,7 @@ export type ClientSummary = {
   created_at: Date;
 };
 
-export async function listClients(): Promise<ClientSummary[]> {
+export async function listClients(limit = 200, offset = 0): Promise<ClientSummary[]> {
   return query<ClientSummary>(
     `SELECT c.id, c.reference, c.name, c.industry, c.status, c.created_at,
             s.name AS account_manager,
@@ -302,7 +302,9 @@ export async function listClients(): Promise<ClientSummary[]> {
                        WHERE i.client_id = c.id AND i.status IN ('SENT','VIEWED','OVERDUE')), 0)::float AS outstanding
        FROM clients c
        LEFT JOIN staff s ON s.id = c.account_manager
-      ORDER BY c.name ASC`,
+      ORDER BY c.name ASC
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -319,7 +321,7 @@ export type ProjectSummary = {
   lead_staff_name: string | null;
 };
 
-export async function listProjects(): Promise<ProjectSummary[]> {
+export async function listProjects(limit = 200, offset = 0): Promise<ProjectSummary[]> {
   return query<ProjectSummary>(
     `SELECT p.id, p.name, p.status, p.progress, p.phase, p.next_step, p.target_date,
             p.client_id, c.name AS client_name, s.name AS lead_staff_name
@@ -329,7 +331,9 @@ export async function listProjects(): Promise<ProjectSummary[]> {
       ORDER BY
         CASE p.status WHEN 'ON_HOLD' THEN 0 WHEN 'IN_REVIEW' THEN 1 WHEN 'IN_PROGRESS' THEN 2
                       WHEN 'DISCOVERY' THEN 3 ELSE 4 END,
-        p.target_date NULLS LAST`,
+        p.target_date NULLS LAST
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -360,14 +364,16 @@ export type ProposalSummary = {
   created_at: Date;
 };
 
-export async function listProposals(): Promise<ProposalSummary[]> {
+export async function listProposals(limit = 200, offset = 0): Promise<ProposalSummary[]> {
   return query<ProposalSummary>(
     `SELECT p.id, p.reference, p.title, p.status, p.model, p.investment, p.currency,
             p.sent_at, p.created_at, c.name AS client_name, l.name AS lead_name
        FROM proposals p
        LEFT JOIN clients c ON c.id = p.client_id
        LEFT JOIN leads l ON l.id = p.lead_id
-      ORDER BY p.created_at DESC`,
+      ORDER BY p.created_at DESC
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -383,12 +389,14 @@ export type ContractSummary = {
   created_at: Date;
 };
 
-export async function listContracts(): Promise<ContractSummary[]> {
+export async function listContracts(limit = 200, offset = 0): Promise<ContractSummary[]> {
   return query<ContractSummary>(
     `SELECT ct.id, ct.reference, ct.title, ct.status, ct.value_total, ct.currency,
             ct.signed_at, ct.created_at, c.name AS client_name
        FROM contracts ct JOIN clients c ON c.id = ct.client_id
-      ORDER BY ct.created_at DESC`,
+      ORDER BY ct.created_at DESC
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -405,7 +413,7 @@ export type TaskSummary = {
   created_at: Date;
 };
 
-export async function listTasks(): Promise<TaskSummary[]> {
+export async function listTasks(limit = 200, offset = 0): Promise<TaskSummary[]> {
   return query<TaskSummary>(
     `SELECT t.id, t.title, t.detail, t.status, t.priority, t.due_at, t.created_at,
             s.name AS assignee_name, c.name AS client_name, p.name AS project_name
@@ -415,7 +423,9 @@ export async function listTasks(): Promise<TaskSummary[]> {
        LEFT JOIN projects p ON p.id = t.project_id
       ORDER BY
         CASE t.status WHEN 'BLOCKED' THEN 0 WHEN 'IN_PROGRESS' THEN 1 WHEN 'OPEN' THEN 2 ELSE 3 END,
-        t.due_at NULLS LAST`,
+        t.due_at NULLS LAST
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -432,12 +442,14 @@ export type InvoiceSummary = {
   due_at: Date | null;
 };
 
-export async function listInvoices(): Promise<InvoiceSummary[]> {
+export async function listInvoices(limit = 200, offset = 0): Promise<InvoiceSummary[]> {
   return query<InvoiceSummary>(
     `SELECT i.id, i.reference, i.description, i.amount, i.amount_paid, i.currency,
             i.status, i.issued_at, i.due_at, c.name AS client_name
        FROM invoices i JOIN clients c ON c.id = i.client_id
-      ORDER BY i.created_at DESC`,
+      ORDER BY i.created_at DESC
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 
@@ -492,7 +504,7 @@ export type StaffSummary = {
   active_projects: number;
 };
 
-export async function listStaff(): Promise<StaffSummary[]> {
+export async function listStaff(limit = 200, offset = 0): Promise<StaffSummary[]> {
   return query<StaffSummary>(
     `SELECT s.id, s.name, s.email, s.role, s.title, s.active, s.last_login_at, s.created_at,
             (SELECT count(*)::int FROM leads l WHERE l.assigned_to = s.id
@@ -502,8 +514,11 @@ export async function listStaff(): Promise<StaffSummary[]> {
             (SELECT count(*)::int FROM projects p WHERE p.lead_staff_id = s.id
                AND p.status IN ('PLANNING','DISCOVERY','IN_PROGRESS','IN_REVIEW')) AS active_projects
        FROM staff s
-      ORDER BY s.name ASC`,
-    [["RECEIVED", "REVIEWING", "QUALIFIED", "CONSULTATION", "PROPOSAL", "NEGOTIATION"]],
+      ORDER BY s.name ASC
+      LIMIT $2 OFFSET $3`,
+    // $1 is the status enum the open_leads subquery filters on, so the window
+    // has to start at $2 here.
+    [["RECEIVED", "REVIEWING", "QUALIFIED", "CONSULTATION", "PROPOSAL", "NEGOTIATION"], limit, offset],
   );
 }
 
@@ -517,11 +532,13 @@ export type LibrarySummary = {
   updated_at: Date;
 };
 
-export async function listLibrary(): Promise<LibrarySummary[]> {
+export async function listLibrary(limit = 200, offset = 0): Promise<LibrarySummary[]> {
   return query<LibrarySummary>(
     `SELECT l.id, l.title, l.kind, l.description, l.tags, l.updated_at, c.name AS client_name
        FROM library_items l LEFT JOIN clients c ON c.id = l.client_id
-      ORDER BY l.kind ASC, l.title ASC`,
+      ORDER BY l.kind ASC, l.title ASC
+      LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 

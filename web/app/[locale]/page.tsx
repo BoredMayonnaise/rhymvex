@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { HomeView } from "@/components/site/HomeView";
 import { localeCurrency } from "@/lib/currency-preference";
 import { getTranslator } from "@/lib/i18n";
+import { homeHref, homeAlternates } from "@/lib/locales";
+import { SITE_ORIGIN } from "@/lib/services";
 
 /**
  * Statically cached, deliberately.
@@ -34,7 +36,14 @@ export async function generateMetadata({
   return {
     title: `Rhymvex — ${t("footer.tagline")}`,
     description: t("footer.body"),
-    alternates: { canonical: `/${locale}` },
+    // `homeHref` rather than a raw `/${locale}`, because the default locale is
+    // served at the un-prefixed URL. Building the tag by hand pointed /en-IE's
+    // canonical at /en-IE while / pointed at /, so the two URLs for the same
+    // page both claimed to be canonical. One locale, one URL.
+    alternates: {
+      canonical: homeHref(locale),
+      languages: homeAlternates(SITE_ORIGIN),
+    },
     openGraph: {
       title: `Rhymvex — ${t("footer.tagline")}`,
       description: t("footer.body"),

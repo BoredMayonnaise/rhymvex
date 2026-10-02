@@ -63,7 +63,7 @@ function Preview({ id }: { id: (typeof TEMPLATES)[number]["id"] }) {
           <p className="text-[13px] font-medium leading-snug text-rhymvex-white">
             &ldquo;Your brand is a system. Build it like one.&rdquo;
           </p>
-          <p className="mt-2 text-[10px] text-rhymvex-white/40">&mdash; Rhymvex</p>
+          <p className="mt-2 text-[10px] text-rhymvex-white/50">&mdash; Rhymvex</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ function Preview({ id }: { id: (typeof TEMPLATES)[number]["id"] }) {
 
   return (
     <div className="flex h-full flex-col justify-between p-4">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/35">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
         Framework
       </p>
       <ol className="space-y-1.5">
@@ -111,6 +111,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduceMotion = useRef(false);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     reduceMotion.current = window.matchMedia(
@@ -127,20 +128,61 @@ export function TokenCard({ className = "" }: { className?: string }) {
     return () => window.clearInterval(id);
   }, [paused]);
 
+  /**
+   * Arrow-key navigation for the tablist.
+   *
+   * The WAI-ARIA tabs pattern makes the arrow keys the primary interaction and
+   * keeps a single tab stop for the whole group via roving tabindex. Without it
+   * this control was three separate tab stops, so reaching the last template
+   * meant pressing Tab three times, and there was no way to move between them
+   * with an arrow key at all.
+   */
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const last = TEMPLATES.length - 1;
+    let next: number;
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        next = index === last ? 0 : index + 1;
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        next = index === 0 ? last : index - 1;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = last;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setIndex(next);
+    // Move focus with the selection, which is what makes the arrow key feel
+    // like it is driving the control rather than just the highlight.
+    tabRefs.current[next]?.focus();
+  };
+
   return (
     <div
       className={`overflow-hidden rounded-xl border border-rhymvex-white/10 bg-rhymvex-slate/85 backdrop-blur-sm ${className}`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      // The auto-cycle used to stop only for a mouse. A keyboard user tabbing
+      // onto these controls had the content swap underneath them every 4.2s.
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-rhymvex-white/10 px-5 py-4">
         <p className="text-sm font-medium">Design tokens</p>
-        <p className="text-[10px] text-rhymvex-white/35">Brand system · v1</p>
+        <p className="text-[10px] text-rhymvex-white/50">Brand system · v1</p>
       </div>
 
       {/* Colour reference */}
       <div className="px-5 py-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/35">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
           Colour
         </p>
         <ul className="mt-3 space-y-1.5">
@@ -148,7 +190,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
             <li key={c.name} className="flex items-center gap-2.5">
               <span className={`size-3.5 shrink-0 rounded-sm ${c.swatch}`} />
               <span className="text-xs text-rhymvex-white/75">{c.name}</span>
-              <span className="ms-auto font-mono text-[10px] text-rhymvex-white/35">
+              <span className="ms-auto font-mono text-[10px] text-rhymvex-white/50">
                 {c.hex}
               </span>
             </li>
@@ -158,7 +200,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
 
       {/* Type reference */}
       <div className="border-t border-rhymvex-white/10 px-5 py-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/35">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
           Type
         </p>
         <ul className="mt-3 space-y-3">
@@ -169,7 +211,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
               </span>
               <span className="min-w-0">
                 <span className="block text-xs text-rhymvex-white/75">{t.role}</span>
-                <span className="block text-[10px] text-rhymvex-white/35">
+                <span className="block text-[10px] text-rhymvex-white/50">
                   {t.spec}
                 </span>
               </span>
@@ -181,28 +223,45 @@ export function TokenCard({ className = "" }: { className?: string }) {
       {/* The system in use */}
       <div className="border-t border-rhymvex-white/10 px-5 py-4">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/35">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
             In use
           </p>
           <div
-            className="flex gap-1.5"
+            className="flex items-center"
             role="tablist"
             aria-label="Template previews"
+            onKeyDown={onTabKeyDown}
           >
             {TEMPLATES.map((t, i) => (
               <button
                 key={t.id}
+                ref={(el) => {
+                  tabRefs.current[i] = el;
+                }}
+                id={`tk-tab-${t.id}`}
                 type="button"
                 role="tab"
                 aria-selected={i === index}
+                aria-controls={`tk-panel-${t.id}`}
+                // Roving tabindex: one stop for the whole group. The visual is a
+                // 6px pill, which is nowhere near the 24px minimum target size,
+                // so the button carries a 24x24 hit area and the pill sits inside
+                // it as an aria-hidden span. Hover and focus are painted on the
+                // pill via group- so the larger button stays invisible.
+                tabIndex={i === index ? 0 : -1}
                 aria-label={t.name}
                 onClick={() => setIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === index
-                    ? "w-4 bg-rhymvex-volt"
-                    : "w-1.5 bg-rhymvex-white/20 hover:bg-rhymvex-white/40"
-                }`}
-              />
+                className="group flex size-6 cursor-pointer items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rhymvex-volt"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`block rounded-full transition-all duration-300 group-hover:bg-rhymvex-white/75 ${
+                    i === index
+                      ? "h-1.5 w-4 bg-rhymvex-volt"
+                      : "h-1.5 w-1.5 bg-rhymvex-white/50"
+                  }`}
+                />
+              </button>
             ))}
           </div>
         </div>
@@ -211,7 +270,9 @@ export function TokenCard({ className = "" }: { className?: string }) {
           {TEMPLATES.map((t, i) => (
             <div
               key={t.id}
+              id={`tk-panel-${t.id}`}
               role="tabpanel"
+              aria-labelledby={`tk-tab-${t.id}`}
               aria-hidden={i !== index}
               className={`absolute inset-0 transition-opacity duration-500 ${
                 i === index ? "opacity-100" : "opacity-0"

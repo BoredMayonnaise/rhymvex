@@ -94,7 +94,7 @@ export default async function IntakeView({
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-xs text-rhymvex-white/40 transition-colors hover:text-rhymvex-volt"
+            className="flex items-center gap-1.5 text-xs text-rhymvex-white/50 transition-colors hover:text-rhymvex-volt"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             {t("nav.backToSite")}
@@ -169,12 +169,12 @@ export default async function IntakeView({
                   .
                 </p>
               ) : (
-                <p className="mt-8 border-l-2 border-rhymvex-volt/40 ps-4 text-sm text-rhymvex-white/45">
+                <p className="mt-8 border-l-2 border-rhymvex-volt/40 ps-4 text-sm text-rhymvex-white/55">
                   {t("intake.noSla")}
                 </p>
               )}
 
-              <p className="mt-8 text-xs text-rhymvex-white/35">
+              <p className="mt-8 text-xs text-rhymvex-white/50">
                 {t("intake.preferEmail")} {" "}
                 <a
                   href={`mailto:${settings.contact_email}`}

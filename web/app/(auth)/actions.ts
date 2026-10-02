@@ -7,7 +7,7 @@ import { createClientSession, createStaffSession, staffCookieOptions, clientCook
 import { claimInvitation, findLiveInvitation, InvitationError } from "@/lib/auth/invitations";
 import { fieldErrors, loginSchema, acceptInvitationSchema } from "@/lib/validation";
 import { recordAudit, ANONYMOUS_ACTOR } from "@/lib/audit";
-import { requestMeta } from "@/lib/ratelimit";
+import { requestMeta, consumeSignInAttempt, consumeSignInFailure, SIGN_IN_THROTTLED_MESSAGE } from "@/lib/ratelimit";
 import { sendMail, siteUrl } from "@/lib/mail/smtp";
 import { invitationEmail } from "@/lib/mail/invitation-templates";
 import { cookies } from "next/headers";
@@ -42,6 +42,15 @@ export async function staffSignInAction(
   }
 
   const meta = await requestMeta();
+
+  // Throttle before the hash is computed, not after: the cost of a guess is the
+  // scrypt work, so the ceiling has to be the number of attempts, and it has to
+  // be enforced ahead of the verify call rather than once a failure is known.
+  const attempt = await consumeSignInAttempt("staff", meta.ipAddress);
+  if (!attempt.allowed) {
+    return { ok: false, error: SIGN_IN_THROTTLED_MESSAGE };
+  }
+
   const staff = await queryOne<{
     id: string;
     name: string;
@@ -60,14 +69,25 @@ export async function staffSignInAction(
     : (await fakeVerifyDelay(), false);
 
   if (!staff || !valid || !staff.active) {
+    // Account-keyed, so guessing one mailbox from many addresses still runs out.
+    const failure = await consumeSignInFailure("staff", parsed.data.email);
     await recordAudit(ANONYMOUS_ACTOR, {
       action: "staff.login_failed",
       entityType: "staff",
-      metadata: { email: parsed.data.email, reason: !staff ? "no-account" : "bad-credentials" },
+      metadata: {
+        email: parsed.data.email,
+        reason: !staff ? "no-account" : "bad-credentials",
+        throttled: !failure.allowed,
+      },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
-    return { ok: false, error: "That email and password combination didn't work." };
+    return {
+      ok: false,
+      error: failure.allowed
+        ? "That email and password combination didn't work."
+        : SIGN_IN_THROTTLED_MESSAGE,
+    };
   }
 
   const { cookieValue, expiresAt } = await createStaffSession(staff.id, meta);
@@ -108,6 +128,12 @@ export async function clientSignInAction(
   }
 
   const meta = await requestMeta();
+
+  const attempt = await consumeSignInAttempt("client", meta.ipAddress);
+  if (!attempt.allowed) {
+    return { ok: false, error: SIGN_IN_THROTTLED_MESSAGE };
+  }
+
   const user = await queryOne<{
     id: string;
     client_id: string;
@@ -127,7 +153,13 @@ export async function clientSignInAction(
     : (await fakeVerifyDelay(), false);
 
   if (!user || !valid || !user.active) {
-    return { ok: false, error: "That email and password combination didn't work." };
+    const failure = await consumeSignInFailure("client", parsed.data.email);
+    return {
+      ok: false,
+      error: failure.allowed
+        ? "That email and password combination didn't work."
+        : SIGN_IN_THROTTLED_MESSAGE,
+    };
   }
 
   const { cookieValue, expiresAt } = await createClientSession(user.id, meta);

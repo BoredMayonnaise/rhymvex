@@ -32,7 +32,7 @@ export default async function PortalSettingsPage() {
               If something here looks wrong, or you need access for a colleague, ask your contact
               and they&apos;ll invite them from their side.
             </p>
-            <p className="m-0 text-rhymvex-white/40">
+            <p className="m-0 text-rhymvex-white/50">
               This portal shows only your records. Anything about how Rhymvex runs stays on our
               side.
             </p>

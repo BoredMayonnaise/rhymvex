@@ -88,10 +88,10 @@ export default async function PortalInvoicesPage() {
                         invoice.currency || settings.currency,
                       )}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(invoice.issued_at)}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/45">
+                    <td className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(invoice.due_at)}
                     </td>
                   </tr>

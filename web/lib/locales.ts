@@ -72,6 +72,50 @@ export function localePrefix(locale?: string | null): string {
 }
 
 /**
+ * Where the visitor said they wanted to read.
+ *
+ * The language itself lives in the URL, which is what makes a page shareable and
+ * indexable. This cookie is not that: it records that the visitor has already
+ * been decided, either by picking from the switcher or by being sent to their
+ * own locale on arrival. Its only job is to stop detection running a second time
+ * and undo a choice the visitor already made — someone who deliberately went back
+ * to the default should stay there rather than being bounced out again.
+ *
+ * Written for a year, same as the currency preference beside it.
+ */
+export const LOCALE_COOKIE = "rv_locale";
+export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/**
+ * Record a deliberate locale choice.
+ *
+ * Called when somebody picks a market from the switcher. The URL already changes,
+ * so this is not what makes the switch work — it is what tells `proxy.ts` that
+ * detection is finished for this visitor, so returning to `/` later does not
+ * bounce them straight back out to the market they just left.
+ *
+ * Written on the client for the same reason the currency preference is: it has to
+ * happen at the moment of the choice, without a round trip.
+ */
+export function rememberLocale(code: LocaleCode): void {
+  if (typeof document === "undefined") return;
+  if (!isLocale(code)) return;
+  document.cookie =
+    `${LOCALE_COOKIE}=${encodeURIComponent(code)}; path=/; ` +
+    `max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax`;
+}
+
+/** The locale this visitor chose, or null if they have not chosen. */
+export function readRememberedLocale(): LocaleCode | null {
+  if (typeof document === "undefined") return null;
+  const found = /(?:^|;\s*)rv_locale=([^;]*)/.exec(document.cookie);
+  if (!found) return null;
+  const value = decodeURIComponent(found[1]);
+  return isLocale(value) ? value : null;
+}
+
+
+/**
  * The home page for a locale.
  *
  * No trailing slash, because the app runs with Next's default
@@ -80,6 +124,65 @@ export function localePrefix(locale?: string | null): string {
  */
 export function homeHref(locale?: string | null): string {
   return localePrefix(locale) || "/";
+}
+
+/* --------------------------------------------------------------------------
+   hreflang
+
+   Every locale is a real translation of the same two pages, so each page has to
+   name its siblings. Without this a crawler only ever learns about the locale
+   it happened to land on: the pages self-declare a canonical, which stops them
+   being treated as duplicates, but nothing tells a search engine that `/ar` and
+   `/th-TH` are the same content in another language, so it picks one and stops
+   discovering the rest.
+   -------------------------------------------------------------------------- */
+
+/**
+ * A locale code as an hreflang value.
+ *
+ * Normalised to the conventional form — lowercase language, uppercase region —
+ * because the catalogue stores `en-IE` and `zh-CN` while hreflang is written
+ * `en-ie` and `zh-cn`. Matching is case-insensitive, but emitting one canonical
+ * spelling keeps the tag identical across the meta tags and the sitemap.
+ */
+export function hrefLangTag(locale: LocaleCode): string {
+  const [language, region] = locale.split("-");
+  return region ? `${language.toLowerCase()}-${region.toUpperCase()}` : language.toLowerCase();
+}
+
+/**
+ * Sibling URLs for one page across every locale, plus `x-default`.
+ *
+ * `x-default` points at the default locale's own URL, which is the un-prefixed
+ * one. That is the page to serve a visitor whose language matches none of the
+ * seven, so it is the right target for the annotation and not a separate
+ * redirect page we would then have to maintain.
+ *
+ * Shared by the page metadata and the sitemap so the two can never disagree
+ * about which URL stands for which locale.
+ */
+export function localeAlternates(
+  siteUrl: string,
+  path: (locale: LocaleCode) => string,
+): Record<string, string> {
+  const entries = LOCALE_CODES.map((code) => [
+    hrefLangTag(code),
+    `${siteUrl}${path(code)}`,
+  ]);
+  return {
+    ...Object.fromEntries(entries),
+    "x-default": `${siteUrl}${path(DEFAULT_LOCALE)}`,
+  };
+}
+
+/** Sibling URLs for the home page. */
+export function homeAlternates(siteUrl: string): Record<string, string> {
+  return localeAlternates(siteUrl, homeHref);
+}
+
+/** Sibling URLs for the intake page. */
+export function intakeAlternates(siteUrl: string): Record<string, string> {
+  return localeAlternates(siteUrl, (locale) => intakeHref(locale));
 }
 
 /**

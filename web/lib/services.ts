@@ -29,6 +29,21 @@ export const CONTACT_EMAIL =
 export const CALENDAR_URL = process.env.NEXT_PUBLIC_CALENDAR_URL ?? "";
 
 /**
+ * The public origin, for absolute URLs the site has to state rather than link:
+ * canonicals, hreflang, the sitemap.
+ *
+ * Defaults to the real domain rather than localhost, because these strings are
+ * read by crawlers and a canonical pointing at a dev machine is worse than no
+ * canonical. Trailing slashes are stripped so callers can append a path without
+ * producing a double slash. Note this is distinct from `siteUrl()` in
+ * lib/mail/smtp, which deliberately defaults to localhost: a link in an email
+ * should point at wherever the app is actually running.
+ */
+export const SITE_ORIGIN = (
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://rhymvex.com"
+).replace(/\/+$/, "");
+
+/**
  * The primary contact path.
  *
  * Requests go to the in-site intake form, which records a lead in the platform
