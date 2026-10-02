@@ -6,7 +6,6 @@ import { LeadCaptureProvider } from "@/components/lead/LeadCaptureProvider";
 import { RvWordmark } from "@/components/RvWordmark";
 import { WaveformRhythm } from "@/components/WaveformRhythm";
 import { enquiryUrl, CONTACT_EMAIL, SITE_ORIGIN } from "@/lib/services";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { getTranslator } from "@/lib/i18n";
 import "./globals.css";
 
@@ -167,14 +166,6 @@ export default function RootLayout({
             <div className="mt-12 flex flex-col items-start gap-4 border-t border-rhymvex-white/10 pt-6 text-xs text-rhymvex-white/50 sm:flex-row sm:items-center sm:justify-between">
               <p>© {year} Rhymvex. All rights reserved.</p>
               <div className="flex flex-wrap items-center gap-5">
-                {/* Language only, no currency control. The currency preference is
-                    detected on arrival and it only changes figures on the intake
-                    page, which carries its own switcher in its own header. This
-                    footer is on every route including the home pages, where there
-                    are no figures at all, so a currency switch here would repaint
-                    the page and alter nothing — which reads as broken rather than
-                    as unnecessary. */}
-                <LocaleSwitcher />
                 <p className="hidden sm:block">{t("footer.systemsYouCanRun")}</p>
                 <a
                   href="#main"

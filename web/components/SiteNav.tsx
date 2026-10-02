@@ -5,7 +5,6 @@ import { ArrowUpRight, MessageSquareText } from "lucide-react";
 import { RvMark } from "@/components/RvMark";
 import { useLeadCapture } from "@/components/lead/LeadCaptureProvider";
 import { enquiryUrl } from "@/lib/services";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
 import { getTranslator } from "@/lib/i18n";
 
@@ -81,10 +80,6 @@ export function SiteNav({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }) {
           </a>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            {/* Prices differ by locale, so which one is showing has to be
-                visible and changeable from every page. */}
-            <LocaleSwitcher />
-
             {/* Opens the modal capture. Not a mailto: that would drop the
                 request outside the platform, with no lead record and no
                 assignment. */}

@@ -71,48 +71,6 @@ export function localePrefix(locale?: string | null): string {
   return code === DEFAULT_LOCALE ? "" : `/${code}`;
 }
 
-/**
- * Where the visitor said they wanted to read.
- *
- * The language itself lives in the URL, which is what makes a page shareable and
- * indexable. This cookie is not that: it records that the visitor has already
- * been decided, either by picking from the switcher or by being sent to their
- * own locale on arrival. Its only job is to stop detection running a second time
- * and undo a choice the visitor already made — someone who deliberately went back
- * to the default should stay there rather than being bounced out again.
- *
- * Written for a year, same as the currency preference beside it.
- */
-export const LOCALE_COOKIE = "rv_locale";
-export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
-
-/**
- * Record a deliberate locale choice.
- *
- * Called when somebody picks a market from the switcher. The URL already changes,
- * so this is not what makes the switch work — it is what tells `proxy.ts` that
- * detection is finished for this visitor, so returning to `/` later does not
- * bounce them straight back out to the market they just left.
- *
- * Written on the client for the same reason the currency preference is: it has to
- * happen at the moment of the choice, without a round trip.
- */
-export function rememberLocale(code: LocaleCode): void {
-  if (typeof document === "undefined") return;
-  if (!isLocale(code)) return;
-  document.cookie =
-    `${LOCALE_COOKIE}=${encodeURIComponent(code)}; path=/; ` +
-    `max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax`;
-}
-
-/** The locale this visitor chose, or null if they have not chosen. */
-export function readRememberedLocale(): LocaleCode | null {
-  if (typeof document === "undefined") return null;
-  const found = /(?:^|;\s*)rv_locale=([^;]*)/.exec(document.cookie);
-  if (!found) return null;
-  const value = decodeURIComponent(found[1]);
-  return isLocale(value) ? value : null;
-}
 
 
 /**
@@ -233,39 +191,6 @@ export function stripLocalePrefix(pathname: string): string | null {
     : null;
 }
 
-/** True when a path exists in every locale, so a locale switch can stay on it. */
-export function isLocalizedPath(pathname: string): boolean {
-  const first = pathname.split("/").filter(Boolean)[0];
-  return !NON_LOCALIZED_ROOTS.some(
-    (root) => first === root || pathname.startsWith(`/${root}/`),
-  );
-}
-
-/** Read the locale out of a pathname, for client components. */
-export function localeFromPathname(pathname: string): LocaleCode {
-  const first = pathname.split("/").filter(Boolean)[0];
-  return isLocale(first) ? first : DEFAULT_LOCALE;
-}
-
-/**
- * Rewrite a site path so it points at a different locale.
- *
- * Falls back to that locale's home page when the current path is not one that
- * exists per locale. Without that, the switcher in the footer of a workspace
- * page would hand out URLs that 404, and the one place the visitor can change
- * the market would be the one place that breaks.
- */
-export function hrefForLocale(pathname: string, locale: LocaleCode): string {
-  const prefix = localePrefix(locale);
-  if (!isLocalizedPath(pathname)) return homeHref(locale);
-  const rest = pathname
-    .split("/")
-    .filter(Boolean)
-    .filter((segment) => !isLocale(segment))
-    .join("/");
-  return rest ? `${prefix}/${rest}` : prefix || "/";
-}
-
 /* --------------------------------------------------------------------------
    Money and dates
    -------------------------------------------------------------------------- */
@@ -287,18 +212,6 @@ export function formatDate(value: Date | string, locale: Locale): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(date);
-}
-
-/** The currency symbol a locale shows, derived from its own data. */
-export function currencySymbol(locale: Locale): string {
-  return (
-    new Intl.NumberFormat(locale.code, {
-      style: "currency",
-      currency: locale.currency,
-    })
-      .formatToParts(0)
-      .find((part) => part.type === "currency")?.value ?? locale.currency
-  );
 }
 
 /* --------------------------------------------------------------------------

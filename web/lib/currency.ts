@@ -73,66 +73,13 @@ export function bandLabel(currency: Currency, key: BandKey): string {
   return currency.budgetBands[key];
 }
 
-/** How a currency is named in a switcher, e.g. `Japan (¥)`. */
-export function currencyLabel(currency: Currency): string {
-  return `${currency.label} (${currency.symbol})`;
-}
-
-/**
- * The short form, for the switcher.
- *
- * A `<select>` is as wide as its widest option, so "United Kingdom (£)" made the
- * control a 190px block sitting in the intake header next to a logo. The symbol
- * is what a person scans for and the code is what is unambiguous, so the country
- * name is what goes: six characters instead of nineteen, and the option list
- * becomes scannable at a glance.
- *
- * The full name is still what the option means, so it stays in `aria-label` on
- * the control rather than in the option text, where a screen reader would read
- * out "United Kingdom" before every single one.
- */
-export function currencyCompactLabel(currency: Currency): string {
-  // CHF, AED and SAR have no distinct symbol, so the catalogue stores the code
-  // as the symbol. Printing both would render "CHF CHF".
-  return currency.symbol === currency.code
-    ? currency.code
-    : `${currency.symbol} ${currency.code}`;
-}
-
 /* --------------------------------------------------------------------------
-   Remembering the choice
+   The currency cookie
 
-   A cookie, not a query parameter, so the money follows the visitor from a
-   shared link, through the back button, and into next week's session. It is not
-   httpOnly because the switcher writes it from the browser and the server reads
-   it; it carries no secret and authorises nothing.
+   Still read, never written. `preferredCurrency` honours a value left by an
+   earlier visit so a returning visitor keeps the currency they were shown last
+   time, but nothing on the site offers a choice any more: the currency is a
+   property of the language being read, set by the locale catalogue.
    -------------------------------------------------------------------------- */
 
 export const CURRENCY_COOKIE = "rv_currency";
-
-/** A year, so a returning visitor is not asked again next month. */
-export const CURRENCY_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
-
-/** Write the preference from the browser. A no-op during server rendering. */
-export function rememberCurrency(code: CurrencyCode): void {
-  if (typeof document === "undefined") return;
-  document.cookie =
-    `${CURRENCY_COOKIE}=${encodeURIComponent(code)}; path=/; ` +
-    `max-age=${CURRENCY_COOKIE_MAX_AGE}; samesite=lax`;
-}
-
-/**
- * The remembered preference, read from the browser. Null when unset or unknown.
- *
- * Used only where the server could not resolve it, which is the shared layout:
- * reading the cookie there would make every route dynamic, including the home
- * pages that show no money and are deliberately cached. See `CurrencySwitcher`.
- */
-export function readRememberedCurrency(): CurrencyCode | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${CURRENCY_COOKIE}=([^;]*)`),
-  );
-  const value = match ? decodeURIComponent(match[1]) : null;
-  return isCurrency(value) ? value : null;
-}

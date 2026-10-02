@@ -7,8 +7,6 @@ import { draftFromIds, services } from "@/lib/services";
 import { SITUATIONS } from "@/lib/validation";
 import { DEFAULT_LOCALE, getLocale, type LocaleCode } from "@/lib/locales";
 import { preferredCurrency } from "@/lib/currency-preference";
-import { LocaleSwitcher } from "@/components/LocaleSwitcher";
-import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { getTranslator } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -99,12 +97,6 @@ export default async function IntakeView({
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             {t("nav.backToSite")}
           </Link>
-          {/* This page has its own header rather than the site header, so the
-              switchers are repeated here rather than left out. The currency one
-              is here too: this is the only page on the site that shows money,
-              so it is the one place a wrong choice would be visible. */}
-          <CurrencySwitcher currency={currency.code} locale={locale} />
-          <LocaleSwitcher />
         </div>
       </header>
 
