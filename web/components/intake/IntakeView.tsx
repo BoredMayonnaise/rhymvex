@@ -81,7 +81,18 @@ export default async function IntakeView({
         aria-hidden="true"
       />
 
-      <header className="relative border-b border-rhymvex-white/8">
+      {/* Sticky, because the form is taller than any screen and this bar holds
+          the only way out of it. Scrolling a 1200px form on a phone used to
+          take "Back to site" off the top and leave nothing behind, so leaving
+          meant scrolling back up first.
+
+          The surface goes opaque and picks up a blur on scroll, matching the
+          condensed treatment the site header already uses. Without it the page
+          content slides visibly underneath a transparent bar. The hairline is
+          permanent rather than scroll-driven: this bar is only ever over the
+          page's own background, so a border that appears and disappears reads
+          as a glitch rather than as depth. */}
+      <header className="sticky top-0 z-50 border-b border-rhymvex-white/10 bg-rhymvex-black/85 backdrop-blur-md">
         <div className="rv-container flex items-center justify-between py-5">
           <Link
             href="/"
