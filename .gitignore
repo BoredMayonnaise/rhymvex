@@ -22,3 +22,6 @@ tmp/
 
 # opencode local config
 .opencode/
+
+# Local skills
+skills/
