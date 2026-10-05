@@ -86,8 +86,7 @@ export function Positioning({ locale = DEFAULT_LOCALE }: { locale?: LocaleCode }
           className="relative min-h-72 overflow-hidden rounded-2xl border border-rhymvex-white/10 bg-rhymvex-slate sm:min-h-80 flex flex-col justify-between"
         >
           <LoopVideo
-            mp4Src="/media/brand-reel.mp4"
-            webmSrc="/media/brand-reel.webm"
+            mp4Src="/brand/Crystalline_shards_and_ribbons_d…_20261004124439.mp4"
             posterSrc="/media/brand-reel-poster.jpg"
             className="absolute inset-0 object-[center_65%]"
           />

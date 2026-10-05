@@ -23,8 +23,8 @@ interface ScrollVideoBgProps {
  */
 export function ScrollVideoBg({
   className = "",
-  mp4Src = "/media/brand-reel-intra.mp4",
-  webmSrc = "/media/brand-reel-intra.webm",
+  mp4Src = "/brand/Camera_moving_through_purple_cry…_20261004133011.mp4",
+  webmSrc = undefined,
   posterSrc = "/media/brand-reel-poster.jpg",
   objectPosition = "object-[center_65%]",
 }: ScrollVideoBgProps) {
