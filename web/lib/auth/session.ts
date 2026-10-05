@@ -20,7 +20,9 @@ const STAFF_COOKIE = "rv_staff_session";
 const CLIENT_COOKIE = "rv_client_session";
 
 const STAFF_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
+const STAFF_REMEMBERED_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 const CLIENT_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+const CLIENT_REMEMBERED_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 export type StaffSession = {
   id: string;
@@ -96,10 +98,12 @@ export function hashToken(token: string): string {
 export async function createStaffSession(
   staffId: string,
   meta: { userAgent?: string | null; ipAddress?: string | null },
+  options?: { remember?: boolean },
 ): Promise<{ cookieValue: string; csrfToken: string; expiresAt: Date }> {
   const id = newSessionId();
   const csrfToken = newCsrfToken();
-  const expiresAt = new Date(Date.now() + STAFF_TTL_MS);
+  const ttl = options?.remember ? STAFF_REMEMBERED_TTL_MS : STAFF_TTL_MS;
+  const expiresAt = new Date(Date.now() + ttl);
 
   await query(
     `INSERT INTO sessions (id, staff_id, user_agent, ip_address, csrf_token, expires_at)
@@ -188,10 +192,12 @@ export { STAFF_COOKIE };
 export async function createClientSession(
   clientUserId: string,
   meta: { userAgent?: string | null; ipAddress?: string | null },
+  options?: { remember?: boolean },
 ): Promise<{ cookieValue: string; csrfToken: string; expiresAt: Date }> {
   const id = newSessionId();
   const csrfToken = newCsrfToken();
-  const expiresAt = new Date(Date.now() + CLIENT_TTL_MS);
+  const ttl = options?.remember ? CLIENT_REMEMBERED_TTL_MS : CLIENT_TTL_MS;
+  const expiresAt = new Date(Date.now() + ttl);
 
   await query(
     `INSERT INTO client_sessions (id, client_user_id, user_agent, ip_address, csrf_token, expires_at)

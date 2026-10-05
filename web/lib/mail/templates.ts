@@ -149,12 +149,32 @@ ${siteUrl()}`;
 /* Internal new-lead notification                                             */
 /* -------------------------------------------------------------------------- */
 
-export function internalLeadNotification(lead: IntakeLead & { id: string; ip: string | null; source: string }) {
-  const subject = `New Rhymvex lead — ${lead.company || lead.name}`;
+export interface PipelineStats {
+  todayCount: number;
+  openCount: number;
+  totalCount: number;
+}
+
+export function internalLeadNotification(
+  lead: IntakeLead & { id: string; ip: string | null; source: string },
+  pipelineStats?: PipelineStats,
+) {
+  const subjectPrefix = pipelineStats ? `[Lead #${pipelineStats.totalCount}] ` : "";
+  const subject = `${subjectPrefix}New Rhymvex lead — ${lead.company || lead.name}`;
   // Internal link. Only ever delivered to the configured internal address.
   const openUrl = `${siteUrl()}/admin/leads/${lead.id}`;
 
-  const text = `New lead from the website.
+  const pipelineSectionText = pipelineStats
+    ? `
+Pipeline Status
+---------------
+Leads Today:        ${pipelineStats.todayCount}
+Awaiting Response:  ${pipelineStats.openCount}
+Total Recorded:     ${pipelineStats.totalCount}
+`
+    : "";
+
+  const text = `New lead from the website.${pipelineSectionText}
 
 Name:      ${lead.name}
 Company:   ${lead.company || "—"}
@@ -180,7 +200,20 @@ You don't need to reply to this email — it's an internal alert.`;
   const row = (label: string, value: string) =>
     `<p style="margin:0 0 8px;font:400 14px/1.6 Inter,sans-serif;color:${BRAND.white};"><span style="display:inline-block;min-width:96px;color:rgba(245,247,250,0.45);">${label}</span>${escapeHtml(value)}</p>`;
 
+  const pipelineSectionHtml = pipelineStats
+    ? `
+    <div style="background:#0B0F14;border:1px solid rgba(110,231,255,0.25);border-radius:8px;padding:12px 16px;margin:0 0 18px;">
+      <p style="margin:0 0 6px;font:600 10px/1 Inter,sans-serif;letter-spacing:0.16em;text-transform:uppercase;color:${BRAND.volt};">Live Pipeline Status</p>
+      <p style="margin:0;font:400 13px/1.5 Inter,sans-serif;color:${BRAND.white};">
+        <strong>${pipelineStats.todayCount}</strong> new today &nbsp;&middot;&nbsp; 
+        <strong style="color:${BRAND.volt};">${pipelineStats.openCount}</strong> awaiting review &nbsp;&middot;&nbsp; 
+        <strong>${pipelineStats.totalCount}</strong> total inflow
+      </p>
+    </div>`
+    : "";
+
   const body = `
+    ${pipelineSectionHtml}
     <p style="margin:0 0 18px;">A new request came in through the website intake. Nobody is assigned yet.</p>
     <div style="border:1px solid ${BRAND.border};border-radius:10px;padding:16px 18px;margin:0 0 20px;">
       ${row("Name", lead.name)}

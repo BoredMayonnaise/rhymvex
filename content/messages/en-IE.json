@@ -6,22 +6,28 @@
     "tellUs": "Tell us what you're trying to solve",
     "markets": "Prices for",
     "currency": "Currency",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "process": "How we work",
+    "services": "Services",
+    "work": "Studio",
+    "primary": "Sections"
   },
   "footer": {
     "tagline": "Build with rhythm.",
-    "body": "Brand & product agency. We build the system behind your brand, then hand it over so your team can run it.",
+    "body": "Digital product & systems studio. We build the platforms, software, and brand systems behind your business, then hand them over so your team can run them.",
     "newProjects": "New projects",
     "systemsYouCanRun": "Systems you can run.",
     "rights": "All rights reserved.",
     "backToTop": "Back to top"
   },
   "hero": {
-    "line1": "Your brand is a system.",
-    "line2": "Build it like one.",
-    "body": "Your team should be able to ship on-brand without us in the room. That's what the system is for.",
+    "line1": "Stop stitching disconnected tools.",
+    "line2": "Build an integrated system.",
+    "body": "From custom digital products and client platforms to design systems and full-stack web applications. We architect, engineer, and deploy the complete system so your team can scale without bloat.",
     "seeHowWeWork": "See how we work",
-    "orFullForm": "Or open the full enquiry form"
+    "orFullForm": "Or open the full enquiry form",
+    "primaryCta": "Start your project",
+    "note": "No package to choose and no budget conversation up front. Describe the situation and a person reads it."
   },
   "intake": {
     "title": "Tell us what you're trying to solve",
@@ -95,5 +101,92 @@
     "scales": "You need a system that scales",
     "momentum": "You need ongoing momentum",
     "specific": "Something specific"
+  },
+  "home": {
+    "problem": {
+      "eyebrow": "The problem",
+      "heading1": "Most products don't fail on features.",
+      "heading2": "They fail because nothing connects.",
+      "body": "The pitch deck says one thing. The site says another. The product does something else. Every tool gets stitched together by hand, so every release drifts further from the core.",
+      "channelsLabel": "Where the drift shows",
+      "channelDeck": "Pitch deck",
+      "channelSite": "Web platform",
+      "channelAds": "Product UX",
+      "channelSocial": "Operations",
+      "channelsCaption": "One company, four disconnected surfaces.",
+      "fixHeading": "So we build the system first.",
+      "fixBody": "The architecture, the data model, the design tokens and the components come before any single feature. Everything built afterwards connects to the same foundation, so your team ships in hours.",
+      "p1Title": "Integrated product & brand",
+      "p1Body": "From UI/UX to code and design tokens, your team ships consistent releases without endless handoff friction.",
+      "p2Title": "Full-stack architecture",
+      "p2Body": "Production-ready software built on modern foundations: fast, resilient, and ready to scale.",
+      "p3Title": "Built to convert & perform",
+      "p3Body": "Every system, interface, and workflow is designed around real business outcomes and measurable conversion."
+    },
+    "process": {
+      "eyebrow": "How we work",
+      "heading1": "Four steps.",
+      "heading2": "You know the price before step one.",
+      "body": "Each step ends with something written down and signed off, so nothing gets reopened in week six.",
+      "step": "Step {n}",
+      "deliverables": "You get",
+      "s1Title": "Diagnose",
+      "s1Body": "We audit what exists, then interview the people who built it. You get the two or three gaps that are actually costing you.",
+      "s1D1": "System audit",
+      "s1D2": "Stakeholder interviews",
+      "s1D3": "Gap analysis",
+      "s2Title": "Define",
+      "s2Body": "We lock the architecture, user journeys, and core value proposition, and get them signed off.",
+      "s2D1": "Product roadmap",
+      "s2D2": "User architecture",
+      "s2D3": "Technical spec",
+      "s3Title": "Systemise & Build",
+      "s3Body": "Digital product, tokens, components and production code, delivered as an engineered system your team can run.",
+      "s3D1": "Design tokens",
+      "s3D2": "Full-stack app",
+      "s3D3": "Component library",
+      "s4Title": "Deploy & Hand Over",
+      "s4Body": "Your team gets production deployment, codebase walkthrough, and system docs. Afterwards we stay on a rhythm if needed.",
+      "s4D1": "Production deploy",
+      "s4D2": "Team walkthrough",
+      "s4D3": "System docs"
+    },
+    "services": {
+      "eyebrow": "Services",
+      "recommended": "Recommended",
+      "solve": "What we'll help you solve",
+      "included": "{n} included",
+      "optional": "(optional)",
+      "engagement": "Engagement",
+      "timeline": "Timeline",
+      "type": "Type",
+      "terms": "Terms"
+    },
+    "work": {
+      "eyebrow": "Studio",
+      "heading1": "No client case studies yet.",
+      "heading2": "Here's what we run ourselves.",
+      "body": "We would rather show you nothing than show you something invented. These are the systems the studio built for its own use, made the same way a client's would be.",
+      "label": "Studio system",
+      "builtWith": "What's in it",
+      "coreTitle": "Design token & code pipeline",
+      "coreBody": "One unified token repository feeds web apps, native iOS/Android, and Figma. Changes compile and sync automatically via CI/CD, giving development and design a single source of truth.",
+      "coreD1": "Design tokens",
+      "coreD2": "CI/CD compiler",
+      "coreD3": "Multi-platform sync",
+      "portalTitle": "Full-stack client intake & operations platform",
+      "portalBody": "The custom software platform powering this studio. Intelligent multi-locale intake, automated qualification, interactive proposal engine, and a private client workspace with contracts and live billing.",
+      "portalD1": "Next.js & Postgres",
+      "portalD2": "Interactive proposals",
+      "portalD3": "Client portal",
+      "imageAlt": "Screenshot of {name}"
+    },
+    "contact": {
+      "eyebrow": "Start here",
+      "heading1": "Tell us where the system hurts.",
+      "heading2": "We'll map the fix.",
+      "body": "Every engagement starts with understanding the problem. Nothing gets quoted until we both know what's actually broken.",
+      "orBook": "Prefer to talk first?"
+    }
   }
 }

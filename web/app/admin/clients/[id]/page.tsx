@@ -100,15 +100,15 @@ export default async function ClientDetailPage({
       ) : null}
 
       <header className="rv-page-head">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="rv-page-title">{client.name}</h1>
+            <h1 className="rv-page-title break-words">{client.name}</h1>
             <StatusPill
               value={humanise(client.status)}
               tone={CLIENT_TONE[client.status] ?? "idle"}
             />
           </div>
-          <p className="rv-page-sub">
+          <p className="rv-page-sub break-words">
             <span className="font-mono">{client.reference}</span>
             {client.industry ? ` · ${client.industry}` : ""} · client since{" "}
             {formatDate(client.created_at)}
@@ -125,16 +125,16 @@ export default async function ClientDetailPage({
         ) : null}
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rv-stat">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Collected</p>
-          <p className="rv-stat-value">{formatMoney(collected, settings.currency)}</p>
+          <p className="rv-stat-value truncate">{formatMoney(collected, settings.currency)}</p>
         </div>
-        <div className="rv-stat">
+        <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Outstanding</p>
-          <p className="rv-stat-value">{formatMoney(outstanding, settings.currency)}</p>
+          <p className="rv-stat-value truncate">{formatMoney(outstanding, settings.currency)}</p>
         </div>
-        <div className="rv-stat">
+        <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Active projects</p>
           <p className="rv-stat-value">
             {
@@ -144,7 +144,7 @@ export default async function ClientDetailPage({
             }
           </p>
         </div>
-        <div className="rv-stat">
+        <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Portal users</p>
           <p className="rv-stat-value">{users.length}</p>
         </div>
@@ -162,8 +162,8 @@ export default async function ClientDetailPage({
                     key={engagement.id}
                     className="border-b border-rhymvex-white/5 px-4 py-3.5 last:border-b-0"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-rhymvex-white">{engagement.name}</p>
                         <p className="mt-0.5 text-xs text-rhymvex-white/55">
                           {humanise(engagement.model)}
@@ -175,10 +175,10 @@ export default async function ClientDetailPage({
                           </p>
                         ) : null}
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-end sm:justify-start sm:text-right">
                         <StatusPill value={humanise(engagement.status)} tone="active" />
                         {engagement.value_total ? (
-                          <p className="rv-table-num mt-1.5 text-xs text-rhymvex-white/60">
+                          <p className="rv-table-num text-xs text-rhymvex-white/60 sm:mt-1.5">
                             {formatMoney(engagement.value_total, settings.currency)}
                           </p>
                         ) : null}
@@ -197,9 +197,20 @@ export default async function ClientDetailPage({
               <ul>
                 {projects.map((project) => (
                   <li key={project.id} className="border-b border-rhymvex-white/5 px-4 py-3.5 last:border-b-0">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-rhymvex-white">{project.name}</p>
+                        <div className="flex items-center justify-between gap-2 sm:block">
+                          <p className="text-sm font-semibold text-rhymvex-white">{project.name}</p>
+                          <div className="flex shrink-0 items-center gap-2 sm:hidden">
+                            <span className="rv-table-num text-xs text-rhymvex-white/50">
+                              {project.progress}%
+                            </span>
+                            <StatusPill
+                              value={humanise(project.status)}
+                              tone={projectStatusTone(project.status)}
+                            />
+                          </div>
+                        </div>
                         <p className="mt-0.5 text-xs text-rhymvex-white/55">
                           {project.phase ?? humanise(project.status)}
                           {project.lead_staff_name ? ` · ${project.lead_staff_name}` : ""}
@@ -218,7 +229,7 @@ export default async function ClientDetailPage({
                           />
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2.5">
+                      <div className="hidden shrink-0 items-center gap-2.5 sm:flex">
                         <span className="rv-table-num text-xs text-rhymvex-white/50">
                           {project.progress}%
                         </span>
@@ -295,46 +306,90 @@ export default async function ClientDetailPage({
             {invoices.length === 0 ? (
               <EmptyState>No invoices.</EmptyState>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="rv-table">
-                  <caption className="sr-only">Invoices</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Reference</th>
-                      <th scope="col">Description</th>
-                      <th scope="col">Status</th>
-                      <th scope="col" className="text-right">Amount</th>
-                      <th scope="col" className="text-right">Paid</th>
-                      <th scope="col">Due</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((invoice) => (
-                      <tr key={invoice.id}>
-                        <td className="font-mono text-[11px] text-rhymvex-white/50">
+              <>
+                {/* Mobile Cards (< sm) */}
+                <div className="divide-y divide-rhymvex-white/5 sm:hidden">
+                  {invoices.map((invoice) => (
+                    <div key={invoice.id} className="flex flex-col gap-2 p-3.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs text-rhymvex-white/60">
                           {invoice.reference}
-                        </td>
-                        <td className="text-rhymvex-white/70">{invoice.description}</td>
-                        <td>
-                          <StatusPill
-                            value={humanise(invoice.status)}
-                            tone={invoiceStatusTone(invoice.status)}
-                          />
-                        </td>
-                        <td className="rv-table-num text-right text-rhymvex-white/75">
-                          {formatMoney(invoice.amount, invoice.currency || settings.currency)}
-                        </td>
-                        <td className="rv-table-num text-right text-rhymvex-white/55">
-                          {formatMoney(invoice.amount_paid, invoice.currency || settings.currency)}
-                        </td>
-                        <td className="whitespace-nowrap text-rhymvex-white/55">
-                          {formatDate(invoice.due_at)}
-                        </td>
+                        </span>
+                        <StatusPill
+                          value={humanise(invoice.status)}
+                          tone={invoiceStatusTone(invoice.status)}
+                        />
+                      </div>
+                      <p className="text-xs text-rhymvex-white/85 line-clamp-2">
+                        {invoice.description}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 rounded-lg bg-rhymvex-white/[0.03] p-2 text-xs border border-rhymvex-white/5">
+                        <div>
+                          <span className="block text-[10px] uppercase tracking-wider text-rhymvex-white/45">
+                            Amount
+                          </span>
+                          <span className="font-mono font-medium text-rhymvex-white/80">
+                            {formatMoney(invoice.amount, invoice.currency || settings.currency)}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="block text-[10px] uppercase tracking-wider text-rhymvex-white/45">
+                            Paid
+                          </span>
+                          <span className="font-mono font-medium text-rhymvex-white/60">
+                            {formatMoney(invoice.amount_paid, invoice.currency || settings.currency)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-rhymvex-white/45">
+                        Due {formatDate(invoice.due_at)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table (>= sm) */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="rv-table">
+                    <caption className="sr-only">Invoices</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Reference</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" className="text-right">Amount</th>
+                        <th scope="col" className="text-right">Paid</th>
+                        <th scope="col">Due</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {invoices.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td className="font-mono text-[11px] text-rhymvex-white/50">
+                            {invoice.reference}
+                          </td>
+                          <td className="text-rhymvex-white/70">{invoice.description}</td>
+                          <td>
+                            <StatusPill
+                              value={humanise(invoice.status)}
+                              tone={invoiceStatusTone(invoice.status)}
+                            />
+                          </td>
+                          <td className="rv-table-num text-right text-rhymvex-white/75">
+                            {formatMoney(invoice.amount, invoice.currency || settings.currency)}
+                          </td>
+                          <td className="rv-table-num text-right text-rhymvex-white/55">
+                            {formatMoney(invoice.amount_paid, invoice.currency || settings.currency)}
+                          </td>
+                          <td className="whitespace-nowrap text-rhymvex-white/55">
+                            {formatDate(invoice.due_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Panel>
 
@@ -349,9 +404,9 @@ export default async function ClientDetailPage({
                       key={file.id}
                       className="flex items-start justify-between gap-2 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-xs text-rhymvex-white/75">{file.name}</p>
-                        <p className="text-[10px] text-rhymvex-white/50">
+                        <p className="truncate text-[10px] text-rhymvex-white/50">
                           {file.uploader_name ?? "Rhymvex"} · {relativeTime(file.uploaded_at)}
                           {file.project_name ? ` · ${file.project_name}` : ""}
                         </p>
@@ -379,12 +434,12 @@ export default async function ClientDetailPage({
                   {messages.map((message) => (
                     <li
                       key={message.id}
-                      className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
+                      className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0 min-w-0"
                     >
                       <p className="truncate text-xs font-medium text-rhymvex-white">
                         {message.subject || "(no subject)"}
                       </p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] text-rhymvex-white/50">
+                      <p className="mt-0.5 line-clamp-2 text-[11px] text-rhymvex-white/50 break-words">
                         {message.body}
                       </p>
                       <p className="mt-1 text-[10px] text-rhymvex-white/50">
@@ -406,24 +461,28 @@ export default async function ClientDetailPage({
                 {emails.map((email) => (
                   <li
                     key={email.id}
-                    className="flex flex-wrap items-center gap-2 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
+                    className="flex flex-col gap-1.5 border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-2 sm:py-2.5"
                   >
-                    <span className="rv-status" data-tone="idle">
-                      <span className="rv-status-dot" aria-hidden="true" />
-                      {email.direction === "OUTBOUND" ? "Out" : "In"}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-xs text-rhymvex-white/70">
-                      {email.subject}
-                    </span>
-                    {!email.client_visible ? (
-                      <span className="rounded-full border border-rhymvex-ember/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-ember">
-                        Internal
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="rv-status shrink-0" data-tone="idle">
+                        <span className="rv-status-dot" aria-hidden="true" />
+                        {email.direction === "OUTBOUND" ? "Out" : "In"}
                       </span>
-                    ) : null}
-                    <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
-                    <span className="text-[10px] text-rhymvex-white/50">
-                      {relativeTime(email.created_at)}
-                    </span>
+                      <span className="min-w-0 flex-1 truncate text-xs text-rhymvex-white/70">
+                        {email.subject}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                      {!email.client_visible ? (
+                        <span className="rounded-full border border-rhymvex-ember/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-ember">
+                          Internal
+                        </span>
+                      ) : null}
+                      <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
+                      <span className="text-[10px] text-rhymvex-white/50 whitespace-nowrap">
+                        {relativeTime(email.created_at)}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -485,19 +544,19 @@ export default async function ClientDetailPage({
                 {contacts.map((contact) => (
                   <li
                     key={contact.id}
-                    className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
+                    className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0 min-w-0"
                   >
-                    <p className="text-xs font-medium text-rhymvex-white">
-                      {contact.name}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="truncate text-xs font-medium text-rhymvex-white">{contact.name}</span>
                       {contact.is_primary ? (
-                        <span className="ml-1.5 rounded-full border border-rhymvex-volt/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-volt">
+                        <span className="shrink-0 rounded-full border border-rhymvex-volt/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-volt">
                           Primary
                         </span>
                       ) : null}
-                    </p>
+                    </div>
                     <p className="truncate text-[11px] text-rhymvex-white/50">{contact.email}</p>
                     {contact.role_title ? (
-                      <p className="text-[11px] text-rhymvex-white/50">{contact.role_title}</p>
+                      <p className="truncate text-[11px] text-rhymvex-white/50">{contact.role_title}</p>
                     ) : null}
                   </li>
                 ))}
@@ -515,7 +574,7 @@ export default async function ClientDetailPage({
                     key={user.id}
                     className="flex items-center justify-between gap-2 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium text-rhymvex-white">{user.name}</p>
                       <p className="truncate text-[11px] text-rhymvex-white/50">{user.email}</p>
                       <p className="text-[10px] text-rhymvex-white/50">
@@ -524,10 +583,12 @@ export default async function ClientDetailPage({
                           : `invited ${formatDate(user.created_at)}`}
                       </p>
                     </div>
-                    <StatusPill
-                      value={user.active ? "Active" : "Disabled"}
-                      tone={user.active ? "done" : "idle"}
-                    />
+                    <div className="shrink-0">
+                      <StatusPill
+                        value={user.active ? "Active" : "Disabled"}
+                        tone={user.active ? "done" : "idle"}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -16,6 +16,7 @@ import { describeAuditAction } from "@/lib/audit";
 import { formatDateTime, formatMoney, humanise, relativeTime, untilTime } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, bookingStatusTone, leadStatusTone } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
+import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +41,17 @@ export default async function AdminOverviewPage() {
             }).format(new Date())}
           </p>
         </div>
-        <Link href="/admin/leads" className="rv-btn rv-btn-ghost rv-btn-sm">
-          <Inbox className="size-3.5" aria-hidden="true" />
-          All leads
-        </Link>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <PwaInstallButton />
+          <Link href="/admin/leads" className="rv-btn rv-btn-ghost rv-btn-sm w-full justify-center sm:w-auto">
+            <Inbox className="size-3.5" aria-hidden="true" />
+            All leads
+          </Link>
+        </div>
       </header>
 
       {/* Key numbers. Deliberately six: one screen, no scrolling to compare. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Pipeline value"
           value={formatMoney(overview.pipelineValue, settings.currency)}

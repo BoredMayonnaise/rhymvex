@@ -87,6 +87,7 @@ export function proxy(request: NextRequest) {
     if (!request.cookies.get(CLIENT_COOKIE)?.value) {
       const url = request.nextUrl.clone();
       url.pathname = "/portal-sign-in";
+      url.search = `?next=${encodeURIComponent(pathname + search)}`;
       return NextResponse.redirect(url);
     }
   }

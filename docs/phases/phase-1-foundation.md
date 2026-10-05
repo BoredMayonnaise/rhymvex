@@ -49,7 +49,7 @@ Phase 1 is about building the machine before turning it on. No client work start
 | Register domain (`rhymvex.com`) | ⏳ | External — needs registrar account |
 | Set up hosting / deployment pipeline | ⏳ | App builds clean (`npm run build` ✅); deploy target TBD |
 | Build landing page (hero + positioning + CTA) | ✅ | `web/` — Next.js, dark theme, Volt CTA, services sync-checked |
-| Set up professional email (`hello@rhymvex.com`) | ⏳ | |
+| Set up professional email (`support@rhymvex.space`) | ⏳ | |
 | Set up analytics (Google Analytics / Plausible) | ⏳ | |
 | Set up project management tool (Notion / Linear) | ⏳ | |
 | Set up CRM or contact tracking (basic) | ⏳ | |

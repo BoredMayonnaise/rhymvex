@@ -25,7 +25,7 @@ export const servicesStatus = servicesData.meta.status;
 export const featuredService = services.find((s) => s.featured) ?? services[0];
 
 export const CONTACT_EMAIL =
-  process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@rhymvex.com";
+  process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "support@rhymvex.space";
 export const CALENDAR_URL = process.env.NEXT_PUBLIC_CALENDAR_URL ?? "";
 
 /**
@@ -40,7 +40,7 @@ export const CALENDAR_URL = process.env.NEXT_PUBLIC_CALENDAR_URL ?? "";
  * should point at wherever the app is actually running.
  */
 export const SITE_ORIGIN = (
-  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://rhymvex.com"
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://rhymvex.space"
 ).replace(/\/+$/, "");
 
 /**

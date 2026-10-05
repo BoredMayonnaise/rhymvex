@@ -17,7 +17,7 @@ const SEED_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "RhymvexAdmin2026";
 async function ensureSettings() {
   await query(
     `INSERT INTO org_settings (id, company_name, contact_email, notification_email, response_sla_minutes, timezone, currency)
-     VALUES (true, 'Rhymvex', 'hello@rhymvex.com', 'hello@rhymvex.com', NULL, 'Europe/Lisbon', 'EUR')
+     VALUES (true, 'Rhymvex', 'support@rhymvex.space', 'support@rhymvex.space', NULL, 'Europe/Lisbon', 'EUR')
      ON CONFLICT (id) DO NOTHING`,
   );
 }

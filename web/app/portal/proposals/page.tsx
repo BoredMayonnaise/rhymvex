@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FileText } from "lucide-react";
 import { requireClientSession } from "@/lib/auth/guards";
 import { listPortalProposals } from "@/lib/data/portal";
@@ -38,27 +37,40 @@ export default async function PortalProposalsPage() {
         <ul className="flex flex-col gap-3">
           {proposals.map((proposal) => (
             <li key={proposal.id}>
-              <details className="rv-panel">
-                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4">
-                  <FileText className="size-4 shrink-0 text-rhymvex-volt" aria-hidden="true" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-rhymvex-white">
-                      {proposal.title}
+              <details className="rv-panel group">
+                <summary className="flex cursor-pointer list-none flex-col gap-3 p-4 select-none hover:bg-rhymvex-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3 sm:flex-1">
+                    <FileText className="mt-0.5 size-4 shrink-0 text-rhymvex-volt" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-rhymvex-white">
+                        {proposal.title}
+                      </span>
+                      <span className="block text-[11px] text-rhymvex-white/50">
+                        {proposal.model ? `${humanise(proposal.model)} · ` : ""}
+                        {proposal.sent_at ? `sent ${formatDate(proposal.sent_at)}` : "draft"}
+                      </span>
                     </span>
-                    <span className="block text-[11px] text-rhymvex-white/50">
-                      {proposal.model ? `${humanise(proposal.model)} · ` : ""}
-                      {proposal.sent_at ? `sent ${formatDate(proposal.sent_at)}` : "draft"}
-                    </span>
-                  </span>
-                  {proposal.investment ? (
-                    <span className="rv-table-num shrink-0 text-xs text-rhymvex-white/70">
-                      {formatMoney(proposal.investment, proposal.currency || settings.currency)}
-                    </span>
-                  ) : null}
-                  <StatusPill
-                    value={humanise(proposal.status)}
-                    tone={proposalStatusTone(proposal.status)}
-                  />
+                    <div className="sm:hidden">
+                      <StatusPill
+                        value={humanise(proposal.status)}
+                        tone={proposalStatusTone(proposal.status)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-rhymvex-white/5 pt-2 sm:border-t-0 sm:pt-0 sm:justify-end sm:gap-3">
+                    {proposal.investment ? (
+                      <span className="rv-table-num font-mono text-xs font-semibold text-rhymvex-white/75">
+                        {formatMoney(proposal.investment, proposal.currency || settings.currency)}
+                      </span>
+                    ) : null}
+                    <div className="hidden sm:block">
+                      <StatusPill
+                        value={humanise(proposal.status)}
+                        tone={proposalStatusTone(proposal.status)}
+                      />
+                    </div>
+                  </div>
                 </summary>
 
                 <div className="border-t border-rhymvex-white/8 px-4 py-4">

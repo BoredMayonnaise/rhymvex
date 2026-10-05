@@ -1,15 +1,25 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 /**
  * Hero panel: the design system, shown rather than described.
  *
  * Two halves. The top is the reference — palette and type with real names and
- * values, so it reads as a spec somebody could hand over. The bottom is the
- * proof: the same tokens applied to the four core templates from docs/DESIGN.md,
- * cycling on a timer. It answers the only question a prospect actually has,
- * which is "what do I get".
+ * values, so it reads as a spec somebody could hand over. The bottom is what
+ * actually ships: the four core templates from docs/DESIGN.md, rendered from
+ * brand/templates/ and cycling on a timer. It answers the only question a
+ * prospect actually has, which is "what do I get".
+ *
+ * These are the real files, not mock-ups of them, and the copy inside each one
+ * is the template's own example text rather than a client's result. That
+ * distinction is the whole reason to show them: a prospective client can open
+ * the same PNGs in brand/templates/ and see there is nothing hidden behind the
+ * preview. An earlier version of this card drew its previews in markup and
+ * filled them with invented figures — a "+38% inbound" result and a "3 slots"
+ * offer for engagements that had not happened. It looked more impressive and
+ * proved nothing, which is the failure this panel is meant to avoid.
  */
 
 const COLOURS = [
@@ -27,82 +37,59 @@ const TYPE = [
 ] as const;
 
 const TEMPLATES = [
-  { id: "case", name: "Case Study" },
-  { id: "quote", name: "Quote" },
-  { id: "offer", name: "Offer" },
-  { id: "process", name: "Process" },
+  {
+    id: "case",
+    name: "Case Study",
+    file: "/brand/templates/template-case-study.png",
+    for: "Challenge, work, result. Three lines, in that order.",
+  },
+  {
+    id: "quote",
+    name: "Quote",
+    file: "/brand/templates/template-quote.png",
+    for: "One line from a client, at the size it deserves.",
+  },
+  {
+    id: "offer",
+    name: "Offer",
+    file: "/brand/templates/template-offer.png",
+    for: "A dated slot or a campaign, with the scarcity stated.",
+  },
+  {
+    id: "process",
+    name: "Process",
+    file: "/brand/templates/template-process.png",
+    for: "Numbered steps. The one people screenshot.",
+  },
 ] as const;
 
 const DWELL = 4200;
 
-/** Each template renders to the same fixed box, so cycling never shifts layout. */
+/**
+ * Each specimen renders into the same fixed box and letterboxes rather than
+ * crops, so the tabbed panel never shifts and a template is never shown with
+ * its own content cut off.
+ */
 function Preview({ id }: { id: (typeof TEMPLATES)[number]["id"] }) {
-  if (id === "case") {
-    return (
-      <div className="flex h-full flex-col justify-between p-4">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-volt">
-          Case study
-        </p>
-        <div>
-          <p className="font-display text-3xl font-bold leading-none tracking-tight">
-            +38%
-          </p>
-          <p className="mt-1.5 text-[11px] leading-snug text-rhymvex-white/55">
-            inbound in 90 days, one system instead of six
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "quote") {
-    return (
-      <div className="flex h-full flex-col justify-between p-4">
-        <span className="rv-rule block h-px w-8" aria-hidden="true" />
-        <div>
-          <p className="text-[13px] font-medium leading-snug text-rhymvex-white">
-            &ldquo;Your brand is a system. Build it like one.&rdquo;
-          </p>
-          <p className="mt-2 text-[10px] text-rhymvex-white/50">&mdash; Rhymvex</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (id === "offer") {
-    return (
-      <div className="flex h-full flex-col justify-between p-4">
-        <span className="w-fit rounded-full border border-rhymvex-ember/40 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-rhymvex-ember">
-          3 slots
-        </span>
-        <div>
-          <p className="font-display text-lg font-bold leading-tight tracking-tight">
-            Brand Sprint
-          </p>
-          <p className="mt-1 text-[11px] text-rhymvex-white/50">January</p>
-          <span className="mt-3 inline-block rounded-md bg-rhymvex-volt px-2.5 py-1 text-[10px] font-semibold text-rhymvex-black">
-            Book now
-          </span>
-        </div>
-      </div>
-    );
-  }
+  const template = TEMPLATES.find((t) => t.id === id);
+  if (!template) return null;
 
   return (
-    <div className="flex h-full flex-col justify-between p-4">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
-        Framework
+    <div className="flex h-full flex-col">
+      <div className="relative min-h-0 flex-1 bg-rhymvex-black/40">
+        <Image
+          src={template.file}
+          alt={`${template.name} template, rendered from the Rhymvex design system`}
+          fill
+          sizes="(min-width: 1024px) 22rem, 100vw"
+          className="object-contain"
+        />
+      </div>
+      {/* The caption carries the meaning at this size, where the artwork itself
+          is too small to read. */}
+      <p className="shrink-0 px-3 pt-2 text-[10px] leading-snug text-rhymvex-white/50">
+        {template.for}
       </p>
-      <ol className="space-y-1.5">
-        {["Diagnose", "Define", "Systemise"].map((step, i) => (
-          <li key={step} className="flex items-baseline gap-2">
-            <span className="font-display text-[10px] font-bold text-rhymvex-volt">
-              0{i + 1}
-            </span>
-            <span className="text-[11px] text-rhymvex-white/70">{step}</span>
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }
@@ -176,55 +163,67 @@ export function TokenCard({ className = "" }: { className?: string }) {
       onBlurCapture={() => setPaused(false)}
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-rhymvex-white/10 px-5 py-4">
-        <p className="text-sm font-medium">Design tokens</p>
-        <p className="text-[10px] text-rhymvex-white/50">Brand system · v1</p>
+        <p className="text-sm font-semibold tracking-tight text-rhymvex-white">Studio Architecture</p>
+        <span className="inline-flex items-center gap-1.5 text-[10px] text-rhymvex-volt font-medium">
+          <span className="size-1.5 rounded-full bg-rhymvex-volt animate-pulse" />
+          Production stack · v2.4
+        </span>
       </div>
 
-      {/* Colour reference */}
+      {/* Integrated capabilities */}
       <div className="px-5 py-4">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
-          Colour
+          Integrated Capabilities
         </p>
-        <ul className="mt-3 space-y-1.5">
-          {COLOURS.map((c) => (
-            <li key={c.name} className="flex items-center gap-2.5">
-              <span className={`size-3.5 shrink-0 rounded-sm ${c.swatch}`} />
-              <span className="text-xs text-rhymvex-white/75">{c.name}</span>
-              <span className="ms-auto font-mono text-[10px] text-rhymvex-white/50">
-                {c.hex}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-mono">
+          <div className="rounded-md border border-rhymvex-white/5 bg-rhymvex-black/40 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-rhymvex-volt font-semibold">01 · Products</p>
+            <p className="mt-0.5 text-xs text-rhymvex-white/80 font-sans">Full-Stack SaaS</p>
+          </div>
+          <div className="rounded-md border border-rhymvex-white/5 bg-rhymvex-black/40 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-rhymvex-volt font-semibold">02 · Platforms</p>
+            <p className="mt-0.5 text-xs text-rhymvex-white/80 font-sans">Client Portals</p>
+          </div>
+          <div className="rounded-md border border-rhymvex-white/5 bg-rhymvex-black/40 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-rhymvex-volt font-semibold">03 · Pipelines</p>
+            <p className="mt-0.5 text-xs text-rhymvex-white/80 font-sans">Design Tokens</p>
+          </div>
+          <div className="rounded-md border border-rhymvex-white/5 bg-rhymvex-black/40 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-rhymvex-volt font-semibold">04 · Identity</p>
+            <p className="mt-0.5 text-xs text-rhymvex-white/80 font-sans">Brand Systems</p>
+          </div>
+        </div>
       </div>
 
-      {/* Type reference */}
-      <div className="border-t border-rhymvex-white/10 px-5 py-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
-          Type
-        </p>
-        <ul className="mt-3 space-y-3">
-          {TYPE.map((t) => (
-            <li key={t.role} className="flex items-center gap-3">
-              <span className={`w-14 shrink-0 text-rhymvex-white/80 ${t.className}`}>
-                {t.sample}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs text-rhymvex-white/75">{t.role}</span>
-                <span className="block text-[10px] text-rhymvex-white/50">
-                  {t.spec}
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
+      {/* Colour & Type tokens */}
+      <div className="border-t border-rhymvex-white/10 px-5 py-3.5">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
+            Design Tokens
+          </p>
+          <span className="text-[10px] font-mono text-rhymvex-white/40">Next.js 16 · Tailwind</span>
+        </div>
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            {COLOURS.map((c) => (
+              <span
+                key={c.name}
+                className={`size-4 rounded-sm ${c.swatch}`}
+                title={`${c.name} ${c.hex}`}
+              />
+            ))}
+          </div>
+          <span className="font-mono text-[10px] text-rhymvex-white/60 truncate">
+            Space Grotesk + Inter
+          </span>
+        </div>
       </div>
 
-      {/* The system in use */}
+      {/* The templates that ship in the system */}
       <div className="border-t border-rhymvex-white/10 px-5 py-4">
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rhymvex-white/50">
-            In use
+            Templates
           </p>
           <div
             className="flex items-center"
@@ -266,7 +265,7 @@ export function TokenCard({ className = "" }: { className?: string }) {
           </div>
         </div>
 
-        <div className="relative mt-3 h-32 overflow-hidden rounded-lg border border-rhymvex-white/10 bg-rhymvex-black/40">
+        <div className="relative mt-3 h-56 overflow-hidden rounded-lg border border-rhymvex-white/10 bg-rhymvex-black/40 sm:h-64">
           {TEMPLATES.map((t, i) => (
             <div
               key={t.id}
@@ -282,6 +281,11 @@ export function TokenCard({ className = "" }: { className?: string }) {
             </div>
           ))}
         </div>
+
+        <p className="mt-2.5 text-[10px] leading-snug text-rhymvex-white/40">
+          These four ship inside every system we hand over. The files are the
+          deliverable, not a mock-up of one.
+        </p>
       </div>
     </div>
   );

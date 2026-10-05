@@ -28,6 +28,21 @@ export type FormResult =
 /* Staff sign-in                                                               */
 /* -------------------------------------------------------------------------- */
 
+function safeRedirectTarget(raw: unknown, prefix: string, fallback: string): string {
+  if (typeof raw !== "string") return fallback;
+  const trimmed = raw.trim();
+  if (
+    !trimmed.startsWith(prefix) ||
+    trimmed.startsWith("//") ||
+    trimmed.includes("\\") ||
+    trimmed.includes("\n") ||
+    trimmed.includes("\r")
+  ) {
+    return fallback;
+  }
+  return trimmed;
+}
+
 export async function staffSignInAction(
   _prev: FormResult | null,
   formData: FormData,
@@ -90,7 +105,8 @@ export async function staffSignInAction(
     };
   }
 
-  const { cookieValue, expiresAt } = await createStaffSession(staff.id, meta);
+  const remember = formData.get("remember") === "true" || formData.get("remember") === "on";
+  const { cookieValue, expiresAt } = await createStaffSession(staff.id, meta, { remember });
   (await cookies()).set("rv_staff_session", cookieValue, staffCookieOptions(expiresAt));
 
   await recordAudit(
@@ -99,7 +115,7 @@ export async function staffSignInAction(
       action: "staff.login",
       entityType: "staff",
       entityId: staff.id,
-      metadata: { role: staff.role },
+      metadata: { role: staff.role, remembered: remember },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     },
@@ -107,7 +123,8 @@ export async function staffSignInAction(
 
   await queryOne("UPDATE staff SET last_login_at = now() WHERE id = $1 RETURNING id", [staff.id]);
 
-  redirect("/admin");
+  const target = safeRedirectTarget(formData.get("next"), "/admin", "/admin");
+  redirect(target);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -162,7 +179,8 @@ export async function clientSignInAction(
     };
   }
 
-  const { cookieValue, expiresAt } = await createClientSession(user.id, meta);
+  const remember = formData.get("remember") === "true" || formData.get("remember") === "on";
+  const { cookieValue, expiresAt } = await createClientSession(user.id, meta, { remember });
   (await cookies()).set("rv_client_session", cookieValue, clientCookieOptions(expiresAt));
 
   await recordAudit(
@@ -171,13 +189,14 @@ export async function clientSignInAction(
       action: "portal.login",
       entityType: "client_user",
       entityId: user.id,
-      metadata: { clientId: user.client_id },
+      metadata: { clientId: user.client_id, remembered: remember },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     },
   );
 
-  redirect("/portal");
+  const target = safeRedirectTarget(formData.get("next"), "/portal", "/portal");
+  redirect(target);
 }
 
 /* -------------------------------------------------------------------------- */

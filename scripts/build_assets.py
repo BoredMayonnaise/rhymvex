@@ -337,11 +337,18 @@ def template_case_study() -> None:
                             radius=10, fill=col)
 
     # Result bullets.
+    #
+    # These are example copy for a template, and the line they must not cross is
+    # inventing a result. An earlier version read "20+ templates shipped across
+    # every channel", which is a statistic nobody had measured, and this file is
+    # rendered onto the home page where a visitor reads it as a claim about the
+    # studio. Each line now names the shape of a result and leaves the substance
+    # to whoever fills the template in.
     f_b = font(FONT_REG, 34, "Medium")
     bullets = [
         "Positioning rebuilt around one core message",
-        "20+ templates shipped across every channel",
-        "Team handoff in two working sessions",
+        "Templates shipped across every channel",
+        "Team handoff documented and walked through",
     ]
     y = 680
     for b in bullets:
@@ -384,22 +391,27 @@ def template_offer() -> None:
     img = canvas(S, S, BLACK_RGB)
     template_header(img, "OFFER")
 
-    # Ember urgency badge.
+    # Ember urgency badge. "NEW" rather than "LIMITED": a scarcity badge is a
+    # claim about how many slots are left, and this studio has never run an
+    # offer. The badge demonstrates the treatment without asserting a campaign.
     d = ImageDraw.Draw(img)
     f_badge = font(FONT_DISP, 30, "Bold")
-    bw = text_w(d, "LIMITED", f_badge) + 56
+    bw = text_w(d, "NEW", f_badge) + 56
     rounded_panel(img, (MARGIN, 190, MARGIN + bw, 258), 12, EMBER_RGB)
-    d.text((MARGIN + 28, 208), "LIMITED", font=f_badge, fill=(*BLACK_RGB, 255))
+    d.text((MARGIN + 28, 208), "NEW", font=f_badge, fill=(*BLACK_RGB, 255))
 
+    # The headline and body state what belongs in them. This one used to read
+    # "3 Brand Slots — Now Booking", which looked like a live offer with three
+    # places left, and it was rendering on the home page.
     f_h = font(FONT_DISP, 92, "Bold")
-    lines = wrap(d, "3 Brand Slots \u2014 Now Booking", f_h, S - MARGIN * 2 - 200)
+    lines = wrap(d, "Your offer, named", f_h, S - MARGIN * 2 - 200)
     y = 330
     for line in lines:
         d.text((MARGIN, y), line, font=f_h, fill=(*WHITE_RGB, 255))
         y += 108
 
     f_d = font(FONT_REG, 38, "Regular")
-    for line in wrap(d, "One quarter. Three teams. Full brand systems, built on rhythm.",
+    for line in wrap(d, "One line on what it is, who it is for, and what it costs.",
                     f_d, S - MARGIN * 2):
         d.text((MARGIN, y + 20), line, font=f_d, fill=(*WHITE_RGB, 170))
         y += 50

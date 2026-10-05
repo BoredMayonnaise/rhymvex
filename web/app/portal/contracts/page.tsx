@@ -38,26 +38,39 @@ export default async function PortalContractsPage() {
         <ul className="flex flex-col gap-3">
           {contracts.map((contract) => (
             <li key={contract.id}>
-              <details className="rv-panel">
-                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-rhymvex-white">
-                      {contract.title}
+              <details className="rv-panel group">
+                <summary className="flex cursor-pointer list-none flex-col gap-3 p-4 select-none hover:bg-rhymvex-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start justify-between gap-2 sm:flex-1">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-rhymvex-white">
+                        {contract.title}
+                      </span>
+                      <span className="block text-[11px] text-rhymvex-white/50">
+                        {contract.reference}
+                        {contract.signed_at ? ` · signed ${formatDate(contract.signed_at)}` : ""}
+                      </span>
                     </span>
-                    <span className="block text-[11px] text-rhymvex-white/50">
-                      {contract.reference}
-                      {contract.signed_at ? ` · signed ${formatDate(contract.signed_at)}` : ""}
-                    </span>
-                  </span>
-                  {contract.value_total ? (
-                    <span className="rv-table-num shrink-0 text-xs text-rhymvex-white/70">
-                      {formatMoney(contract.value_total, contract.currency || settings.currency)}
-                    </span>
-                  ) : null}
-                  <StatusPill
-                    value={humanise(contract.status)}
-                    tone={contractStatusTone(contract.status)}
-                  />
+                    <div className="sm:hidden">
+                      <StatusPill
+                        value={humanise(contract.status)}
+                        tone={contractStatusTone(contract.status)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-rhymvex-white/5 pt-2 sm:border-t-0 sm:pt-0 sm:justify-end sm:gap-3">
+                    {contract.value_total ? (
+                      <span className="rv-table-num font-mono text-xs font-semibold text-rhymvex-white/75">
+                        {formatMoney(contract.value_total, contract.currency || settings.currency)}
+                      </span>
+                    ) : null}
+                    <div className="hidden sm:block">
+                      <StatusPill
+                        value={humanise(contract.status)}
+                        tone={contractStatusTone(contract.status)}
+                      />
+                    </div>
+                  </div>
                 </summary>
                 {contract.body ? (
                   <div className="border-t border-rhymvex-white/8 px-4 py-4">

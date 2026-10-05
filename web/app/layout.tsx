@@ -1,12 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { ArrowUp } from "lucide-react";
-import { RvMark } from "@/components/RvMark";
 import { LeadCaptureProvider } from "@/components/lead/LeadCaptureProvider";
-import { RvWordmark } from "@/components/RvWordmark";
-import { WaveformRhythm } from "@/components/WaveformRhythm";
-import { enquiryUrl, CONTACT_EMAIL, SITE_ORIGIN } from "@/lib/services";
-import { getTranslator } from "@/lib/i18n";
+import { SITE_ORIGIN } from "@/lib/services";
 import "./globals.css";
 
 const inter = Inter({
@@ -66,7 +61,21 @@ export const metadata: Metadata = {
   // 31 admin and portal pages, telling a crawler the client portal is a
   // duplicate of the home page. Each public page states its own canonical and
   // its own hreflang set; pages with no canonical are self-canonical by default,
-  // which is correct for the noindex ones.
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Rhymvex",
+  },
   robots: { index: true, follow: true },
 };
 
@@ -78,9 +87,6 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const year = new Date().getFullYear();
-  const t = getTranslator();
-
   return (
     // suppressHydrationWarning: the inline script below adds "rv-js" to <html>
     // before React hydrates, so the client class list always differs by one.
@@ -90,11 +96,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-rhymvex-black text-rhymvex-white antialiased">
-        {/* Marks the document as JS-capable so scroll-reveal can start hidden.
-            Runs before paint; without it content simply renders in place. */}
+        {/* Marks the document as JS-capable and captures early PWA install events before React hydration */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add("rv-js")`,
+            __html: `
+              document.documentElement.classList.add("rv-js");
+              window.addEventListener("beforeinstallprompt", function(e) {
+                e.preventDefault();
+                window.__rvDeferredInstallPrompt = e;
+                window.dispatchEvent(new CustomEvent("rv-pwa-ready"));
+              });
+            `,
           }}
         />
 
@@ -108,76 +120,6 @@ export default function RootLayout({
         {/* Wraps the whole site so any CTA can open the modal lead capture,
             not just the ones on the home page. */}
         <LeadCaptureProvider>{children}</LeadCaptureProvider>
-
-        {/* ------------------------------------------------------------------
-            Footer. No nav list — the closing section already carries the
-            actions, and repeating them reads as filler. This is the brand
-            sign-off: the logo, one line, one email, and a hairline legal
-            rail, over the script wordmark as background texture.
-            ------------------------------------------------------------------ */}
-        <footer className="relative overflow-hidden border-t border-rhymvex-white/10">
-          <div
-            className="rv-grid pointer-events-none absolute inset-0 opacity-20"
-            aria-hidden="true"
-          />
-          {/* Script wordmark, demoted to background */}
-          <RvWordmark
-            className="pointer-events-none absolute -bottom-[14%] -right-[12%] w-[78%] max-w-none text-rhymvex-white opacity-[0.05] sm:-right-[6%] sm:w-[52%] lg:-bottom-[26%] lg:w-[38%]"
-            label={null}
-          />
-
-          {/* Signature motif closing the page — the waveform, in motion */}
-          <div className="relative border-b border-rhymvex-white/10">
-            <div className="rv-container py-6 sm:py-8">
-              <WaveformRhythm className="mx-auto aspect-[1468/357] w-full max-w-lg opacity-60" />
-            </div>
-          </div>
-
-          <div className="rv-container relative pb-10 pt-12 sm:pb-12 sm:pt-16">
-            <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-              <div className="max-w-xl">
-                <RvMark className="h-9 w-auto sm:h-11" />
-                <p className="mt-7 font-display text-display-3 text-rhymvex-white">
-                  {t("footer.tagline")}
-                </p>
-                <p className="mt-4 text-sm leading-relaxed text-rhymvex-white/50">
-                  {t("footer.body")}
-                </p>
-              </div>
-
-              <div className="shrink-0">
-                <p className="text-xs text-rhymvex-white/50">{t("footer.newProjects")}</p>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="mt-2 block break-words font-display text-lg text-rhymvex-volt transition-colors duration-200 hover:text-rhymvex-white sm:text-xl"
-                >
-                  {CONTACT_EMAIL}
-                </a>
-                <a
-                  href={enquiryUrl()}
-                  className="rv-btn rv-btn-ghost mt-6"
-                >
-                  {t("nav.bookCall")}
-                </a>
-              </div>
-            </div>
-
-            {/* Legal rail */}
-            <div className="mt-12 flex flex-col items-start gap-4 border-t border-rhymvex-white/10 pt-6 text-xs text-rhymvex-white/50 sm:flex-row sm:items-center sm:justify-between">
-              <p>© {year} Rhymvex. All rights reserved.</p>
-              <div className="flex flex-wrap items-center gap-5">
-                <p className="hidden sm:block">{t("footer.systemsYouCanRun")}</p>
-                <a
-                  href="#main"
-                  className="inline-flex items-center gap-1.5 transition-colors duration-200 hover:text-rhymvex-volt"
-                >
-                  {t("footer.backToTop")}
-                  <ArrowUp className="size-3.5" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </footer>
       </body>
     </html>
   );

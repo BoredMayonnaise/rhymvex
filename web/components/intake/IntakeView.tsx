@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { IntakeForm } from "@/components/intake/IntakeForm";
-import { RvMark } from "@/components/RvMark";
+import { IntakeHeader } from "@/components/intake/IntakeHeader";
 import { getOrgSettings, getResponseSlaMinutes } from "@/lib/data/org";
 import { draftFromIds, services } from "@/lib/services";
 import { SITUATIONS } from "@/lib/validation";
@@ -60,14 +58,25 @@ export default async function IntakeView({
   // request is recorded in the platform, not handed to an email client.
   const calendarUrl = process.env.NEXT_PUBLIC_CALENDAR_URL?.trim() || "";
 
-  // The situation arrives as one of the site's own service labels so the radio
-  // can preselect. Anything unrecognised is dropped rather than echoed back.
-  const knownSituation = SITUATIONS.find((s) => s === params.situation) ?? "";
+  // Resolve known situation for radio pre-selection
+  const sitLower = (params.situation ?? "").toLowerCase();
+  const knownSituation =
+    SITUATIONS.find((s) => s === params.situation) ||
+    (sitLower.includes("clarity") ? SITUATIONS[0] : null) ||
+    (sitLower.includes("system") || sitLower.includes("scale") ? SITUATIONS[1] : null) ||
+    (sitLower.includes("momentum") || sitLower.includes("ongoing") ? SITUATIONS[2] : null) ||
+    "";
 
   // A drafted scope from the scope builder. The ids are resolved to labels here,
   // server-side, so a hand-edited query string cannot inject arbitrary copy
   // into the message that becomes a lead record.
-  const pkg = services.find((s) => s.situation === params.situation) ?? null;
+  const pkg =
+    services.find((s) => s.situation === params.situation) ||
+    (sitLower.includes("clarity") ? services[0] : null) ||
+    (sitLower.includes("system") || sitLower.includes("scale") ? services[1] : null) ||
+    (sitLower.includes("momentum") || sitLower.includes("ongoing") ? services[2] : null) ||
+    null;
+
   const initialMessage =
     params.draft && (params.outcomes || params.addons)
       ? (draftFromIds(pkg, params.outcomes ?? "", params.addons ?? "") ?? "")
@@ -81,44 +90,11 @@ export default async function IntakeView({
         aria-hidden="true"
       />
 
-      {/* Sticky, because the form is taller than any screen and this bar holds
-          the only way out of it. Scrolling a 1200px form on a phone used to
-          take "Back to site" off the top and leave nothing behind, so leaving
-          meant scrolling back up first.
-
-          The surface goes opaque and picks up a blur on scroll, matching the
-          condensed treatment the site header already uses. Without it the page
-          content slides visibly underneath a transparent bar. The hairline is
-          permanent rather than scroll-driven: this bar is only ever over the
-          page's own background, so a border that appears and disappears reads
-          as a glitch rather than as depth. */}
-      <header className="sticky top-0 z-50 border-b border-rhymvex-white/10 bg-rhymvex-black/85 backdrop-blur-md">
-        <div className="rv-container flex items-center justify-between py-5">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 text-sm text-rhymvex-white/55 transition-colors hover:text-rhymvex-white"
-          >
-            <RvMark label={null} className="size-6" />
-            <span className="font-display font-semibold tracking-tight">Rhymvex</span>
-          </Link>
-          {/* The only navigation this page has, so it is sized like a control
-              rather than like fine print. It measured 89x16px, which fails the
-              24px minimum target in WCAG 2.5.8, and it sat at text-xs and 50%
-              white — quieter than the logo beside it, on the one page where
-              somebody part-way through a form most wants a way out.
-
-              py-2 takes the hit area to 32px without growing the bar: the
-              header's own py-5 is what sets its height, so this sits inside the
-              space that padding already occupies. */}
-          <Link
-            href="/"
-            className="-my-2 flex items-center gap-2 rounded px-2 py-2 text-sm text-rhymvex-white/70 transition-colors hover:text-rhymvex-volt"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            {t("nav.backToSite")}
-          </Link>
-        </div>
-      </header>
+      {/* The header holds the only way out of a form taller than any screen, so
+          it is pinned: scrolling a 1200px form on a phone used to take "Back to
+          site" off the top and leave nothing behind. Its treatment lives in
+          IntakeHeader so it stays the site bar rather than a variant of it. */}
+      <IntakeHeader locale={locale} />
 
       {/* Three blocks, and the order they are read in differs by width. On a
           phone the form comes second, right under the headline: a visitor who
@@ -211,6 +187,8 @@ export default async function IntakeView({
               calendarUrl={calendarUrl}
               region={getLocale(locale)}
               currency={currency}
+              preselectedPackage={pkg ? { name: pkg.name, duration: pkg.duration } : null}
+              slaMinutes={slaMinutes}
             />
           </div>
         </div>

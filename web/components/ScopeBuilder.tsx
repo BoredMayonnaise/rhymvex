@@ -9,6 +9,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { NOTES, type NoteName } from "@/lib/notes";
 import { addOns, buildScopeIntake } from "@/lib/services";
@@ -29,18 +30,27 @@ import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/locales";
 export function ScopeBuilder({
   pkg,
   locale = DEFAULT_LOCALE,
+  triggerClassName,
+  children,
 }: {
   pkg: ServicePackage;
   /** Market the drafted scope is sent to, so the intake page opens priced in it. */
   locale?: LocaleCode;
+  triggerClassName?: string;
+  children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [picked, setPicked] = useState<Record<string, boolean>>({});
   const [extras, setExtras] = useState<Record<string, boolean>>({});
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const descId = useId();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggle = (
     setter: Dispatch<SetStateAction<Record<string, boolean>>>,
@@ -62,8 +72,8 @@ export function ScopeBuilder({
 
   const close = useCallback(() => {
     setOpen(false);
-    // Return focus to the control that opened the dialog.
-    triggerRef.current?.focus();
+    // Return focus to the control that opened the dialog without jumping the scroll.
+    triggerRef.current?.focus({ preventScroll: true });
   }, []);
 
   const href = buildScopeIntake(
@@ -106,25 +116,33 @@ export function ScopeBuilder({
     document.addEventListener("keydown", onKeyDown);
 
     // Lock the page behind the dialog without layout shift from the scrollbar.
-    const { body } = document;
-    const gap = window.innerWidth - document.documentElement.clientWidth;
-    const prevOverflow = body.style.overflow;
+    const { body, documentElement } = document;
+    const gap = window.innerWidth - documentElement.clientWidth;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverflow = documentElement.style.overflow;
     const prevPadding = body.style.paddingRight;
+
     body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
     if (gap > 0) body.style.paddingRight = `${gap}px`;
+
+    // Notify smooth scroll / Lenis to pause while the dialog is open
+    window.dispatchEvent(new CustomEvent("rv-modal-open"));
 
     // Move focus in once the panel is mounted.
     const id = window.requestAnimationFrame(() => {
       panelRef.current
         ?.querySelector<HTMLElement>("button, input")
-        ?.focus();
+        ?.focus({ preventScroll: true });
     });
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       window.cancelAnimationFrame(id);
-      body.style.overflow = prevOverflow;
+      body.style.overflow = prevBodyOverflow;
+      documentElement.style.overflow = prevHtmlOverflow;
       body.style.paddingRight = prevPadding;
+      window.dispatchEvent(new CustomEvent("rv-modal-close"));
     };
   }, [open, close]);
 
@@ -135,19 +153,28 @@ export function ScopeBuilder({
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        className="rv-btn rv-btn-ghost mt-2 w-full"
+        className={
+          triggerClassName ??
+          "mt-3 inline-flex items-center justify-center gap-1.5 text-xs text-rhymvex-white/60 hover:text-rhymvex-volt transition-colors py-1 w-full text-center"
+        }
       >
-        Talk through your situation
+        {children ?? "Customise scope & deliverables →"}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
+      {mounted && open
+        ? createPortal(
+            <div
+              data-lenis-prevent
+              data-lenis-prevent-touch
+              data-lenis-prevent-wheel
+              className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center"
+            >
           {/* Backdrop */}
           <button
             type="button"
             aria-label="Close"
             onClick={close}
-            className="absolute inset-0 cursor-default bg-rhymvex-black/80 backdrop-blur-sm"
+            className="absolute inset-0 cursor-default bg-rhymvex-black/80 backdrop-blur-sm touch-none"
           />
 
           <div
@@ -156,8 +183,17 @@ export function ScopeBuilder({
             aria-modal="true"
             aria-labelledby={titleId}
             aria-describedby={descId}
-            className="relative flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-2xl border border-rhymvex-white/10 bg-rhymvex-slate/95 sm:rounded-2xl"
+            data-lenis-prevent
+            data-lenis-prevent-touch
+            data-lenis-prevent-wheel
+            className="rv-animate-sheet relative flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-3xl border border-rhymvex-white/15 bg-rhymvex-slate/95 backdrop-blur-xl sm:rounded-2xl"
           >
+            {/* Mobile drag handle */}
+            <div
+              className="mx-auto mt-2.5 h-1.5 w-12 rounded-full bg-rhymvex-white/20 sm:hidden"
+              aria-hidden="true"
+            />
+
             {/* Header */}
             <div className="flex items-start justify-between gap-4 border-b border-rhymvex-white/10 px-5 py-4 sm:px-6 sm:py-5">
               <div className="min-w-0">
@@ -181,7 +217,16 @@ export function ScopeBuilder({
             </div>
 
             {/* Body */}
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+            <div
+              data-lenis-prevent
+              data-lenis-prevent-touch
+              data-lenis-prevent-wheel
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6"
+              style={{
+                WebkitOverflowScrolling: "touch",
+                touchAction: "pan-y",
+              }}
+            >
               <fieldset>
                 <legend className="rv-eyebrow text-rhymvex-white/50">
                   What this engagement covers
@@ -250,8 +295,10 @@ export function ScopeBuilder({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body,
+      )
+    : null}
     </>
   );
 }

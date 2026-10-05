@@ -11,8 +11,8 @@
     "heading": "We don’t start with a package.",
     "headingAccent": "We start with what’s getting in your way.",
     "body": [
-      "Every business arrives at a different point. Sometimes the brand needs fixing. Sometimes the system needs building. Sometimes you need a reliable creative partner and nothing more.",
-      "We’ll work out which one you’re looking at, then shape the engagement around it."
+      "Every business arrives at a different stage. Sometimes the digital product needs engineering. Sometimes the whole platform and brand system needs building. Sometimes you need a high-velocity partner to ship features and creative on an ongoing cadence.",
+      "We’ll diagnose where the bottlenecks are, then engineer the engagement around it."
     ],
     "prompt": "Not sure where to start?",
     "promptAction": "Tell us what’s going on",
@@ -24,41 +24,41 @@
     {
       "id": "brand-sprint",
       "index": "01",
-      "name": "Brand Sprint",
-      "situation": "You need clarity",
-      "forWhen": "For when things feel unclear.",
-      "body": "There’s potential in the brand, but the positioning, the visual direction and the messaging don’t agree with each other. We find what’s pulling them apart and spend the next 30 days on the changes that count.",
+      "name": "Product & System Sprint",
+      "situation": "You need clarity & architecture",
+      "forWhen": "For when your product, tools, or brand feel fragmented.",
+      "body": "There’s potential in the business, but the product, the technology stack and the positioning don’t agree with each other. We diagnose the bottlenecks pulling them apart and spend the next two weeks on the changes that count.",
       "note": "music",
       "price": 2400,
       "duration": "2 weeks",
       "engagement": "Focused engagement",
       "priceNote": "Fixed scope",
-      "cta": "Let’s find the problem",
+      "cta": "Let’s diagnose the bottlenecks",
       "featured": false,
       "outcomes": [
         {
           "id": "gaps",
-          "label": "Find the gaps in your current brand",
+          "label": "Audit product, code, and brand bottlenecks",
           "core": true
         },
         {
           "id": "positioning",
-          "label": "Clarify positioning and messaging",
+          "label": "Clarify technical architecture and user journeys",
           "core": true
         },
         {
           "id": "direction",
-          "label": "Establish a focused visual direction",
+          "label": "Establish focused UI/UX and brand direction",
           "core": true
         },
         {
           "id": "impact",
-          "label": "Fix the highest-impact brand problems",
+          "label": "Fix highest-impact system and product gaps",
           "core": true
         },
         {
           "id": "plan",
-          "label": "Leave you with a prioritised action plan",
+          "label": "Deliver prioritised execution roadmap",
           "core": true
         }
       ]
@@ -66,10 +66,10 @@
     {
       "id": "brand-system",
       "index": "02",
-      "name": "Brand System",
-      "situation": "You need a system that scales",
-      "forWhen": "When your brand needs to work without you.",
-      "body": "If every new asset needs another decision, more templates won’t help. What your team needs is a system. We build the foundation they can use, repeat and grow with.",
+      "name": "Platform & System Build",
+      "situation": "You need an integrated system that scales",
+      "forWhen": "When your business needs a product and platform that works without you.",
+      "body": "If every new feature or asset requires another ad-hoc tool, more patchwork won’t help. What your team needs is an integrated system. We design and build the complete digital product, client platform, and production system from scratch.",
       "note": "music2",
       "price": 7800,
       "duration": "6–8 weeks",
@@ -80,27 +80,27 @@
       "outcomes": [
         {
           "id": "identity",
-          "label": "Build a coherent identity system",
+          "label": "Full-stack digital product or client platform",
           "core": true
         },
         {
           "id": "messaging",
-          "label": "Define messaging and communication rules",
+          "label": "Coherent design system and token pipeline",
           "core": true
         },
         {
           "id": "components",
-          "label": "Create reusable production components",
+          "label": "Production-ready web architecture and APIs",
           "core": true
         },
         {
           "id": "execution",
-          "label": "Make your brand easier for your team to execute",
+          "label": "Operational workflows your team can execute",
           "core": true
         },
         {
           "id": "documented",
-          "label": "Document the system for future work",
+          "label": "Complete documentation and handover",
           "core": true
         }
       ]
@@ -109,9 +109,9 @@
       "id": "retainer",
       "index": "03",
       "name": "Rhythm Retainer",
-      "situation": "You need ongoing momentum",
-      "forWhen": "For teams that need a partner, not another vendor.",
-      "body": "You’ve got the brand system. The hard part is keeping it moving. We sit alongside your team to decide what matters first, produce what’s needed, and keep the system current as the business changes.",
+      "situation": "You need ongoing engineering & momentum",
+      "forWhen": "For teams that need a product & systems partner, not another vendor.",
+      "body": "You’ve got the platform and the system. The hard part is keeping momentum. We sit alongside your team to ship features, build new tools, produce creative, and keep the system ahead as the business grows.",
       "note": "music4",
       "price": 2400,
       "duration": "3-month minimum",
@@ -122,27 +122,22 @@
       "outcomes": [
         {
           "id": "prioritise",
-          "label": "Prioritise upcoming brand and creative needs",
+          "label": "Ship features and engineering sprints on an agreed cadence",
           "core": true
         },
         {
           "id": "produce",
-          "label": "Produce work against an agreed cadence",
+          "label": "Prioritise upcoming product, platform, and creative needs",
           "core": true
         },
         {
           "id": "review",
-          "label": "Review what’s working and what isn’t",
+          "label": "Continuous code and design system evolution",
           "core": true
         },
         {
           "id": "improve",
-          "label": "Improve the system as new needs appear",
-          "core": true
-        },
-        {
-          "id": "access",
-          "label": "Provide priority access when something matters",
+          "label": "Priority access and rapid turnaround",
           "core": true
         }
       ]

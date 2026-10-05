@@ -101,8 +101,8 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE TABLE IF NOT EXISTS org_settings (
   id                 boolean PRIMARY KEY DEFAULT true CHECK (id),
   company_name       text NOT NULL DEFAULT 'Rhymvex',
-  contact_email      text NOT NULL DEFAULT 'hello@rhymvex.com',
-  notification_email text NOT NULL DEFAULT 'hello@rhymvex.com',
+  contact_email      text NOT NULL DEFAULT 'support@rhymvex.space',
+  notification_email text NOT NULL DEFAULT 'support@rhymvex.space',
   -- NULL means we make no response-time promise to clients. The success screen
   -- is driven off this value rather than hard-coding a number.
   response_sla_minutes integer CHECK (response_sla_minutes IS NULL OR response_sla_minutes > 0),

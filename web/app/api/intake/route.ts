@@ -128,7 +128,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "We could not record your request just now. Please try again, or email hello@rhymvex.com.",
+        error: "We could not record your request just now. Please try again, or email support@rhymvex.space.",
       },
       { status: 500 },
     );

@@ -48,12 +48,12 @@ export function InviteToPortal({
     existingUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
 
   return (
-    <div className="w-full">
-      <div className="flex justify-end">
+    <div className={open ? "w-full" : "w-full sm:w-auto"}>
+      <div className="flex sm:justify-end">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="rv-btn rv-btn-primary rv-btn-sm"
+          className="rv-btn rv-btn-primary rv-btn-sm w-full sm:w-auto"
           aria-expanded={open}
         >
           <UserPlus className="size-3.5" aria-hidden="true" />
@@ -155,7 +155,7 @@ export function InviteToPortal({
                 {invitations.map((invitation) => (
                   <li
                     key={invitation.id}
-                    className="flex flex-wrap items-center gap-2 rounded border border-rhymvex-white/8 px-2.5 py-2"
+                    className="flex flex-col gap-2 rounded border border-rhymvex-white/8 px-2.5 py-2 sm:flex-row sm:items-center sm:gap-2"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[11px] text-rhymvex-white/70">
@@ -170,11 +170,13 @@ export function InviteToPortal({
                         {alreadyHasAccess(invitation.email) ? " · already has access" : ""}
                       </span>
                     </span>
-                    <StatusPill
-                      value={humanise(invitation.status)}
-                      tone={invitationStatusTone(invitation.status)}
-                    />
-                    <RevokeButton invitationId={invitation.id} csrfToken={csrfToken} />
+                    <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                      <StatusPill
+                        value={humanise(invitation.status)}
+                        tone={invitationStatusTone(invitation.status)}
+                      />
+                      <RevokeButton invitationId={invitation.id} csrfToken={csrfToken} />
+                    </div>
                   </li>
                 ))}
               </ul>

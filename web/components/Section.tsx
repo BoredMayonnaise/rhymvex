@@ -5,6 +5,7 @@ type SectionProps = {
   id?: string;
   eyebrow?: string;
   title: ReactNode;
+  description?: ReactNode;
   children: ReactNode;
   className?: string;
   /** Decorative artwork rendered behind the section content. */
@@ -20,6 +21,7 @@ export function Section({
   id,
   eyebrow,
   title,
+  description,
   children,
   className = "",
   overlay,
@@ -27,7 +29,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={`relative scroll-mt-24 overflow-hidden border-t border-rhymvex-white/10 px-6 py-section ${className}`}
+      className={`relative scroll-mt-20 overflow-hidden border-t border-rhymvex-white/10 py-section ${className}`}
     >
       {overlay}
       <div className="rv-container relative">
@@ -35,6 +37,11 @@ export function Section({
           {eyebrow && <p className="rv-eyebrow mb-4">{eyebrow}</p>}
           <span className="rv-rule mb-5 block h-px w-10" aria-hidden="true" />
           <h2 className="text-display-2">{title}</h2>
+          {description && (
+            <div className="mt-5 max-w-2xl text-lead text-rhymvex-white/70">
+              {description}
+            </div>
+          )}
         </Reveal>
         {children}
       </div>

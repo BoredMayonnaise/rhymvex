@@ -34,7 +34,8 @@ import {
   portalInvitationEmail,
   staffInvitationEmail,
 } from "@/lib/mail/invitation-templates";
-import { sendMail, siteUrl } from "@/lib/mail/smtp";
+import { fromAddress, sendMail, siteUrl } from "@/lib/mail/smtp";
+import { verifySmtpConnection, verifySmtpChannel, type EmailChannel } from "@/lib/mail/providers";
 import { outboundEmailTemplate } from "@/lib/mail/outbound-template";
 
 /**
@@ -522,7 +523,7 @@ export async function sendLeadEmailAction(
   const emailId = await recordEmail({
     direction: "OUTBOUND",
     leadId,
-    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+    fromAddress: fromAddress("business"),
     toAddresses: data.to,
     ccAddresses: data.cc,
     subject: data.subject,
@@ -552,6 +553,58 @@ export async function sendLeadEmailAction(
       result.delivery === "dev"
         ? "Recorded. SMTP is not configured, so this is in the outbox rather than sent."
         : "Email sent.",
+  };
+}
+
+export type SmtpTestActionResult = {
+  ok: boolean;
+  message: string;
+  channel?: EmailChannel;
+  latencyMs?: number;
+  provider?: string;
+  host?: string;
+  port?: number;
+  user?: string;
+  hint?: string;
+};
+
+export async function testSmtpConnectionAction(
+  _prev: SmtpTestActionResult | null,
+  formData: FormData,
+): Promise<SmtpTestActionResult> {
+  const session = await getStaffSession();
+  if (!session) return { ok: false, message: "Not signed in." };
+  if (!csrfValid(session, formData.get("csrf"))) {
+    return { ok: false, message: "Your session expired. Reload the page and try again." };
+  }
+
+  const rawChannel = formData.get("channel");
+  const channel: EmailChannel = rawChannel === "system" ? "system" : "business";
+
+  const result = await verifySmtpChannel(channel);
+  if (result.ok) {
+    return {
+      ok: true,
+      message: `Connection successful (${result.latencyMs}ms). TLS handshake & authentication verified.`,
+      channel,
+      latencyMs: result.latencyMs,
+      provider: result.provider,
+      host: result.host,
+      port: result.port,
+      user: result.user,
+    };
+  }
+
+  return {
+    ok: false,
+    message: result.error || "Connection test failed.",
+    channel,
+    latencyMs: result.latencyMs,
+    provider: result.provider,
+    host: result.host,
+    port: result.port,
+    user: result.user,
+    hint: result.hint,
   };
 }
 
@@ -624,7 +677,7 @@ export async function inviteToPortalAction(
     await recordEmail({
       direction: "OUTBOUND",
       clientId,
-      fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+      fromAddress: fromAddress("business"),
       toAddresses: [parsed.data.email],
       subject: email.subject,
       bodyText: email.text,
@@ -861,7 +914,7 @@ export async function sendBusinessEmailAction(
     clientId: data.client_id,
     projectId: data.project_id,
     proposalId: data.proposal_id,
-    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <support@rhymvex.space>",
     toAddresses: data.to,
     ccAddresses: data.cc,
     subject: data.subject,
@@ -1057,7 +1110,7 @@ export async function inviteStaffAction(
 
   await recordEmail({
     direction: "OUTBOUND",
-    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+    fromAddress: fromAddress("system"),
     toAddresses: [data.email],
     subject: email.subject,
     bodyText: email.text,

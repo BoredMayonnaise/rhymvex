@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { LeadCaptureForm } from "./LeadCaptureForm";
 
@@ -120,12 +121,18 @@ function LeadCaptureModal({
     document.addEventListener("keydown", onKeyDown);
 
     // Lock scroll without letting the page shift as the scrollbar disappears.
-    const { body } = document;
-    const previousOverflow = body.style.overflow;
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousHtmlOverflow = documentElement.style.overflow;
     const previousPadding = body.style.paddingRight;
-    const gap = window.innerWidth - document.documentElement.clientWidth;
+    const gap = window.innerWidth - documentElement.clientWidth;
+
     body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
     if (gap > 0) body.style.paddingRight = `${gap}px`;
+
+    // Notify smooth scroll / Lenis to pause while the modal is open
+    window.dispatchEvent(new CustomEvent("rv-modal-open"));
 
     // Move focus in, so a keyboard user is inside the dialog immediately.
     requestAnimationFrame(() => {
@@ -137,26 +144,38 @@ function LeadCaptureModal({
       const target = panelRef.current?.querySelector<HTMLElement>(
         "input:not([tabindex='-1']), textarea, select",
       );
-      target?.focus();
+      target?.focus({ preventScroll: true });
     });
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      body.style.overflow = previousOverflow;
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousHtmlOverflow;
       body.style.paddingRight = previousPadding;
-      triggerRef.current?.focus();
+      window.dispatchEvent(new CustomEvent("rv-modal-close"));
+      triggerRef.current?.focus({ preventScroll: true });
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center">
+  if (!mounted || !open) return null;
+
+  return createPortal(
+    <div
+      data-lenis-prevent
+      data-lenis-prevent-touch
+      data-lenis-prevent-wheel
+      className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center"
+    >
       <button
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-rhymvex-black/80 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-rhymvex-black/80 backdrop-blur-sm touch-none"
       />
 
       <div
@@ -165,8 +184,21 @@ function LeadCaptureModal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={describedBy}
-        className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-y-auto rounded-t-2xl border border-rhymvex-white/12 bg-rhymvex-slate/95 p-6 shadow-2xl sm:rounded-2xl sm:p-7"
+        data-lenis-prevent
+        data-lenis-prevent-touch
+        data-lenis-prevent-wheel
+        className="rv-animate-sheet relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-y-auto overscroll-contain rounded-t-3xl border border-rhymvex-white/15 bg-rhymvex-slate/95 p-6 shadow-2xl sm:rounded-2xl sm:p-7 backdrop-blur-xl"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+        }}
       >
+        {/* Mobile bottom-sheet drag handle */}
+        <div
+          className="mx-auto -mt-2 mb-4 h-1.5 w-12 rounded-full bg-rhymvex-white/20 sm:hidden"
+          aria-hidden="true"
+        />
+
         <div className="mb-1 flex items-start justify-between gap-4">
           <p className="rv-eyebrow">Start here</p>
           <button
@@ -198,6 +230,7 @@ function LeadCaptureModal({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

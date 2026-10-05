@@ -14,8 +14,8 @@ export type OrgSettings = {
 
 const FALLBACK: OrgSettings = {
   company_name: "Rhymvex",
-  contact_email: "hello@rhymvex.com",
-  notification_email: "hello@rhymvex.com",
+  contact_email: "support@rhymvex.space",
+  notification_email: "support@rhymvex.space",
   response_sla_minutes: null,
   timezone: "Europe/Lisbon",
   currency: "EUR",

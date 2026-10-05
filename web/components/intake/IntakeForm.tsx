@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, Loader2 } from "lucide-react";
 import { SITUATIONS, TIMELINES, fieldErrors, intakeSchema } from "@/lib/validation";
 import { DEFAULT_LOCALE, getLocale, type Locale } from "@/lib/locales";
 import { bandOptions, getCurrency, type Currency } from "@/lib/currency";
@@ -71,6 +71,14 @@ const SITUATION_KEYS: Record<string, string> = {
   "Something specific": "situations.specific",
 };
 
+/** Service alignment tags mapped to each situation option. */
+const SITUATION_TAGS: Record<string, string> = {
+  "You need clarity": "Sprint · 2 weeks",
+  "You need a system that scales": "Platform Build · 6–8 weeks",
+  "You need ongoing momentum": "Retainer · Monthly",
+  "Something specific": "Custom Architecture",
+};
+
 const TIMELINE_KEYS: Record<string, string> = {
   "As soon as possible": "form.asap",
   "Within a month": "form.withinMonth",
@@ -84,6 +92,8 @@ export function IntakeForm({
   calendarUrl = "",
   region = getLocale(DEFAULT_LOCALE),
   currency = getCurrency(),
+  preselectedPackage = null,
+  slaMinutes,
 }: {
   initialSituation?: string;
   initialMessage?: string;
@@ -96,12 +106,15 @@ export function IntakeForm({
    * server will record and the first paint is already correct.
    */
   currency?: Currency;
+  preselectedPackage?: { name: string; duration: string } | null;
+  slaMinutes?: number | null;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<FieldErrors>({});
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [reference, setReference] = useState<string | null>(null);
+  const [message, setMessage] = useState(initialMessage);
   // Tracked separately from `fields` so the Ember treatment on the situation
   // cards clears the moment one is chosen, rather than waiting for a resubmit.
   const [situationChosen, setSituationChosen] = useState(Boolean(initialSituation));
@@ -258,6 +271,24 @@ export function IntakeForm({
         </p>
       ) : null}
 
+      {/* Preselected Scope Banner (when arriving from Scope Builder or service cards) */}
+      {preselectedPackage && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-rhymvex-volt/30 bg-rhymvex-volt/8 px-4 py-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="size-2 rounded-full bg-rhymvex-volt animate-pulse" />
+            <div>
+              <span className="font-semibold text-rhymvex-white">
+                Selected Scope: {preselectedPackage.name}
+              </span>
+              <span className="ms-1.5 text-rhymvex-white/60">({preselectedPackage.duration})</span>
+            </div>
+          </div>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-rhymvex-volt">
+            Pre-configured
+          </span>
+        </div>
+      )}
+
       {/* The ask. Situation first, then their words: the two fields a lead is
           actually made of, and the only two that are not optional. */}
       <fieldset className="flex flex-col gap-4">
@@ -269,11 +300,6 @@ export function IntakeForm({
           </p>
           <div
             className="mt-3 grid gap-2.5 sm:grid-cols-2"
-            // role="radiogroup" is what makes the two attributes below do
-            // anything. aria-describedby is only surfaced on roles that support a
-            // description, and aria-invalid is not a global attribute, so on a
-            // bare div both were inert: a screen reader reached the four radios
-            // hearing only the legend, never the question and never the error.
             role="radiogroup"
             aria-required="true"
             aria-describedby={
@@ -284,17 +310,12 @@ export function IntakeForm({
             {SITUATIONS.map((situation, index) => (
               <label
                 key={situation}
-                className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 text-[0.9375rem] leading-snug text-rhymvex-white/70 transition-colors duration-200 hover:border-rhymvex-white/30 hover:text-rhymvex-white has-[:checked]:bg-rhymvex-volt/10 has-[:checked]:text-rhymvex-white has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-rhymvex-volt ${
-                  // Only an unanswered group goes Ember, and it stops as soon
-                  // as one is picked — an answered question is not an error.
+                className={`group flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-[0.9375rem] leading-snug text-rhymvex-white/70 transition-colors duration-200 hover:border-rhymvex-white/30 hover:text-rhymvex-white has-[:checked]:bg-rhymvex-volt/10 has-[:checked]:text-rhymvex-white has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-rhymvex-volt ${
                   situationUnanswered
                     ? "border-rhymvex-ember/60"
                     : "border-rhymvex-white/10 has-[:checked]:border-rhymvex-volt"
                 }`}
               >
-                {/* The dot is drawn rather than native, so the selected state
-                    is a brand object instead of a browser control. The input
-                    itself stays in the accessibility tree and the tab order. */}
                 <input
                   ref={index === 0 ? firstSituation : undefined}
                   type="radio"
@@ -307,11 +328,20 @@ export function IntakeForm({
                 />
                 <span
                   aria-hidden="true"
-                  className="grid size-[1.125rem] shrink-0 place-items-center rounded-full border border-rhymvex-white/25 transition-colors duration-200 peer-checked:border-rhymvex-volt peer-focus-visible:border-rhymvex-volt"
+                  className="mt-0.5 grid size-[1.125rem] shrink-0 place-items-center rounded-full border border-rhymvex-white/25 transition-colors duration-200 peer-checked:border-rhymvex-volt peer-focus-visible:border-rhymvex-volt"
                 >
                   <span className="size-[0.5rem] scale-0 rounded-full bg-rhymvex-volt transition-transform duration-200 peer-checked:scale-100" />
                 </span>
-                {t(SITUATION_KEYS[situation] ?? "")}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-medium text-rhymvex-white">
+                    {t(SITUATION_KEYS[situation] ?? "")}
+                  </span>
+                  {SITUATION_TAGS[situation] && (
+                    <span className="mt-1 text-[11px] font-mono text-rhymvex-volt/75">
+                      {SITUATION_TAGS[situation]}
+                    </span>
+                  )}
+                </div>
               </label>
             ))}
           </div>
@@ -330,15 +360,30 @@ export function IntakeForm({
             id="message"
             name="message"
             rows={4}
-            defaultValue={initialMessage}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder={t("form.messagePlaceholder")}
             className="rv-textarea"
             aria-invalid={fields.message ? "true" : undefined}
             aria-describedby={`message-hint${fields.message ? " message-error" : ""}`}
           />
-          <p id="message-hint" className="mt-1.5 text-xs text-rhymvex-white/50">
-            {t("form.messageHint", { n: MIN_MESSAGE_CHARS })}
-          </p>
+          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <p id="message-hint" className="text-rhymvex-white/50">
+              {t("form.messageHint", { n: MIN_MESSAGE_CHARS })}
+            </p>
+            <div>
+              {message.trim().length >= MIN_MESSAGE_CHARS ? (
+                <span className="inline-flex items-center gap-1 font-mono text-[11px] text-rhymvex-volt font-medium">
+                  <Check className="size-3" strokeWidth={3} />
+                  Minimum reached ({message.trim().length} chars)
+                </span>
+              ) : (
+                <span className="font-mono text-[11px] text-rhymvex-white/45">
+                  {message.trim().length} / {MIN_MESSAGE_CHARS} characters
+                </span>
+              )}
+            </div>
+          </div>
           {initialMessage ? (
             <p className="mt-2 text-xs text-rhymvex-white/50">
               {t("form.prefilled")}
@@ -382,7 +427,12 @@ export function IntakeForm({
           Opening it is the visitor saying they want to give us more. */}
       <details className="group border-t border-rhymvex-white/8 pt-7">
         <summary className="rv-eyebrow -mx-3 flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-rhymvex-white/55 transition-colors duration-200 hover:bg-rhymvex-white/4 hover:text-rhymvex-white [&::-webkit-details-marker]:hidden">
-          {t("form.aLittleContext")}
+          <span>
+            {t("form.aLittleContext")}{" "}
+            <span className="text-rhymvex-white/40 font-normal lowercase tracking-normal">
+              (budget, timeline & website)
+            </span>
+          </span>
           <span className="flex items-center gap-2 text-[0.6875rem] font-medium tracking-normal text-rhymvex-white/50 normal-case">
             {t("form.optional")}
             <ChevronDown
@@ -423,6 +473,14 @@ export function IntakeForm({
         </div>
       </details>
 
+      {/* SLA Trust Seal: visible on both mobile and desktop before submitting */}
+      <div className="flex items-center gap-2.5 rounded-xl border border-rhymvex-white/10 bg-rhymvex-slate/40 px-4 py-3 text-xs text-rhymvex-white/75 backdrop-blur-sm">
+        <span className="size-2 rounded-full bg-rhymvex-volt animate-pulse shrink-0" />
+        <p className="leading-snug">
+          <strong className="font-semibold text-rhymvex-white">Guaranteed SLA:</strong> A lead architect reviews and replies within {slaMinutes ? `${slaMinutes} minutes` : "45 minutes"}.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-4 border-t border-rhymvex-white/8 pt-7 sm:flex-row sm:items-center sm:justify-between">
         <p className="m-0 max-w-sm text-xs leading-relaxed text-rhymvex-white/50">
           {t("form.consent")}
@@ -445,6 +503,21 @@ export function IntakeForm({
           )}
         </button>
       </div>
+
+      {calendarUrl ? (
+        <p className="text-center text-xs text-rhymvex-white/50">
+          Prefer to talk directly?{" "}
+          <a
+            href={calendarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-rhymvex-volt underline-offset-4 hover:underline inline-flex items-center gap-1 font-medium"
+          >
+            <span>Book a 15-minute intro on our calendar</span>
+            <ArrowUpRight className="size-3" aria-hidden="true" />
+          </a>
+        </p>
+      ) : null}
 
       <p className="flex items-center justify-center gap-2 text-xs text-rhymvex-white/50">
         <RvMark label={null} className="size-4" />

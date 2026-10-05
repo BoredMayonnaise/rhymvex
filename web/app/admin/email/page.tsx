@@ -6,8 +6,14 @@ import { listInbox } from "@/lib/data/workspace";
 import { emailStats } from "@/lib/data/email";
 import { formatDateTime, humanise, relativeTime } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, emailStatusTone } from "@/components/ui/primitives";
-import { smtpConfigured } from "@/lib/mail/smtp";
+import {
+  getBusinessSmtpConfig,
+  getSystemSmtpConfig,
+  internalNotificationAddress,
+  smtpConfigured,
+} from "@/lib/mail/smtp";
 import { SendEmailForm } from "./SendEmailForm";
+import { SmtpStatusPanel } from "./SmtpStatusPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -70,14 +76,12 @@ export default async function EmailPage({
         </form>
       </header>
 
-      {!smtpConfigured() ? (
-        <p className="rounded-lg border border-rhymvex-volt/25 bg-rhymvex-volt/[0.05] px-4 py-3 text-xs leading-relaxed text-rhymvex-white/60">
-          SMTP is not configured, so nothing is actually being sent. Every message below is
-          rendered in full and written to the outbox, which is how the client confirmation and
-          internal notification workflow can be reviewed before real credentials exist. Set
-          SMTP_HOST and the rest to start delivering for real.
-        </p>
-      ) : null}
+      <SmtpStatusPanel
+        csrfToken={session.csrfToken}
+        businessConfig={getBusinessSmtpConfig()}
+        systemConfig={getSystemSmtpConfig()}
+        notificationEmail={internalNotificationAddress()}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label="Recorded" value={String(stats.total)} meta="all business email" />
@@ -97,7 +101,7 @@ export default async function EmailPage({
         <SendEmailForm
           csrfToken={session.csrfToken}
           actorName={session.name}
-          replyTo={process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>"}
+          replyTo={process.env.SMTP_FROM?.trim() || "Rhymvex <support@rhymvex.space>"}
         />
       ) : null}
 

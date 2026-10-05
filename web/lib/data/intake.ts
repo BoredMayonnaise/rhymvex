@@ -1,7 +1,8 @@
 import { createLead, type Lead } from "@/lib/data/leads";
 import { getOrgSettings, getResponseSlaMinutes } from "@/lib/data/org";
 import { clientConfirmation, internalLeadNotification } from "@/lib/mail/templates";
-import { internalNotificationAddress, sendMail, siteUrl } from "@/lib/mail/smtp";
+import { fromAddress, internalNotificationAddress, sendMail, siteUrl } from "@/lib/mail/smtp";
+import { queryOne } from "@/lib/db/client";
 import { recordEmail } from "@/lib/data/email";
 import { normaliseBand, type IntakeInput } from "@/lib/validation";
 import { leadSource } from "@/lib/locales";
@@ -89,23 +90,40 @@ export async function submitIntake(
     relatedId: lead.id,
   });
 
-  // 2. Internal alert. The workspace link only ever goes to the configured
-  //    internal address, never to the submitting visitor.
-  const notification = internalLeadNotification({
-    id: lead.id,
-    reference: lead.reference,
-    name: lead.name,
-    email: lead.email,
-    company: lead.company,
-    situation: lead.situation,
-    message: lead.message,
-    submittedAt: lead.submitted_at,
-    source: lead.source,
-    ip: meta.ipAddress ?? null,
-  });
+  // 2. Query live pipeline stats for the internal alert
+  const statsRow = await queryOne<{ total: string; today: string; open: string }>(
+    `SELECT
+       COUNT(*)::text AS total,
+       COUNT(*) FILTER (WHERE submitted_at >= date_trunc('day', now()))::text AS today,
+       COUNT(*) FILTER (WHERE status IN ('RECEIVED', 'REVIEWING'))::text AS open
+     FROM leads`,
+  );
+  const pipelineStats = {
+    totalCount: parseInt(statsRow?.total ?? "1", 10),
+    todayCount: parseInt(statsRow?.today ?? "1", 10),
+    openCount: parseInt(statsRow?.open ?? "1", 10),
+  };
+
+  // Internal alert via System Channel (Gmail). Includes live pipeline status.
+  const notification = internalLeadNotification(
+    {
+      id: lead.id,
+      reference: lead.reference,
+      name: lead.name,
+      email: lead.email,
+      company: lead.company,
+      situation: lead.situation,
+      message: lead.message,
+      submittedAt: lead.submitted_at,
+      source: lead.source,
+      ip: meta.ipAddress ?? null,
+    },
+    pipelineStats,
+  );
 
   const internalResult = await sendMail({
     kind: "INTERNAL_NOTIFICATION",
+    channel: "system",
     to: internalNotificationAddress(),
     subject: notification.subject,
     text: notification.text,
@@ -119,7 +137,7 @@ export async function submitIntake(
   await recordEmail({
     direction: "OUTBOUND",
     leadId: lead.id,
-    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+    fromAddress: fromAddress("business"),
     toAddresses: [lead.email],
     subject: confirmation.subject,
     bodyText: confirmation.text,
@@ -132,7 +150,7 @@ export async function submitIntake(
   await recordEmail({
     direction: "OUTBOUND",
     leadId: lead.id,
-    fromAddress: process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>",
+    fromAddress: fromAddress("system"),
     toAddresses: [internalNotificationAddress()],
     subject: notification.subject,
     bodyText: notification.text,

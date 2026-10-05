@@ -197,7 +197,7 @@ export function Dots({
 /** Label/value pair, for record detail panels. */
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div>
+    <div className="contents">
       <dt>{label}</dt>
       <dd>{children}</dd>
     </div>

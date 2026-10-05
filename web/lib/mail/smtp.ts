@@ -2,16 +2,29 @@ import { envInt } from "@/lib/env";
 import { query } from "@/lib/db/client";
 
 /**
- * SMTP transport.
+ * Dual-Channel SMTP Engine.
  *
- * When SMTP_HOST is unset the transport is not created. `sendMail` then writes
- * the fully rendered message to `email_outbox` and logs a summary to the console
- * instead of sending, so the whole intake → confirmation → notification workflow
- * is observable and testable locally before real credentials exist.
+ * Automatically routes email between two specialized transports:
+ * 1. Business Channel (Zoho Mail): Client confirmations, client portal invitations,
+ *    and outbound business proposals.
+ * 2. System Channel (Google / Gmail): Team invitations, internal lead notifications
+ *    with live pipeline stats, and automated error detection.
  *
- * Secrets are read from the environment only. Nothing here is ever written to
- * source control, and the password is never logged.
+ * When a channel is unconfigured, it gracefully writes to `email_outbox` in "dev"
+ * delivery mode so the platform remains fully functional locally and in staging.
  */
+
+import {
+  resolveSmtpConfig,
+  resolveBusinessSmtpConfig,
+  resolveSystemSmtpConfig,
+  diagnoseSmtpError,
+  verifySmtpConnection,
+  verifySmtpChannel,
+  type ResolvedSmtpConfig,
+  type SmtpVerifyResult,
+  type EmailChannel,
+} from "./providers";
 
 export type OutboundEmail = {
   kind:
@@ -20,6 +33,7 @@ export type OutboundEmail = {
     | "STAFF_INVITATION"
     | "PORTAL_INVITATION"
     | "OUTBOUND";
+  channel?: EmailChannel;
   to: string;
   subject: string;
   text: string;
@@ -31,22 +45,54 @@ export type OutboundEmail = {
 
 export type SendResult = {
   delivery: "sent" | "dev" | "failed";
+  channel: EmailChannel;
   error?: string;
+  hint?: string;
 };
 
-export function smtpConfigured(): boolean {
-  return Boolean(process.env.SMTP_HOST);
+export function resolveChannelForEmail(email: OutboundEmail): EmailChannel {
+  if (email.channel) return email.channel;
+  if (email.kind === "STAFF_INVITATION" || email.kind === "INTERNAL_NOTIFICATION") {
+    return "system";
+  }
+  return "business";
 }
 
-export function fromAddress(): string {
-  return process.env.SMTP_FROM?.trim() || "Rhymvex <hello@rhymvex.com>";
+export function getBusinessSmtpConfig(): ResolvedSmtpConfig {
+  return resolveBusinessSmtpConfig();
+}
+
+export function getSystemSmtpConfig(): ResolvedSmtpConfig {
+  return resolveSystemSmtpConfig();
+}
+
+export function getActiveSmtpConfig(): ResolvedSmtpConfig {
+  // Returns business config as primary representation for legacy callers
+  return resolveBusinessSmtpConfig();
+}
+
+export function businessSmtpConfigured(): boolean {
+  return resolveBusinessSmtpConfig().isConfigured;
+}
+
+export function systemSmtpConfigured(): boolean {
+  return resolveSystemSmtpConfig().isConfigured;
+}
+
+export function smtpConfigured(): boolean {
+  return businessSmtpConfigured() || systemSmtpConfigured() || resolveSmtpConfig().isConfigured;
+}
+
+export function fromAddress(channel: EmailChannel = "business"): string {
+  const cfg = channel === "business" ? resolveBusinessSmtpConfig() : resolveSystemSmtpConfig();
+  return cfg.from;
 }
 
 export function internalNotificationAddress(): string {
   return (
     process.env.INTERNAL_NOTIFICATION_EMAIL?.trim() ||
     process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() ||
-    "hello@rhymvex.com"
+    "support@rhymvex.space"
   );
 }
 
@@ -54,31 +100,60 @@ export function siteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000").replace(/\/+$/, "");
 }
 
-// Nodemailer is only imported when actually sending, so the app does not require
-// a live transport to start in development.
-let transportPromise: Promise<import("nodemailer").Transporter> | null = null;
+// Independent transport caching for both channels
+let businessTransportPromise: Promise<import("nodemailer").Transporter> | null = null;
+let businessConfigKey = "";
 
-async function getTransport() {
-  if (!transportPromise) {
-    transportPromise = (async () => {
-      const { default: nodemailer } = await import("nodemailer");
-      const port = envInt("SMTP_PORT", 587);
-      return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port,
-        // Implicit TLS on 465, STARTTLS otherwise.
-        secure: process.env.SMTP_SECURE === "true" || port === 465,
-        auth: process.env.SMTP_USER
-          ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-          : undefined,
-        // Keep the timeout short: intake should not hang on a bad mail server.
-        connectionTimeout: 10_000,
-        greetingTimeout: 10_000,
-        socketTimeout: 20_000,
-      });
-    })();
+let systemTransportPromise: Promise<import("nodemailer").Transporter> | null = null;
+let systemConfigKey = "";
+
+async function getTransportForChannel(channel: EmailChannel) {
+  const { default: nodemailer } = await import("nodemailer");
+
+  if (channel === "business") {
+    const cfg = resolveBusinessSmtpConfig();
+    const configKey = `${cfg.host}:${cfg.port}:${cfg.secure}:${cfg.user}:${cfg.pass}`;
+    if (!businessTransportPromise || businessConfigKey !== configKey) {
+      businessConfigKey = configKey;
+      businessTransportPromise = (async () => {
+        return nodemailer.createTransport({
+          host: cfg.host,
+          port: cfg.port,
+          secure: cfg.secure,
+          auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
+          connectionTimeout: 10_000,
+          greetingTimeout: 10_000,
+          socketTimeout: 20_000,
+        });
+      })();
+    }
+    return { transport: await businessTransportPromise, config: cfg };
+  } else {
+    const cfg = resolveSystemSmtpConfig();
+    const configKey = `${cfg.host}:${cfg.port}:${cfg.secure}:${cfg.user}:${cfg.pass}`;
+    if (!systemTransportPromise || systemConfigKey !== configKey) {
+      systemConfigKey = configKey;
+      systemTransportPromise = (async () => {
+        return nodemailer.createTransport({
+          host: cfg.host,
+          port: cfg.port,
+          secure: cfg.secure,
+          auth: cfg.user ? { user: cfg.user, pass: cfg.pass } : undefined,
+          connectionTimeout: 10_000,
+          greetingTimeout: 10_000,
+          socketTimeout: 20_000,
+        });
+      })();
+    }
+    return { transport: await systemTransportPromise, config: cfg };
   }
-  return transportPromise;
+}
+
+export async function verifySmtp(channel?: EmailChannel): Promise<SmtpVerifyResult> {
+  if (channel) {
+    return verifySmtpChannel(channel);
+  }
+  return verifySmtpConnection();
 }
 
 async function persistToOutbox(email: OutboundEmail, result: SendResult): Promise<void> {
@@ -104,7 +179,7 @@ function logToConsole(email: OutboundEmail, result: SendResult): void {
   if (process.env.NODE_ENV === "test") return;
   const lines = [
     "",
-    "  ┌─ email " + result.delivery + " ─────────────────────────────",
+    `  ┌─ email ${result.delivery} [${result.channel.toUpperCase()}] ─────────────────────────────`,
     `  │ ${email.kind}`,
     `  │ to:      ${email.to}`,
     `  │ subject: ${email.subject}`,
@@ -117,37 +192,48 @@ function logToConsole(email: OutboundEmail, result: SendResult): void {
 }
 
 /**
- * Send one message. Never throws: a mail failure must not roll back a lead that
- * was already recorded. The failure is recorded in the outbox with its reason
- * and reported in the return value so callers can surface it.
+ * Send one message. Automatically routes to Business (Zoho) or System (Gmail).
+ * Never throws: a mail failure must not abort a lead transaction.
  */
 export async function sendMail(email: OutboundEmail): Promise<SendResult> {
-  if (!smtpConfigured()) {
-    const result: SendResult = { delivery: "dev" };
+  const channel = resolveChannelForEmail(email);
+  const cfg = channel === "business" ? resolveBusinessSmtpConfig() : resolveSystemSmtpConfig();
+
+  // If this specific channel is not configured, record in dev outbox
+  if (!cfg.isConfigured) {
+    const result: SendResult = { delivery: "dev", channel };
     await persistToOutbox(email, result);
     logToConsole(email, result);
     return result;
   }
 
   try {
-    const transport = await getTransport();
+    const { transport, config } = await getTransportForChannel(channel);
     await transport.sendMail({
-      from: fromAddress(),
+      from: config.from,
       to: email.to,
       subject: email.subject,
       text: email.text,
       html: email.html,
     });
-    const result: SendResult = { delivery: "sent" };
+
+    const result: SendResult = { delivery: "sent", channel };
     await persistToOutbox(email, result);
     return result;
   } catch (error) {
+    const rawError = error instanceof Error ? error.message : "Unknown SMTP error";
+    const hint = diagnoseSmtpError(error, cfg);
     const result: SendResult = {
       delivery: "failed",
-      error: error instanceof Error ? error.message : "Unknown SMTP error",
+      channel,
+      error: rawError,
+      hint,
     };
     await persistToOutbox(email, result);
-    console.error(`  email failed (${email.kind} -> ${email.to}): ${result.error}`);
+    console.error(`  email failed (${email.kind} [${channel}] -> ${email.to}): ${result.error}`);
+    if (hint && hint !== rawError) {
+      console.error(`  smtp diagnosis: ${hint}`);
+    }
     return result;
   }
 }
