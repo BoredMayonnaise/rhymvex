@@ -1,1 +1,0 @@
-../../../docs/SKILL.md

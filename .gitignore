@@ -19,3 +19,6 @@ Thumbs.db
 *.log
 scratch/
 tmp/
+
+# opencode local config
+.opencode/
