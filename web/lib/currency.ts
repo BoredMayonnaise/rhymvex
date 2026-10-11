@@ -76,10 +76,14 @@ export function bandLabel(currency: Currency, key: BandKey): string {
 /* --------------------------------------------------------------------------
    The currency cookie
 
-   Still read, never written. `preferredCurrency` honours a value left by an
-   earlier visit so a returning visitor keeps the currency they were shown last
-   time, but nothing on the site offers a choice any more: the currency is a
-   property of the language being read, set by the locale catalogue.
+   Written only when a visitor confirms a suggestion, so it records a decision
+   rather than a detection: it is paired with the language it was made in and is
+   ignored on any other page. That pairing is what stops the failure the retired
+   cookie had, where nothing could refresh it and a value from an earlier visit
+   outlived the reason it was set.
    -------------------------------------------------------------------------- */
 
 export const CURRENCY_COOKIE = "rv_currency";
+
+/** The language the currency choice was made in. See `currency-preference.ts`. */
+export const CURRENCY_LOCALE_COOKIE = "rv_currency_for";

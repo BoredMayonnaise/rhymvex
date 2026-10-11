@@ -18,35 +18,17 @@ import { CLIENT_HOME, SIGN_IN_PATH, STAFF_HOME } from "@/lib/auth/workspace";
  *
  * It reads the cookie's presence only, never its contents, so it needs no
  * database access and runs on the edge.
+ *
+ * `rv_currency` is deliberately not touched here. It is written again now that a
+ * visitor can confirm a suggested currency, and `preferredCurrency` scopes it to
+ * the language it was chosen in, so a value from a visit in another language is
+ * ignored rather than quietly overriding this one. Nothing here can do that
+ * scoping — the cookie name alone does not say which language it belongs to —
+ * so expiring it from middleware would only be the old mistake in a new place.
  */
 
 const STAFF_COOKIE = "rv_staff_session";
 const CLIENT_COOKIE = "rv_client_session";
-const RETIRED_CURRENCY_COOKIE = "rv_currency";
-
-/**
- * Expires the retired `rv_currency` cookie.
- *
- * The currency switcher and the detection layer that used to write this are
- * gone, so nothing can refresh it any more. Left alone, a cookie set during that
- * period overrides the language's own currency forever: a visitor in the
- * Philippines holding a leftover `rv_currency=SAR` saw Saudi riyals on /fil-PH.
- *
- * Dropped here rather than left to expire on its own so the fix reaches people
- * who already have it, instead of only people who happen to clear their cookies.
- * The currency now comes from the language in the URL, which means the right
- * prices do not depend on this cookie being absent — clearing it only removes a
- * stale value that is no longer read.
- */
-function expireRetiredCurrencyCookie(
-  request: NextRequest,
-  response: NextResponse,
-): NextResponse {
-  if (request.cookies.get(RETIRED_CURRENCY_COOKIE)?.value) {
-    response.cookies.set(RETIRED_CURRENCY_COOKIE, "", { path: "/", maxAge: 0 });
-  }
-  return response;
-}
 
 /**
  * A redirect to a workspace home, discarding any query string on the original
@@ -79,7 +61,7 @@ export function proxy(request: NextRequest) {
   const isPortalRoute = pathname === "/portal" || pathname.startsWith("/portal/");
 
   if (!isAdminRoute && !isPortalRoute) {
-    return expireRetiredCurrencyCookie(request, NextResponse.next());
+    return NextResponse.next();
   }
 
   if (isAdminRoute) {
@@ -92,7 +74,7 @@ export function proxy(request: NextRequest) {
       // is the same decision made from cookie presence so the detour never
       // renders in the first place.
       if (request.cookies.get(CLIENT_COOKIE)?.value) {
-        return expireRetiredCurrencyCookie(request, redirectTo(request, CLIENT_HOME));
+        return redirectTo(request, CLIENT_HOME);
       }
 
       const url = request.nextUrl.clone();
@@ -109,7 +91,7 @@ export function proxy(request: NextRequest) {
   if (isPortalRoute) {
     if (!request.cookies.get(CLIENT_COOKIE)?.value) {
       if (request.cookies.get(STAFF_COOKIE)?.value) {
-        return expireRetiredCurrencyCookie(request, redirectTo(request, STAFF_HOME));
+        return redirectTo(request, STAFF_HOME);
       }
 
       // Straight to the sign-in page rather than to `/portal-sign-in`. The sign-in
@@ -123,7 +105,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  return expireRetiredCurrencyCookie(request, NextResponse.next());
+  return NextResponse.next();
 }
 
 export const config = {

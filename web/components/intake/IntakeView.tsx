@@ -1,10 +1,12 @@
+import { headers } from "next/headers";
 import { IntakeForm } from "@/components/intake/IntakeForm";
 import { IntakeHeader } from "@/components/intake/IntakeHeader";
+import { CurrencySuggestion } from "@/components/intake/CurrencySuggestion";
 import { getOrgSettings, getResponseSlaMinutes } from "@/lib/data/org";
 import { draftFromIds, services } from "@/lib/services";
 import { SITUATIONS } from "@/lib/validation";
 import { DEFAULT_LOCALE, getLocale, type LocaleCode } from "@/lib/locales";
-import { preferredCurrency } from "@/lib/currency-preference";
+import { preferredCurrency, suggestedCurrency } from "@/lib/currency-preference";
 import { getTranslator } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -48,10 +50,15 @@ export default async function IntakeView({
 }) {
   const t = getTranslator(locale);
   const params = await searchParams;
-  const [slaMinutes, settings, currency] = await Promise.all([
+  // Two separate reads on purpose. `preferredCurrency` is what the page is
+  // priced in and never waits on the network. The suggestion is a best guess
+  // from the request's address and is only worth asking about when it differs
+  // from that, so the lookup happens in parallel and its failure is invisible.
+  const [slaMinutes, settings, currency, suggestion] = await Promise.all([
     getResponseSlaMinutes(),
     getOrgSettings(),
     preferredCurrency(locale),
+    suggestedCurrency(locale, await headers()).catch(() => null),
   ]);
 
   // Only an on-site calendar is offered. There is no mailto fallback: the
@@ -193,6 +200,10 @@ export default async function IntakeView({
           </div>
         </div>
       </main>
+
+      {suggestion ? (
+        <CurrencySuggestion suggestion={suggestion} locale={locale} current={currency} />
+      ) : null}
     </div>
   );
 }
