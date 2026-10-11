@@ -367,15 +367,23 @@ export async function listClients(limit = 200, offset = 0): Promise<ClientSummar
          SELECT client_id, count(*)::int AS portal_users FROM client_users GROUP BY client_id
        ) pu ON pu.client_id = c.id
        LEFT JOIN (
-         SELECT client_id,
+         -- Two levels on purpose: json_agg cannot wrap sum directly, so the
+         -- per-currency sums are computed first and then gathered into one array.
+         SELECT agg.client_id,
                 json_agg(json_build_object(
-                  'currency', coalesce(currency, 'USD'),
-                  'total', sum(amount - amount_paid),
+                  'currency', agg.currency,
+                  'total', agg.total::float,
                   'count', 0
                 )) AS outstanding
-           FROM invoices
-          WHERE status IN ('SENT','VIEWED','OVERDUE')
-          GROUP BY client_id
+           FROM (
+             SELECT client_id,
+                    coalesce(currency, 'USD') AS currency,
+                    sum(amount - amount_paid) AS total
+               FROM invoices
+              WHERE status IN ('SENT','VIEWED','OVERDUE')
+              GROUP BY client_id, coalesce(currency, 'USD')
+           ) agg
+          GROUP BY agg.client_id
        ) inv ON inv.client_id = c.id
       ORDER BY c.name ASC
       LIMIT $1 OFFSET $2`,
