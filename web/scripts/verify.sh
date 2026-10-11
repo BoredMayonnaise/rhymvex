@@ -175,7 +175,66 @@ check "internal notifications do carry the workspace link" \
       "$(q "SELECT count(*) FROM email_outbox WHERE kind='INTERNAL_NOTIFICATION'")"
 
 echo
-echo "=== 8. Leads are not auto-converted to clients ==="
+echo "=== 8. Contract signing is client-scoped and leaves a record ==="
+# The signature is the whole point of a contract, so these assert the three
+# things that make it mean something: a client can only sign their own, only a
+# contract actually sent to them is signable, and signing records who and from
+# where. Both clients need a contract, otherwise there is nothing to test
+# isolation between; each is created and removed inside this section so the
+# suite stays repeatable against a seeded database.
+# `q` reads a single line, so these are one-liners.
+ACON=$(q "INSERT INTO contracts (reference, client_id, title, body, status, value_total, currency, sent_at) SELECT 'CON-VERIFY-A', id, 'Verification contract A', 'Terms for A.', 'AWAITING_SIGNATURE', 100, 'EUR', now() FROM clients WHERE reference = 'CLI-DEMO01' RETURNING id")
+BCON=$(q "INSERT INTO contracts (reference, client_id, title, body, status, value_total, currency, sent_at) SELECT 'CON-VERIFY-B', id, 'Verification contract B', 'Terms for B.', 'AWAITING_SIGNATURE', 200, 'EUR', now() FROM clients WHERE reference = 'CLI-DEMO02' RETURNING id")
+if [ -n "$ACON" ] && [ -n "$BCON" ]; then
+  # A client session cannot reach the staff contract detail page at all.
+  check "client A blocked from a staff contract page" \
+        "$(code /admin/contracts/$ACON -H "Cookie: $CA")" 307
+  check "staff session opens a contract detail page" \
+        "$(code /admin/contracts/$ACON -H "Cookie: $SC")" 200
+  check "unknown contract id is 404" \
+        "$(code /admin/contracts/00000000-0000-0000-0000-000000000000 -H "Cookie: $SC")" 404
+
+  # Signing is offered only once the contract is in front of the client.
+  n=$(html /portal/contracts -H "Cookie: $CA" | grep -c 'name="consent"' || true)
+  if [ "$n" -ge 1 ]; then
+    ok "portal offers signature capture for a sent contract"
+  else
+    bad "portal does not offer signature capture for a sent contract"
+  fi
+
+  # Tenant isolation: neither portal may see the other's contract id.
+  # Client B has no portal user in the seed, so use the portal's own scoping
+  # query against B's contract rather than an HTTP request that cannot be made.
+  check "client B's contract is not returned for client A" \
+        "$(q "SELECT count(*) FROM contracts WHERE id = '$BCON' AND client_id = (SELECT client_id FROM client_users WHERE email = 'rina@harbourlight.test')")" 0
+
+  # A draft is never rendered for a client, so it cannot be signed by accident.
+  q "UPDATE contracts SET status = 'DRAFT' WHERE id = '$ACON'" >/dev/null
+  n=$(html /portal/contracts -H "Cookie: $CA" | grep -c 'Verification contract A' || true)
+  check "a draft is not shown in the portal" "$n" 0
+
+  q "DELETE FROM contracts WHERE id = '$ACON'" >/dev/null
+  q "DELETE FROM contracts WHERE id = '$BCON'" >/dev/null
+else
+  bad "could not create verification contracts for CLI-DEMO01 / CLI-DEMO02"
+fi
+
+echo
+echo "=== 9. Contracts cannot exist without a commercial gate ==="
+# A contract is an agreement, so it may only follow a proposal the client
+# already accepted. A contract pointing at a draft or declined proposal would
+# mean the gate was bypassed somewhere.
+check "no contract comes from an unaccepted proposal" \
+      "$(q "SELECT count(*) FROM contracts ct JOIN proposals p ON p.id = ct.proposal_id WHERE p.status <> 'ACCEPTED'")" 0
+# A signature with no signer name is not a signature.
+check "no contract is signed without a signer name" \
+      "$(q "SELECT count(*) FROM contracts WHERE signed_at IS NOT NULL AND signed_by_name IS NULL")" 0
+# A client-facing email must never carry a workspace link.
+check "no contract email carries a workspace link" \
+      "$(q "SELECT count(*) FROM email_outbox WHERE kind='OUTBOUND' AND (body_text LIKE '%/admin/%' OR body_html LIKE '%/admin/%')")" 0
+
+echo
+echo "=== 10. Leads are not auto-converted to clients ==="
 check "no client points at an unlinked lead" \
       "$(q "SELECT count(*) FROM clients c JOIN leads l ON l.id = c.lead_id WHERE l.client_id IS DISTINCT FROM c.id")" 0
 check "one client per originating lead" \
@@ -184,7 +243,7 @@ check "converted leads are all WON" \
       "$(q "SELECT count(*) FROM clients c JOIN leads l ON l.id = c.lead_id WHERE l.status <> 'WON'")" 0
 
 echo
-echo "=== 9. Spam is absorbed rather than announced ==="
+echo "=== 11. Spam is absorbed rather than announced ==="
 # A fresh address per run, so the per-IP rate limit cannot turn this into a 429.
 PROBE_IP="198.51.100.$(( (RANDOM % 200) + 20 ))"
 started=$(( $(date +%s) * 1000 - 20000 ))

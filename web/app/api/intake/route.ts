@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   }
 
   // 3. Honeypot and fill-time check, before any parsing cost is trusted.
-  const human = assertLikelyHuman({
+  const human = await assertLikelyHuman({
     website_confirm: (raw as Record<string, unknown>).website_confirm as string | undefined,
     startedAt: (raw as Record<string, unknown>).startedAt as number | undefined,
   });

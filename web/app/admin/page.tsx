@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -11,7 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { requireStaffPermission } from "@/lib/auth/guards";
-import { getOverview } from "@/lib/data/workspace";
+import { getOverview, listRecentActivity, listUpcomingBookings } from "@/lib/data/workspace";
 import { describeAuditAction } from "@/lib/audit";
 import { formatDateTime, formatMoney, humanise, relativeTime, untilTime } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, bookingStatusTone, leadStatusTone } from "@/components/ui/primitives";
@@ -22,7 +23,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
   const session = await requireStaffPermission("leads.read");
-  const [overview, settings] = await Promise.all([getOverview(session.staffId), getOrgSettings()]);
+  const [overview, settings] = await Promise.all([
+    getOverview(session.staffId, { light: true }),
+    getOrgSettings(),
+  ]);
 
   const pipelineMax = Math.max(1, ...overview.statusMix.map((r) => r.value));
 
@@ -207,52 +211,9 @@ export default async function AdminOverviewPage() {
             </Panel>
           </div>
 
-          <Panel title="Recent activity" flush>
-            {overview.recentActivity.length === 0 ? (
-              <EmptyState>Nothing recorded yet.</EmptyState>
-            ) : (
-              <ul>
-                {overview.recentActivity.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-start gap-3 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
-                  >
-                    <span
-                      className={`mt-1 size-1.5 shrink-0 rounded-full ${
-                        item.actor_type === "staff"
-                          ? "bg-rhymvex-volt"
-                          : "bg-rhymvex-white/25"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-rhymvex-white/75">
-                        <span className="font-semibold text-rhymvex-white">
-                          {item.actor_label ?? "System"}
-                        </span>{" "}
-                        {describeAuditAction(item.action).toLowerCase()}
-                        {item.entity_id ? (
-                          <>
-                            {" "}
-                            ·{" "}
-                            <span className="font-mono text-[11px] text-rhymvex-white/50">
-                              {humanise(item.entity_type)} {item.entity_id.slice(0, 8)}
-                            </span>
-                          </>
-                        ) : null}
-                      </p>
-                    </div>
-                    <time
-                      dateTime={new Date(item.occurred_at).toISOString()}
-                      className="shrink-0 text-[11px] text-rhymvex-white/50"
-                    >
-                      {relativeTime(item.occurred_at)}
-                    </time>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+          <Suspense fallback={<PanelShell title="Recent activity" />}>
+            <RecentActivityPanel />
+          </Suspense>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -291,48 +252,9 @@ export default async function AdminOverviewPage() {
             )}
           </Panel>
 
-          <Panel title="Upcoming bookings" flush>
-            {overview.upcomingBookings.length === 0 ? (
-              <EmptyState>Nothing scheduled.</EmptyState>
-            ) : (
-              <ul>
-                {overview.upcomingBookings.map((booking) => (
-                  <li
-                    key={booking.id}
-                    className="border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-rhymvex-white">
-                          {booking.title}
-                        </p>
-                        <p className="mt-0.5 truncate text-[11px] text-rhymvex-white/50">
-                          {booking.client_name ?? booking.lead_name ?? "Internal"} ·{" "}
-                          {booking.duration_mins} min
-                          {booking.host_name ? ` · ${booking.host_name}` : ""}
-                        </p>
-                        <p className="mt-1 text-[11px] text-rhymvex-volt">
-                          {formatDateTime(booking.scheduled_for)}
-                        </p>
-                      </div>
-                      <StatusPill
-                        value={humanise(booking.status)}
-                        tone={bookingStatusTone(booking.status)}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="border-t border-rhymvex-white/5 px-4 py-2">
-              <Link
-                href="/admin/bookings"
-                className="text-[11px] font-semibold text-rhymvex-volt hover:underline"
-              >
-                All bookings
-              </Link>
-            </div>
-          </Panel>
+          <Suspense fallback={<PanelShell title="Upcoming bookings" />}>
+            <UpcomingBookingsPanel />
+          </Suspense>
 
           <Panel title="Reference">
             <dl className="flex flex-col gap-2.5 text-xs">
@@ -365,6 +287,117 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function PanelShell({ title }: { title: string }) {
+  return (
+    <Panel title={title}>
+      <div className="animate-pulse space-y-3" aria-busy="true">
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <span className="sr-only">Loading.</span>
+      </div>
+    </Panel>
+  );
+}
+
+async function RecentActivityPanel() {
+  const items = await listRecentActivity();
+  return (
+    <Panel title="Recent activity" flush>
+      {items.length === 0 ? (
+        <EmptyState>Nothing recorded yet.</EmptyState>
+      ) : (
+        <ul>
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-start gap-3 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
+            >
+              <span
+                className={`mt-1 size-1.5 shrink-0 rounded-full ${
+                  item.actor_type === "staff" ? "bg-rhymvex-volt" : "bg-rhymvex-white/25"
+                }`}
+                aria-hidden="true"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-rhymvex-white/75">
+                  <span className="font-semibold text-rhymvex-white">
+                    {item.actor_label ?? "System"}
+                  </span>{" "}
+                  {describeAuditAction(item.action).toLowerCase()}
+                  {item.entity_id ? (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span className="font-mono text-[11px] text-rhymvex-white/50">
+                        {humanise(item.entity_type)} {item.entity_id.slice(0, 8)}
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+              <time
+                dateTime={new Date(item.occurred_at).toISOString()}
+                className="shrink-0 text-[11px] text-rhymvex-white/50"
+              >
+                {relativeTime(item.occurred_at)}
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+async function UpcomingBookingsPanel() {
+  const bookings = await listUpcomingBookings();
+  return (
+    <Panel title="Upcoming bookings" flush>
+      {bookings.length === 0 ? (
+        <EmptyState>Nothing scheduled.</EmptyState>
+      ) : (
+        <ul>
+          {bookings.map((booking) => (
+            <li
+              key={booking.id}
+              className="border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-rhymvex-white">
+                    {booking.title}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] text-rhymvex-white/50">
+                    {booking.client_name ?? booking.lead_name ?? "Internal"} ·{" "}
+                    {booking.duration_mins} min
+                    {booking.host_name ? ` · ${booking.host_name}` : ""}
+                  </p>
+                  <p className="mt-1 text-[11px] text-rhymvex-volt">
+                    {formatDateTime(booking.scheduled_for)}
+                  </p>
+                </div>
+                <StatusPill
+                  value={humanise(booking.status)}
+                  tone={bookingStatusTone(booking.status)}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="border-t border-rhymvex-white/5 px-4 py-2">
+        <Link
+          href="/admin/bookings"
+          className="text-[11px] font-semibold text-rhymvex-volt hover:underline"
+        >
+          All bookings
+        </Link>
+      </div>
+    </Panel>
   );
 }
 

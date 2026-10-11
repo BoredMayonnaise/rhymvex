@@ -43,7 +43,7 @@ export default async function PortalFilesPage() {
               >
                 <FileText className="mt-0.5 size-4 shrink-0 text-rhymvex-white/50" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-rhymvex-white">{file.name}</p>
+                  <a href={`/portal/files/${file.id}/download`} className="block truncate text-sm text-rhymvex-white hover:text-rhymvex-volt">{file.name}</a>
                   {file.description ? (
                     <p className="mt-0.5 text-[11px] leading-relaxed text-rhymvex-white/55">
                       {file.description}

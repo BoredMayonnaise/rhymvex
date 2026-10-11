@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { stripLocalePrefix } from "@/lib/locales";
+import { CLIENT_HOME, SIGN_IN_PATH, STAFF_HOME } from "@/lib/auth/workspace";
 
 /**
  * Workspace route protection, plus locale-prefix canonicalisation.
@@ -47,6 +48,18 @@ function expireRetiredCurrencyCookie(
   return response;
 }
 
+/**
+ * A redirect to a workspace home, discarding any query string on the original
+ * request. The deep link is dropped deliberately: it named the workspace being
+ * refused, so following it would bounce the visitor straight back.
+ */
+function redirectTo(request: NextRequest, pathname: string): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  return NextResponse.redirect(url);
+}
+
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -71,22 +84,40 @@ export function proxy(request: NextRequest) {
 
   if (isAdminRoute) {
     if (!request.cookies.get(STAFF_COOKIE)?.value) {
+      // A portal cookie cannot open the workspace, but it does mean this person
+      // is already signed in — as a client. Sending them to the sign-in form
+      // showed them a form whose credentials could only ever resolve back to
+      // `/portal`, bouncing them straight here. The page guard in
+      // `lib/auth/guards.ts` makes the same call against a real session; this
+      // is the same decision made from cookie presence so the detour never
+      // renders in the first place.
+      if (request.cookies.get(CLIENT_COOKIE)?.value) {
+        return expireRetiredCurrencyCookie(request, redirectTo(request, CLIENT_HOME));
+      }
+
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = SIGN_IN_PATH;
       url.search = `?next=${encodeURIComponent(pathname + search)}`;
       return NextResponse.redirect(url);
     }
-    // A client portal cookie is never sufficient for the admin workspace, but
-    // there is nothing to check here: this point is only reached once a staff
-    // cookie exists, so the `!STAFF_COOKIE` half of a "portal cookie without a
-    // staff cookie" test can never be true. The separation is real and is
-    // enforced by the page guard, which only ever reads `rv_staff_session`.
+    // A client portal cookie is never sufficient for the admin workspace, and
+    // there is nothing further to check here: this point is only reached once a
+    // staff cookie exists. The separation is real and is enforced by the page
+    // guard, which only ever reads `rv_staff_session`.
   }
 
   if (isPortalRoute) {
     if (!request.cookies.get(CLIENT_COOKIE)?.value) {
+      if (request.cookies.get(STAFF_COOKIE)?.value) {
+        return expireRetiredCurrencyCookie(request, redirectTo(request, STAFF_HOME));
+      }
+
+      // Straight to the sign-in page rather than to `/portal-sign-in`. The sign-in
+      // page reads the workspace off `next` on its own, so the legacy route would
+      // only add a hop — and a deep link like `/portal/invoices` arrives there
+      // already scoped to the portal without anything here saying so.
       const url = request.nextUrl.clone();
-      url.pathname = "/portal-sign-in";
+      url.pathname = SIGN_IN_PATH;
       url.search = `?next=${encodeURIComponent(pathname + search)}`;
       return NextResponse.redirect(url);
     }

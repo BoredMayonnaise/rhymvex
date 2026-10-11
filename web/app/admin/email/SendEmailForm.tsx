@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ChevronDown, Loader2, Send } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
+import { FormModal } from "@/components/ui/Modal";
 import { sendBusinessEmailAction, type ActionResult } from "@/app/admin/actions";
 
 /**
@@ -20,32 +21,23 @@ export function SendEmailForm({
   actorName: string;
   replyTo: string;
 }) {
-  const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     sendBusinessEmailAction,
     null,
   );
 
   return (
-    <div className="rv-panel">
-      <header className="rv-panel-head">
-        <h2 className="rv-panel-title">Compose</h2>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="rv-btn rv-btn-ghost rv-btn-sm"
-          aria-expanded={open}
-        >
-          <ChevronDown
-            className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-          {open ? "Close" : "New message"}
+    <FormModal
+      trigger={(open) => (
+        <button type="button" onClick={open} className="rv-btn rv-btn-ghost rv-btn-sm">
+          <Send className="size-3.5" aria-hidden="true" />
+          New message
         </button>
-      </header>
-
-      {open ? (
-        <div className="rv-panel-body">
+      )}
+      title="Compose"
+      eyebrow="Business email"
+      success={state?.ok === true}
+    >
           <form action={formAction} className="flex flex-col gap-3">
             <input type="hidden" name="csrf" value={csrfToken} />
 
@@ -111,8 +103,6 @@ export function SendEmailForm({
               ) : null}
             </div>
           </form>
-        </div>
-      ) : null}
-    </div>
+    </FormModal>
   );
 }

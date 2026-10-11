@@ -1,7 +1,63 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { RvMark } from "@/components/RvMark";
+import {
+  SIGN_IN_PATH,
+  workspaceHome,
+  type Workspace,
+  type WorkspaceScope,
+} from "@/lib/auth/workspace";
+
+/**
+ * The switcher links carry `next` through, so picking a workspace does not throw
+ * away the page someone was originally trying to reach. A `next` belonging to the
+ * other workspace is dropped rather than carried: the sign-in page discards it
+ * again on arrival, and carrying a destination that cannot be honoured only
+ * produces a landing on the wrong side of the boundary.
+ */
+function workspaceTabHref(scope: WorkspaceScope, nextUrl?: string): string {
+  const params = new URLSearchParams({ workspace: scope });
+  if (nextUrl && nextUrl.startsWith(workspaceHome(scope))) {
+    params.set("next", nextUrl);
+  }
+  return `${SIGN_IN_PATH}?${params.toString()}`;
+}
+
+function autoHref(nextUrl?: string): string {
+  return nextUrl ? `${SIGN_IN_PATH}?${new URLSearchParams({ next: nextUrl }).toString()}` : SIGN_IN_PATH;
+}
+
+function WorkspaceTab({
+  active,
+  href,
+  label,
+}: {
+  active: boolean;
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      role="tab"
+      aria-selected={active}
+      className={`flex items-center justify-center gap-2 rounded-lg py-2 font-medium transition-all ${
+        active
+          ? "border border-rhymvex-white/15 bg-rhymvex-white/10 font-semibold text-rhymvex-white shadow-sm"
+          : "text-rhymvex-white/50 hover:text-rhymvex-white/80"
+      }`}
+    >
+      <span
+        className={`size-1.5 rounded-full transition-colors ${
+          active ? "bg-rhymvex-volt" : "bg-transparent"
+        }`}
+        aria-hidden="true"
+      />
+      {label}
+    </Link>
+  );
+}
 
 /**
  * Auth shell.
@@ -16,14 +72,17 @@ export function AuthShell({
   intro,
   children,
   footer,
-  mode,
+  workspace,
+  nextUrl,
 }: {
   eyebrow: string;
   title: string;
   intro?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
-  mode?: "staff" | "client";
+  /** Set to render the workspace switcher; omit on the invitation pages. */
+  workspace?: Workspace;
+  nextUrl?: string;
 }) {
   return (
     <div className="relative flex min-h-screen flex-col justify-between bg-rhymvex-black text-rhymvex-white">
@@ -59,49 +118,46 @@ export function AuthShell({
       {/* Main card */}
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
         <div className="w-full max-w-[440px]">
-          {/* Workspace switcher tabs if mode is specified */}
-          {mode ? (
-            <div
-              role="tablist"
-              aria-label="Workspace sign-in type"
-              className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-rhymvex-white/10 bg-rhymvex-white/[0.03] p-1 text-xs"
-            >
-              <Link
-                href="/login"
-                role="tab"
-                aria-selected={mode === "staff"}
-                className={`flex items-center justify-center gap-2 rounded-lg py-2 font-medium transition-all ${
-                  mode === "staff"
-                    ? "border border-rhymvex-white/15 bg-rhymvex-white/10 font-semibold text-rhymvex-white shadow-sm"
-                    : "text-rhymvex-white/50 hover:text-rhymvex-white/80"
-                }`}
+          {/* Workspace switcher. Reads as an override rather than a required
+              choice: sign-in works without touching it. */}
+          {workspace ? (
+            <div className="mb-6">
+              <div
+                role="tablist"
+                aria-label="Workspace to sign in to"
+                className="grid grid-cols-2 gap-1 rounded-xl border border-rhymvex-white/10 bg-rhymvex-white/[0.03] p-1 text-xs"
               >
-                <span
-                  className={`size-1.5 rounded-full transition-colors ${
-                    mode === "staff" ? "bg-rhymvex-volt" : "bg-transparent"
-                  }`}
-                  aria-hidden="true"
+                <WorkspaceTab
+                  active={workspace === "staff"}
+                  href={workspaceTabHref("staff", nextUrl)}
+                  label="Staff Team"
                 />
-                Staff Team
-              </Link>
-              <Link
-                href="/portal-sign-in"
-                role="tab"
-                aria-selected={mode === "client"}
-                className={`flex items-center justify-center gap-2 rounded-lg py-2 font-medium transition-all ${
-                  mode === "client"
-                    ? "border border-rhymvex-white/15 bg-rhymvex-white/10 font-semibold text-rhymvex-white shadow-sm"
-                    : "text-rhymvex-white/50 hover:text-rhymvex-white/80"
-                }`}
-              >
-                <span
-                  className={`size-1.5 rounded-full transition-colors ${
-                    mode === "client" ? "bg-rhymvex-volt" : "bg-transparent"
-                  }`}
-                  aria-hidden="true"
+                <WorkspaceTab
+                  active={workspace === "client"}
+                  href={workspaceTabHref("client", nextUrl)}
+                  label="Client Portal"
                 />
-                Client Portal
-              </Link>
+              </div>
+
+              {workspace === "auto" ? (
+                <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] text-rhymvex-white/45">
+                  <Sparkles className="size-3 shrink-0 text-rhymvex-volt" aria-hidden="true" />
+                  <span>
+                    We&apos;ll send you to the right one automatically.
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-2.5 text-center text-[11px] text-rhymvex-white/45">
+                  Signing in to the {workspace === "staff" ? "staff workspace" : "client portal"} only.
+                  {" "}
+                  <Link
+                    href={autoHref(nextUrl)}
+                    className="text-rhymvex-volt underline underline-offset-4 hover:text-rhymvex-white"
+                  >
+                    Let us choose
+                  </Link>
+                </p>
+              )}
             </div>
           ) : null}
 

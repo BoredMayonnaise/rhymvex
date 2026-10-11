@@ -1,4 +1,5 @@
-import { query, queryOne } from "@/lib/db/client";
+import { cache } from "react";
+import { queryOne } from "@/lib/db/client";
 import { envInt } from "@/lib/env";
 
 /** Organisation settings, including the SLA that drives client-facing promises. */
@@ -21,12 +22,14 @@ const FALLBACK: OrgSettings = {
   currency: "EUR",
 };
 
-export async function getOrgSettings(): Promise<OrgSettings> {
+// Wrapped in React's per-request cache: every page reads org settings, and
+// without this each one triggers its own query for the same row.
+export const getOrgSettings = cache(async (): Promise<OrgSettings> => {
   const row = await queryOne<OrgSettings>(
     "SELECT company_name, contact_email, notification_email, response_sla_minutes, timezone, currency FROM org_settings WHERE id = true",
   );
   return row ?? FALLBACK;
-}
+});
 
 /**
  * The SLA the client is told about.
@@ -36,11 +39,10 @@ export async function getOrgSettings(): Promise<OrgSettings> {
  * which is what suppresses the timing sentence entirely.
  */
 export async function getResponseSlaMinutes(): Promise<number | null> {
-  const row = await queryOne<{ response_sla_minutes: number | null }>(
-    "SELECT response_sla_minutes FROM org_settings WHERE id = true",
-  );
-  const fromDb = row?.response_sla_minutes ?? null;
-  if (fromDb && fromDb > 0) return fromDb;
+  const settings = await getOrgSettings();
+  if (settings.response_sla_minutes && settings.response_sla_minutes > 0) {
+    return settings.response_sla_minutes;
+  }
   const fromEnv = envInt("RESPONSE_SLA_MINUTES", 0);
   return fromEnv > 0 ? fromEnv : null;
 }

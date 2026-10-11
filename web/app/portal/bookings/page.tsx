@@ -44,8 +44,25 @@ export default async function PortalBookingsPage() {
                   <p className="mt-0.5 text-[11px] text-rhymvex-white/50">
                     {booking.duration_mins} min
                     {booking.host_name ? ` · with ${booking.host_name}` : ""}
-                    {booking.location ? ` · ${booking.location}` : ""}
                   </p>
+                  {/* A location may be a meeting link or an address; a real URL is
+                      tappable, anything else stays plain text. */}
+                  {booking.location ? (
+                    /^https?:\/\//.test(booking.location) ? (
+                      <a
+                        href={booking.location}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-0.5 inline-block text-[11px] text-rhymvex-volt hover:underline"
+                      >
+                        Join the call
+                      </a>
+                    ) : (
+                      <p className="mt-0.5 text-[11px] text-rhymvex-white/50">
+                        {booking.location}
+                      </p>
+                    )
+                  ) : null}
                   {booking.agenda ? (
                     <p className="mt-1.5 text-[11px] leading-relaxed text-rhymvex-white/50">
                       {booking.agenda}
@@ -76,6 +93,11 @@ export default async function PortalBookingsPage() {
                     {formatDateTime(booking.scheduled_for)}
                     {booking.host_name ? ` · ${booking.host_name}` : ""}
                   </p>
+                  {booking.outcome ? (
+                    <p className="mt-1 rounded border border-rhymvex-white/8 bg-rhymvex-black/30 p-2 text-[11px] leading-relaxed text-rhymvex-white/55">
+                      {booking.outcome}
+                    </p>
+                  ) : null}
                 </div>
                 <StatusPill
                   value={humanise(booking.status)}

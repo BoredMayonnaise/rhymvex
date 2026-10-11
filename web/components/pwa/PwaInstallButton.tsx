@@ -277,7 +277,7 @@ export function PwaInstallButton({
             aria-hidden="true"
           />
 
-          <div className="relative w-full max-w-sm rounded-2xl border border-rhymvex-volt/30 bg-[#0E131A] p-5 sm:p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="relative w-full max-w-sm rounded-2xl border border-rhymvex-volt/30 bg-[#0E131A] p-5 sm:p-6 shadow-2xl rv-animate-sheet">
             {/* Close button */}
             <button
               type="button"

@@ -342,3 +342,26 @@ and refuse to run if an already-applied file has been edited.
 The platform is a relationship system, not a contact form attached to a panel.
 Leads, clients, engagements, delivery, and the audit trail are the same records
 the team works from.
+
+---
+
+## Error reference codes
+
+When a workspace page fails, the error screen shows two things and never more:
+
+- **One-line message** — what failed (e.g. a database timeout). The full stack
+  trace is never rendered to the page.
+- **Reference code** (the `digest`, e.g. `4218780975@E394`).
+
+To find the matching entry: `grep <reference-code> .next/dev/logs/next-development.log`
+(or your production log stream). Each route/client boundary also logs
+`[admin] route error` / `[portal] route error` with message, digest, and stack to
+that same stream.
+
+Common causes:
+
+| Message | Cause | Fix |
+|---|---|---|
+| `Body exceeded 1 MB limit` | Upload through a server action | Now raised to 10 MB in `next.config.ts` (`serverActions.bodySizeLimit`) |
+| `DATABASE_URL is not set` | env not loaded | `cp .env.example .env.local` and restart |
+| Pool timeout / connection refused | Postgres not running | `npm run db:up` |

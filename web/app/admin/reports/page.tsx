@@ -16,9 +16,9 @@ export const dynamic = "force-dynamic";
  * it.
  */
 export default async function ReportsPage() {
-  await requireStaffPermission("reports.read");
+  const session = await requireStaffPermission("reports.read");
   const [overview, clients, settings, funnel, sources, monthly] = await Promise.all([
-    getOverview("00000000-0000-0000-0000-000000000000"),
+    getOverview(session.staffId),
     listClients(),
     getOrgSettings(),
     getFunnel(),
@@ -100,9 +100,9 @@ export default async function ReportsPage() {
               <tbody>
                 {sources.map((row) => (
                   <tr key={row.source}>
-                    <td className="text-rhymvex-white/70">{row.source}</td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">{row.count}</td>
-                    <td className="rv-table-num text-right text-rhymvex-white/50">
+                    <td data-label="Source" className="text-rhymvex-white/70">{row.source}</td>
+                    <td data-label="Leads" className="rv-table-num text-right text-rhymvex-white/70">{row.count}</td>
+                    <td data-label="Won" className="rv-table-num text-right text-rhymvex-white/50">
                       {row.won_count}
                     </td>
                   </tr>
@@ -131,10 +131,10 @@ export default async function ReportsPage() {
               <tbody>
                 {monthly.map((row) => (
                   <tr key={row.month}>
-                    <td className="whitespace-nowrap text-rhymvex-white/70">{row.month}</td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">{row.leads_in}</td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">{row.won}</td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">
+                    <td data-label="Month" className="whitespace-nowrap text-rhymvex-white/70">{row.month}</td>
+                    <td data-label="Leads in" className="rv-table-num text-right text-rhymvex-white/70">{row.leads_in}</td>
+                    <td data-label="Won" className="rv-table-num text-right text-rhymvex-white/70">{row.won}</td>
+                    <td data-label="Collected" className="rv-table-num text-right text-rhymvex-white/70">
                       {formatMoney(row.collected, settings.currency)}
                     </td>
                   </tr>
@@ -158,11 +158,11 @@ export default async function ReportsPage() {
           <tbody>
             {overview.statusMix.map((row) => (
               <tr key={row.status}>
-                <td>
+                <td data-label="Status">
                   <StatusPill value={humanise(row.status)} tone={leadStatusTone(row.status)} />
                 </td>
-                <td className="rv-table-num text-right text-rhymvex-white/70">{row.count}</td>
-                <td className="rv-table-num text-right text-rhymvex-white/70">
+                <td data-label="Count" className="rv-table-num text-right text-rhymvex-white/70">{row.count}</td>
+                <td data-label="Value" className="rv-table-num text-right text-rhymvex-white/70">
                   {formatMoney(row.value, settings.currency)}
                 </td>
               </tr>

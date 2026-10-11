@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import type { FormResult } from "@/app/(auth)/actions";
+import type { Workspace } from "@/lib/auth/workspace";
 
 /**
  * Shared credential form.
@@ -20,6 +21,7 @@ import type { FormResult } from "@/app/(auth)/actions";
  * - Caps Lock warning indicator
  * - "Remember this device" option
  * - Deep-link redirect (`nextUrl`) preservation
+ * - Workspace resolution (`workspace`), which may be `auto`
  * - Clear iconography and accessible validation feedback
  */
 export function CredentialForm({
@@ -27,11 +29,13 @@ export function CredentialForm({
   submitLabel,
   serverError,
   nextUrl,
+  workspace,
 }: {
   action: (prev: FormResult | null, formData: FormData) => Promise<FormResult>;
   submitLabel: string;
   serverError?: string | null;
   nextUrl?: string | null;
+  workspace?: Workspace;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   const [showPassword, setShowPassword] = useState(false);
@@ -48,6 +52,9 @@ export function CredentialForm({
     <form action={formAction} className="flex flex-col gap-4">
       {/* Preserve intended destination URL across sign-in */}
       {nextUrl ? <input type="hidden" name="next" value={nextUrl} /> : null}
+      {/* Which workspace to try. `auto` probes both; omitted entirely defaults
+          to `auto` server-side, so the form still works if this is ever missed. */}
+      <input type="hidden" name="workspace" value={workspace ?? "auto"} />
 
       {error ? (
         <div

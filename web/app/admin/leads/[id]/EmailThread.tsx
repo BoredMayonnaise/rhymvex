@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, Loader2, Mail as MailIcon } from "lucide-react";
 import { sendLeadEmailAction, type ActionResult } from "@/app/admin/actions";
 import { EmptyState, StatusPill, emailStatusTone } from "@/components/ui/primitives";
+import { Modal } from "@/components/ui/Modal";
 import { formatDateTime, humanise, relativeTime } from "@/lib/format";
 import type { EmailRecord } from "@/lib/data/email";
 
@@ -30,6 +32,7 @@ export function EmailThread({
   csrfToken: string;
 }) {
   const [composing, setComposing] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="rv-panel">
@@ -49,9 +52,14 @@ export function EmailThread({
       </header>
 
       <div className="rv-panel-body">
-        {composing && canSend ? (
-          <Compose leadId={leadId} leadEmail={leadEmail} leadName={leadName} csrfToken={csrfToken} onDone={() => setComposing(false)} />
-        ) : null}
+        <Modal
+          open={composing && canSend}
+          onClose={() => setComposing(false)}
+          title={`Email ${leadName}`}
+          eyebrow={leadEmail}
+        >
+          <Compose leadId={leadId} leadEmail={leadEmail} leadName={leadName} csrfToken={csrfToken} onDone={() => { setComposing(false); router.refresh(); }} />
+        </Modal>
 
         {emails.length === 0 ? (
           <EmptyState>No email sent or received yet.</EmptyState>

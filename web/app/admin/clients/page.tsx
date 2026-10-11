@@ -55,7 +55,7 @@ export default async function ClientsPage() {
               <tbody>
                 {clients.map((client) => (
                   <tr key={client.id}>
-                    <td>
+                    <td data-label="Client">
                       <Link
                         href={`/admin/clients/${client.id}`}
                         className="font-medium text-rhymvex-white hover:text-rhymvex-volt"
@@ -67,32 +67,32 @@ export default async function ClientsPage() {
                         {client.industry ? ` · ${client.industry}` : ""}
                       </p>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <StatusPill
                         value={humanise(client.status)}
                         tone={STATUS_TONE[client.status] ?? "idle"}
                       />
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/60">
+                    <td data-label="Account manager" className="whitespace-nowrap text-rhymvex-white/60">
                       {client.account_manager ?? "—"}
                     </td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">
+                    <td data-label="Projects" className="rv-table-num text-right text-rhymvex-white/70">
                       {client.project_count}
                     </td>
-                    <td className="rv-table-num text-right text-rhymvex-white/70">
+                    <td data-label="Portal" className="rv-table-num text-right text-rhymvex-white/70">
                       {client.portal_users || (
                         <span className="text-rhymvex-white/50">none</span>
                       )}
                     </td>
-                    <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
+                    <td data-label="Outstanding" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
                       {client.outstanding > 0
                         ? formatMoney(client.outstanding, settings.currency)
                         : "—"}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/55">
+                    <td data-label="Since" className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(client.created_at)}
                     </td>
-                    <td className="text-right">
+                    <td data-label="" className="text-right">
                       <Link
                         href={`/admin/clients/${client.id}`}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-rhymvex-volt hover:underline"

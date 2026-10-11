@@ -36,6 +36,7 @@ export type AuditAction =
   | "contract.created"
   | "contract.sent"
   | "contract.signed"
+  | "contract.updated"
   | "project.created"
   | "project.updated"
   | "file.uploaded"
@@ -49,10 +50,14 @@ export type AuditAction =
   | "staff.invite_revoked"
   | "staff.access_changed"
   | "staff.role_changed"
+  | "staff.permissions_changed"
   | "staff.login"
   | "staff.login_failed"
   | "staff.logout"
+  | "session.revoked"
+  | "security.policy_changed"
   | "portal.login"
+  | "portal.login_failed"
   | "portal.logout"
   | "invitation.accepted"
   | "settings.updated"
@@ -179,6 +184,7 @@ export function describeAuditAction(action: string): string {
     "contract.created": "Contract created",
     "contract.sent": "Contract sent",
     "contract.signed": "Contract signed",
+    "contract.updated": "Contract updated",
     "project.created": "Project created",
     "project.updated": "Project updated",
     "file.uploaded": "File uploaded",
@@ -192,10 +198,14 @@ export function describeAuditAction(action: string): string {
     "staff.invite_revoked": "Team invitation revoked",
     "staff.access_changed": "Team access changed",
     "staff.role_changed": "Role changed",
+    "staff.permissions_changed": "Extra permissions changed",
     "staff.login": "Signed in",
     "staff.login_failed": "Failed sign-in attempt",
     "staff.logout": "Signed out",
+    "session.revoked": "Session revoked",
+    "security.policy_changed": "Security policy changed",
     "portal.login": "Client signed in",
+    "portal.login_failed": "Failed client sign-in attempt",
     "portal.logout": "Client signed out",
     "invitation.accepted": "Invitation accepted",
     "settings.updated": "Settings updated",

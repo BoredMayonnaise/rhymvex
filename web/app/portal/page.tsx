@@ -212,7 +212,7 @@ export default async function PortalOverviewPage() {
                     href="/portal/contracts"
                     icon={FileSignature}
                     title={`${overview.unsignedContracts} contract${overview.unsignedContracts === 1 ? "" : "s"} to sign`}
-                    detail="Signature is all that's outstanding."
+                    detail="Read it through, then sign. Your name and today's date are recorded against it."
                     badge="Sign required"
                   />
                 ) : null}

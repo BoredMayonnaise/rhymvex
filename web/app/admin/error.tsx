@@ -25,5 +25,5 @@ export default function AdminError({
     });
   }, [error]);
 
-  return <ErrorState context="admin" digest={error.digest} reset={reset} />;
+  return <ErrorState context="admin" digest={error.digest} message={error.message} reset={reset} />;
 }

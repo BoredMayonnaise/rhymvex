@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
+import { FormModal } from "@/components/ui/Modal";
 import { updateProfileAction, type PortalActionResult } from "@/app/portal/actions";
 
 export function ProfileForm({
@@ -22,11 +23,19 @@ export function ProfileForm({
   const fields = state && !state.ok ? state.fields : undefined;
 
   return (
-    <form action={formAction} className="rv-panel">
-      <header className="rv-panel-head">
-        <h2 className="rv-panel-title">Your details</h2>
-      </header>
-      <div className="rv-panel-body flex flex-col gap-4">
+    <FormModal
+      trigger={(open) => (
+        <button type="button" onClick={open} className="rv-btn rv-btn-ghost rv-btn-sm">
+          <Pencil className="size-3.5" aria-hidden="true" />
+          Edit details
+        </button>
+      )}
+      title="Your details"
+      eyebrow="Profile"
+      success={state?.ok === true}
+    >
+      <form action={formAction} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <input type="hidden" name="csrf" value={csrfToken} />
 
         <div>
@@ -77,6 +86,7 @@ export function ProfileForm({
           ) : null}
         </div>
       </div>
-    </form>
+      </form>
+    </FormModal>
   );
 }

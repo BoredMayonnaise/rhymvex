@@ -10,11 +10,11 @@ import {
   Briefcase,
   Key,
   ExternalLink,
-  ChevronDown,
   Bell,
   MailCheck,
 } from "lucide-react";
 import { testSmtpConnectionAction, type SmtpTestActionResult } from "@/app/admin/actions";
+import { Modal } from "@/components/ui/Modal";
 import type { ResolvedSmtpConfig } from "@/lib/mail/providers";
 
 export function SmtpStatusPanel({
@@ -55,10 +55,7 @@ export function SmtpStatusPanel({
           >
             <Key className="size-3.5" aria-hidden="true" />
             <span>Setup & DNS Guide</span>
-            <ChevronDown
-              className={`size-3.5 transition-transform ${showGuide ? "rotate-180" : ""}`}
-              aria-hidden="true"
-            />
+
           </button>
         </div>
       </header>
@@ -241,12 +238,15 @@ export function SmtpStatusPanel({
           </div>
         </div>
 
-        {/* Expandable Setup Instructions */}
-        {showGuide ? (
-          <div className="rounded-lg border border-rhymvex-white/10 bg-rhymvex-black/60 p-4 text-xs">
-            <h3 className="font-semibold text-rhymvex-white mb-3 text-sm">
-              Dual-Channel Configuration Guide (Zoho Business & Gmail App Passwords)
-            </h3>
+        {/* Setup Instructions open as a modal */}
+        <Modal
+          open={showGuide}
+          onClose={() => setShowGuide(false)}
+          title="Dual-Channel Configuration Guide"
+          eyebrow="Setup & DNS"
+          wide
+        >
+          <div className="text-xs">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-md border border-rhymvex-white/10 p-3 bg-rhymvex-slate/30">
                 <div className="flex items-center justify-between mb-1.5">
@@ -306,7 +306,7 @@ export function SmtpStatusPanel({
               </code>
             </div>
           </div>
-        ) : null}
+        </Modal>
       </div>
     </div>
   );

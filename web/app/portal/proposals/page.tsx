@@ -4,6 +4,8 @@ import { listPortalProposals } from "@/lib/data/portal";
 import { formatDate, formatMoney, humanise } from "@/lib/format";
 import { EmptyState, Panel, StatusPill, proposalStatusTone } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
+import { ProposalViewTracker } from "./ProposalViewTracker";
+import { ProposalDecision } from "./ProposalDecision";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,8 @@ export default async function PortalProposalsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <ProposalViewTracker csrfToken={session.csrfToken} />
+
       <header className="rv-page-head">
         <div>
           <h1 className="rv-page-title">Proposals</h1>
@@ -37,7 +41,7 @@ export default async function PortalProposalsPage() {
         <ul className="flex flex-col gap-3">
           {proposals.map((proposal) => (
             <li key={proposal.id}>
-              <details className="rv-panel group">
+              <details className="rv-panel group" data-proposal-id={proposal.id} data-status={proposal.status}>
                 <summary className="flex cursor-pointer list-none flex-col gap-3 p-4 select-none hover:bg-rhymvex-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3 sm:flex-1">
                     <FileText className="mt-0.5 size-4 shrink-0 text-rhymvex-volt" aria-hidden="true" />
@@ -129,6 +133,12 @@ export default async function PortalProposalsPage() {
                     Reference {proposal.reference}. Reply to the email that sent this to talk it
                     through — a real person reads it.
                   </p>
+
+                  {proposal.status === "SENT" || proposal.status === "VIEWED" ? (
+                    <div className="mt-4">
+                      <ProposalDecision proposalId={proposal.id} csrfToken={session.csrfToken} />
+                    </div>
+                  ) : null}
                 </div>
               </details>
             </li>

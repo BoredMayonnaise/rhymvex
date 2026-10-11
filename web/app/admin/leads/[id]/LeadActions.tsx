@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CalendarPlus,
@@ -8,7 +9,6 @@ import {
   Loader2,
   Mail,
   UserPlus,
-  X,
 } from "lucide-react";
 import {
   convertLeadToClientAction,
@@ -19,6 +19,7 @@ import {
   type ActionResult,
 } from "@/app/admin/actions";
 import type { Lead } from "@/lib/data/leads";
+import { Modal } from "@/components/ui/Modal";
 
 /**
  * Lead actions.
@@ -75,8 +76,17 @@ export function LeadActions({
   csrfToken: string;
 }) {
   const [panel, setPanel] = useState<Panel>(null);
+  const router = useRouter();
 
   const toggle = (next: Panel) => setPanel((current) => (current === next ? null : next));
+
+  // After a successful form the route has been revalidated; make sure the
+  // client shows the fresh data immediately instead of waiting for a manual
+  // reload.
+  const closeAndRefresh = () => {
+    setPanel(null);
+    router.refresh();
+  };
 
   return (
     <div className="w-full">
@@ -137,43 +147,38 @@ export function LeadActions({
         ) : null}
       </div>
 
-      {panel ? (
-        <div className="mt-3 rounded-xl border border-rhymvex-white/10 bg-rhymvex-slate/40 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="rv-panel-title">
-              {panel === "status" && "Assign and set status"}
-              {panel === "convert" && "Create a client from this lead"}
-              {panel === "booking" && "Schedule a consultation"}
-              {panel === "proposal" && "Create a proposal"}
-              {panel === "email" && "Send an email"}
-            </p>
-            <button
-              type="button"
-              onClick={() => setPanel(null)}
-              aria-label="Close panel"
-              className="text-rhymvex-white/50 hover:text-rhymvex-white"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          {panel === "status" ? (
-            <StatusForm lead={lead} staff={staff} csrfToken={csrfToken} onDone={() => setPanel(null)} />
-          ) : null}
-          {panel === "convert" ? (
-            <ConvertForm lead={lead} staff={staff} csrfToken={csrfToken} />
-          ) : null}
-          {panel === "booking" ? (
-            <BookingForm lead={lead} staff={staff} csrfToken={csrfToken} onDone={() => setPanel(null)} />
-          ) : null}
-          {panel === "proposal" ? (
-            <ProposalForm lead={lead} csrfToken={csrfToken} onDone={() => setPanel(null)} />
-          ) : null}
-          {panel === "email" ? (
-            <EmailForm lead={lead} csrfToken={csrfToken} onDone={() => setPanel(null)} />
-          ) : null}
-        </div>
-      ) : null}
+      <Modal
+        open={panel !== null}
+        onClose={() => setPanel(null)}
+        title={
+          panel === "status"
+            ? "Assign and set status"
+            : panel === "convert"
+              ? "Create a client from this lead"
+              : panel === "booking"
+                ? "Schedule a consultation"
+                : panel === "proposal"
+                  ? "Create a proposal"
+                  : "Send an email"
+        }
+        eyebrow={lead.name}
+      >
+        {panel === "status" ? (
+          <StatusForm lead={lead} staff={staff} csrfToken={csrfToken} onDone={closeAndRefresh} />
+        ) : null}
+        {panel === "convert" ? (
+          <ConvertForm lead={lead} staff={staff} csrfToken={csrfToken} />
+        ) : null}
+        {panel === "booking" ? (
+          <BookingForm lead={lead} staff={staff} csrfToken={csrfToken} onDone={closeAndRefresh} />
+        ) : null}
+        {panel === "proposal" ? (
+          <ProposalForm lead={lead} csrfToken={csrfToken} onDone={closeAndRefresh} />
+        ) : null}
+        {panel === "email" ? (
+          <EmailForm lead={lead} csrfToken={csrfToken} onDone={closeAndRefresh} />
+        ) : null}
+      </Modal>
     </div>
   );
 }

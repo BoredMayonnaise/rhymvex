@@ -67,48 +67,48 @@ export default async function StaffPage() {
             <thead>
               <tr>
                 <th scope="col">Name</th>
-                <th scope="col">Role</th>
+                <th scope="col" className="rv-col-wide">Role</th>
                 <th scope="col">Status</th>
                 <th scope="col" className="text-right">Leads</th>
-                <th scope="col" className="text-right">Projects</th>
+                <th scope="col" className="text-right rv-col-wide">Projects</th>
                 <th scope="col" className="text-right">Tasks</th>
-                <th scope="col">Last seen</th>
+                <th scope="col" className="rv-col-wide">Last seen</th>
                 <th scope="col">Access</th>
               </tr>
             </thead>
             <tbody>
               {staff.map((member) => (
                 <tr key={member.id}>
-                  <td>
+                  <td data-label="Name">
                     <p className="font-medium text-rhymvex-white">{member.name}</p>
                     <p className="mt-0.5 text-[11px] text-rhymvex-white/50">{member.email}</p>
                     {member.title ? (
                       <p className="text-[11px] text-rhymvex-white/50">{member.title}</p>
                     ) : null}
                   </td>
-                  <td>
-                    <StatusPill
-                      value={humanise(member.role)}
-                      tone={member.role === "ADMIN" ? "active" : "idle"}
-                    />
-                  </td>
-                  <td>
+<td data-label="Role" className="rv-col-wide">
+                      <StatusPill
+                        value={humanise(member.role)}
+                        tone={member.role === "ADMIN" ? "active" : "idle"}
+                      />
+                    </td>
+                    <td data-label="Status">
                     <StatusPill
                       value={member.active ? "Active" : "Disabled"}
                       tone={member.active ? "done" : "idle"}
                     />
                   </td>
-                  <td className="rv-table-num text-right text-rhymvex-white/70">{member.open_leads}</td>
-                  <td className="rv-table-num text-right text-rhymvex-white/70">
+                  <td data-label="Leads" className="rv-table-num text-right text-rhymvex-white/70">{member.open_leads}</td>
+                  <td data-label="Projects" className="rv-table-num text-right text-rhymvex-white/70 rv-col-wide">
                     {member.active_projects}
                   </td>
-                  <td className="rv-table-num text-right text-rhymvex-white/70">
+                  <td data-label="Tasks" className="rv-table-num text-right text-rhymvex-white/70">
                     {member.open_tasks}
                   </td>
-                  <td className="whitespace-nowrap text-rhymvex-white/55">
-                    {member.last_login_at ? relativeTime(member.last_login_at) : "never"}
-                  </td>
-                  <td className="text-right">
+<td data-label="Last seen" className="whitespace-nowrap text-rhymvex-white/55 rv-col-wide">
+                      {member.last_login_at ? relativeTime(member.last_login_at) : "never"}
+                    </td>
+                  <td data-label="Access" className="text-right">
                     {/* Your own row is marked, never editable: the action refuses
                         a self-change, so a control here would only ever fail. */}
                     {member.id === session.staffId ? (
@@ -119,6 +119,7 @@ export default async function StaffPage() {
                         memberName={member.name}
                         role={member.role}
                         active={member.active}
+                        extraPermissions={member.extra_permissions ?? []}
                         csrfToken={session.csrfToken}
                       />
                     ) : (

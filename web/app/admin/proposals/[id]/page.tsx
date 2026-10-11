@@ -14,7 +14,9 @@ import {
   proposalStatusTone,
 } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
+import { contractForProposal } from "@/lib/data/workspace";
 import { ProposalActions } from "./ProposalActions";
+import { CreateContractForm } from "./CreateContractForm";
 
 export const dynamic = "force-dynamic";
 
@@ -59,8 +61,13 @@ export default async function ProposalDetailPage({
 
   if (!proposal) notFound();
 
-  const [settings, audit] = await Promise.all([getOrgSettings(), auditForEntity("proposal", id)]);
+  const [settings, audit, existingContract] = await Promise.all([
+    getOrgSettings(),
+    auditForEntity("proposal", id),
+    contractForProposal(id),
+  ]);
   const forWhom = proposal.client_name ?? proposal.lead_company ?? proposal.lead_name ?? "—";
+  const canWrite = canDo(session, "proposals.write");
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,14 +94,49 @@ export default async function ProposalDetailPage({
             <span className="font-mono">{proposal.reference}</span> · for {forWhom}
             {proposal.model ? ` · ${humanise(proposal.model)}` : ""}
           </p>
+          {/* Why the manual buttons above exist: the client normally does this
+              in their own portal, and this page records that it happened. */}
+          {["SENT", "VIEWED"].includes(proposal.status) ? (
+            <p className="mt-1.5 text-[11px] text-rhymvex-white/45">
+              The client accepts or declines in their portal. The buttons here are the manual
+              override.
+            </p>
+          ) : null}
         </div>
-        <ProposalActions
-          proposalId={proposal.id}
-          status={proposal.status}
-          csrfToken={session.csrfToken}
-          canSend={canDo(session, "proposals.send")}
-          canWrite={canDo(session, "proposals.write")}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* An accepted proposal is what a contract follows, so the way through
+              to the paperwork lives here rather than in a separate menu. */}
+          {existingContract ? (
+            <Link
+              href={`/admin/contracts/${existingContract.id}`}
+              className="rv-btn rv-btn-ghost rv-btn-sm"
+            >
+              View contract
+            </Link>
+          ) : proposal.status === "ACCEPTED" && proposal.client_id ? (
+            <CreateContractForm
+              proposalId={proposal.id}
+              proposalReference={proposal.reference}
+              proposalTitle={proposal.title}
+              clientName={proposal.client_name ?? forWhom}
+              scope={proposal.scope}
+              deliverables={proposal.deliverables}
+              exclusions={proposal.exclusions}
+              timeline={proposal.timeline}
+              investment={proposal.investment}
+              currency={proposal.currency || settings.currency}
+              csrfToken={session.csrfToken}
+              canWrite={canDo(session, "contracts.write")}
+            />
+          ) : null}
+          <ProposalActions
+            proposalId={proposal.id}
+            status={proposal.status}
+            csrfToken={session.csrfToken}
+            canSend={canDo(session, "proposals.send")}
+            canWrite={canWrite}
+          />
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -8,13 +8,12 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
-  Menu,
-  MoreHorizontal,
   Users,
   X,
 } from "lucide-react";
 import { ADMIN_NAV, isNavActive, type NavItem } from "@/lib/admin-nav";
 import { RvMark } from "@/components/RvMark";
+import { MenuToggleIcon } from "@/components/ui/MenuToggleIcon";
 import type { Permission } from "@/lib/auth/rbac";
 
 /**
@@ -54,16 +53,28 @@ export function AdminNav({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  // Animate out before unmounting: set `closing`, then drop the drawer once
+  // the exit animation has run.
+  const closeDrawer = () => {
+    if (!mobileOpen || closing) return;
+    setClosing(true);
+    window.setTimeout(() => {
+      setMobileOpen(false);
+      setClosing(false);
+    }, 260);
+  };
 
   // Close drawer whenever user navigates
   useEffect(() => {
-    setMobileOpen(false);
+    closeDrawer();
   }, [pathname]);
 
   // Lock scroll when mobile drawer is open & handle Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileOpen(false);
+      if (e.key === "Escape") closeDrawer();
     };
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -174,13 +185,13 @@ export function AdminNav({
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity duration-200 lg:hidden"
-            onClick={() => setMobileOpen(false)}
+            className={`fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden ${closing ? "rv-animate-fade-out" : "rv-animate-fade"}`}
+            onClick={() => closeDrawer()}
             aria-hidden="true"
           />
 
           <div
-            className="fixed inset-y-0 start-0 z-50 flex w-[300px] max-w-[85vw] flex-col border-e border-rhymvex-white/10 bg-[#0B0F14] shadow-2xl animate-in slide-in-from-left duration-200 lg:hidden"
+            className={`fixed inset-y-0 start-0 z-50 flex w-[300px] max-w-[85vw] flex-col border-e border-rhymvex-white/10 bg-[#0B0F14] shadow-2xl lg:hidden ${closing ? "rv-animate-drawer-out" : "rv-animate-drawer"}`}
             aria-modal="true"
             role="dialog"
             aria-label="Workspace navigation"
@@ -188,7 +199,7 @@ export function AdminNav({
             <div className="flex items-center justify-between border-b border-rhymvex-white/8 px-4 py-3.5 shrink-0">
               <Link
                 href="/admin"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => closeDrawer()}
                 className="flex items-center gap-2.5 min-w-0"
               >
                 <RvMark label={null} className="size-7 shrink-0" />
@@ -204,16 +215,16 @@ export function AdminNav({
 
               <button
                 type="button"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => closeDrawer()}
                 className="flex size-8 items-center justify-center rounded-lg text-rhymvex-white/60 transition-colors hover:bg-rhymvex-white/10 hover:text-rhymvex-white active:scale-95"
                 aria-label="Close navigation menu"
               >
-                <X className="size-4" aria-hidden="true" />
+                <X className="size-4 transition-transform duration-200 hover:rotate-90" aria-hidden="true" />
               </button>
             </div>
 
             <div className="flex-1 flex flex-col min-h-0 overflow-y-auto pb-20">
-              {renderNavLinks(() => setMobileOpen(false))}
+              {renderNavLinks(() => closeDrawer())}
               {renderProfileCard()}
             </div>
           </div>
@@ -241,7 +252,7 @@ export function AdminNav({
               <Link
                 key={tab.href}
                 href={tab.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={() => closeDrawer()}
                 className={`relative flex min-h-[48px] flex-1 flex-col items-center justify-center py-1 transition-colors touch-manipulation active:scale-95 ${
                   active ? "text-rhymvex-volt" : "text-rhymvex-white/55 hover:text-rhymvex-white"
                 }`}
@@ -264,18 +275,14 @@ export function AdminNav({
 
         <button
           type="button"
-          onClick={() => setMobileOpen((prev) => !prev)}
+          onClick={() => (mobileOpen ? closeDrawer() : setMobileOpen(true))}
           className={`relative flex min-h-[48px] flex-1 flex-col items-center justify-center py-1 transition-colors touch-manipulation active:scale-95 ${
             mobileOpen ? "text-rhymvex-volt" : "text-rhymvex-white/55 hover:text-rhymvex-white"
           }`}
           aria-label={mobileOpen ? "Close navigation menu" : "Open full workspace navigation"}
         >
           <div className="relative">
-            {mobileOpen ? (
-              <X className="size-5 shrink-0 text-rhymvex-volt" aria-hidden="true" />
-            ) : (
-              <MoreHorizontal className="size-5 shrink-0" aria-hidden="true" />
-            )}
+            <MenuToggleIcon open={mobileOpen} variant="more" className={`size-5 ${mobileOpen ? "text-rhymvex-volt" : ""}`} />
             {(counts.openTasks || 0) + (counts.todayBookings || 0) > 0 ? (
               <span className="absolute -top-1 -right-1.5 size-2 rounded-full bg-rhymvex-volt animate-pulse" />
             ) : null}
@@ -292,7 +299,7 @@ export function AdminNav({
       {/* ------------------------------------------------------------------
           4. Desktop Sidebar Rail (>= 1024px)
           ------------------------------------------------------------------ */}
-      <aside className="hidden lg:flex lg:flex-col rv-app-rail w-60 shrink-0">
+      <aside className="hidden lg:flex lg:flex-col rv-app-rail w-60 shrink-0 rv-animate-drawer">
         <div className="flex items-center gap-2.5 border-b border-rhymvex-white/8 px-4 py-4 shrink-0">
           <Link
             href="/admin"

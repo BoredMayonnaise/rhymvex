@@ -27,5 +27,5 @@ export default function PortalError({
     });
   }, [error]);
 
-  return <ErrorState context="portal" digest={error.digest} reset={reset} />;
+  return <ErrorState context="portal" digest={error.digest} message={error.message} reset={reset} />;
 }

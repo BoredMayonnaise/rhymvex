@@ -56,9 +56,11 @@ export function proposalStatusTone(status: string): "idle" | "active" | "warn" |
 }
 
 export function contractStatusTone(status: string): "idle" | "active" | "warn" | "done" {
-  if (["SIGNED", "ACTIVE", "COMPLETED"].includes(status)) return "done";
-  if (["SENT", "AWAITING_SIGNATURE"].includes(status)) return "active";
+  if (status === "COMPLETED") return "done";
+  if (["SIGNED", "ACTIVE"].includes(status)) return "active";
   if (status === "TERMINATED") return "warn";
+  // Out with the client and waiting on them: the one state that needs attention.
+  if (["SENT", "AWAITING_SIGNATURE"].includes(status)) return "warn";
   return "idle";
 }
 
@@ -146,8 +148,13 @@ export function Stat({
 }
 
 /** Empty state. Always says what would appear here and what to do next. */
-export function EmptyState({ children }: { children: ReactNode }) {
-  return <p className="rv-empty">{children}</p>;
+export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="rv-empty flex flex-col items-center gap-3">
+      <p>{children}</p>
+      {action}
+    </div>
+  );
 }
 
 /** Progress bar with an accessible value. */

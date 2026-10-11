@@ -239,4 +239,80 @@ You don't need to reply to this email — it's an internal alert.`;
   return { subject, text, html: shell("New lead", lead.name, body) };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Contract for signature                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tells the client a contract is ready for them.
+ *
+ * The signature itself happens in the portal, not by replying to this: an email
+ * reply is not a signature, and pretending otherwise is how agreements get
+ * disputed. This points at the portal and leaves the agreement text there.
+ */
+export function contractSentEmail(input: {
+  contractTitle: string;
+  reference: string;
+  clientName: string;
+  valueTotal: number | null;
+  currency: string;
+}) {
+  const subject = `${input.contractTitle} — ready to sign`;
+  const signUrl = `${siteUrl()}/portal/contracts`;
+  const first = input.clientName.split(" ")[0] || "there";
+
+  const amount =
+    input.valueTotal !== null
+      ? new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency: input.currency || "EUR",
+          maximumFractionDigits: 0,
+        }).format(input.valueTotal)
+      : null;
+
+  const text = `Hi ${first},
+
+The contract for our work is ready for you to read and sign.
+
+${amount ? `Value:      ${amount}\n` : ""}Reference: ${input.reference}
+
+Read it and sign here:
+${signUrl}
+
+Signing takes a moment: type your name and confirm you are authorised to sign
+for ${input.clientName}. We record the name and today's date against it.
+
+If anything in the contract doesn't look right, reply to this email and we'll
+sort it out before you sign. Nothing is agreed until you do.
+
+—
+Rhymvex
+Build with rhythm.`;
+
+  const row = (label: string, value: string) =>
+    `<p style="margin:0 0 8px;font:400 14px/1.6 Inter,sans-serif;color:${BRAND.white};"><span style="display:inline-block;min-width:96px;color:rgba(245,247,250,0.45);">${label}</span>${escapeHtml(value)}</p>`;
+
+  const body = `
+    <p style="margin:0 0 16px;">Hi ${escapeHtml(first)},</p>
+    <p style="margin:0 0 16px;">The contract for our work is ready for you to read and sign.</p>
+    <p style="margin:0 0 16px;">Open your portal to read the full agreement:</p>
+    <div style="border:1px solid ${BRAND.border};border-radius:10px;padding:16px 18px;margin:0 0 20px;">
+      ${row("Contract", input.contractTitle)}
+      ${row("Reference", input.reference)}
+      ${amount ? row("Value", amount) : ""}
+    </div>
+    <p style="margin:0 0 8px;font:600 10px/1 Inter,sans-serif;letter-spacing:0.16em;text-transform:uppercase;color:rgba(245,247,250,0.4);">How signing works</p>
+    <p style="margin:0 0 20px;">You read the agreement in your portal, then type your name and confirm you are authorised to sign for ${escapeHtml(input.clientName)}. We record the name and the date against it. Nothing is agreed until you do.</p>
+    <p style="margin:0 0 20px;">
+      <a href="${signUrl}" style="display:inline-block;background:${BRAND.volt};color:${BRAND.black};text-decoration:none;font:600 14px/1 Inter,sans-serif;padding:12px 18px;border-radius:8px;">Read and sign</a>
+    </p>
+    <p style="margin:0;font-size:12px;color:rgba(245,247,250,0.4);">
+      If the button does not work, sign in at
+      <a href="${siteUrl()}/portal-sign-in" style="color:${BRAND.volt};">your portal</a> — the contract will be waiting under Contracts.
+    </p>
+    <p style="margin:0;font-size:12px;color:rgba(245,247,250,0.4);">If anything doesn't look right, reply to this email and we'll fix it before you sign.</p>`;
+
+  return { subject, text, html: shell("Contract ready to sign", input.contractTitle, body) };
+}
+
 export { fromAddress, internalNotificationAddress, siteUrl };

@@ -90,19 +90,19 @@ export default async function LeadsPage({
               <thead>
                 <tr>
                   <th scope="col">Name</th>
-                  <th scope="col">Company</th>
-                  <th scope="col">Situation</th>
+                  <th scope="col" className="rv-col-wide">Company</th>
+                  <th scope="col" className="rv-col-wide">Situation</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Assigned</th>
+                  <th scope="col" className="rv-col-wide">Assigned</th>
                   <th scope="col" className="text-right">Value</th>
-                  <th scope="col">Received</th>
+                  <th scope="col" className="rv-col-wide">Received</th>
                   <th scope="col"><span className="sr-only">Open</span></th>
                 </tr>
               </thead>
               <tbody>
                 {leads.map((lead) => (
                   <tr key={lead.id}>
-                    <td>
+                    <td data-label="Name">
                       <Link
                         href={`/admin/leads/${lead.id}`}
                         className="font-medium text-rhymvex-white hover:text-rhymvex-volt"
@@ -113,28 +113,32 @@ export default async function LeadsPage({
                         {lead.reference}
                       </p>
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/60">{lead.company ?? "—"}</td>
-                    <td className="max-w-xs truncate text-rhymvex-white/60">{lead.situation}</td>
-                    <td>
+                    <td data-label="Company" className="whitespace-nowrap text-rhymvex-white/60 rv-col-wide">
+                      {lead.company ?? "—"}
+                    </td>
+                    <td data-label="Situation" className="max-w-xs truncate text-rhymvex-white/60 rv-col-wide">
+                      {lead.situation}
+                    </td>
+                    <td data-label="Status">
                       <StatusPill value={humanise(lead.status)} tone={leadStatusTone(lead.status)} />
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/60">
+                    <td data-label="Assigned" className="whitespace-nowrap text-rhymvex-white/60 rv-col-wide">
                       {lead.assigned_name ?? (
                         <span className="text-rhymvex-volt">Unassigned</span>
                       )}
                     </td>
-                    <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
+                    <td data-label="Value" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
                       {lead.estimated_value
                         ? formatMoney(lead.estimated_value, settings.currency)
                         : "—"}
                     </td>
-                    <td
-                      className="whitespace-nowrap text-rhymvex-white/55"
+                    <td data-label="Received"
+                      className="whitespace-nowrap text-rhymvex-white/55 rv-col-wide"
                       title={formatDateTime(lead.submitted_at)}
                     >
                       {relativeTime(lead.submitted_at)}
                     </td>
-                    <td className="text-right">
+                    <td data-label="" className="text-right">
                       <Link
                         href={`/admin/leads/${lead.id}`}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-rhymvex-volt hover:underline"

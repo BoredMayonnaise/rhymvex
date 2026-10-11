@@ -1,25 +1,41 @@
-import Link from "next/link";
 import { requireStaffPermission } from "@/lib/auth/guards";
-import { listBookings } from "@/lib/data/workspace";
-import { formatDateTime, humanise, untilTime } from "@/lib/format";
-import { EmptyState, Panel, StatusPill, bookingStatusTone } from "@/components/ui/primitives";
-import { query } from "@/lib/db/client";
+import {
+  getBookingCounts,
+  getHostLoad,
+  listClosedBookings,
+  listOpenBookings,
+} from "@/lib/data/workspace";
+import { EmptyState, Panel, Stat } from "@/components/ui/primitives";
+import { pluralise } from "@/lib/format";
+import { BookingBrowser } from "./BookingBrowser";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * The window the load panel looks at, and the call time one person is expected
+ * to hold inside it.
+ *
+ * The target is a display threshold, not a stored setting or a promise to a
+ * client — but the panel is only useful if "full" means the same thing on every
+ * row, and a bar drawn against the busiest person instead always shows that
+ * person at exactly 100%, whatever the week actually looks like.
+ */
+const LOAD_WINDOW_DAYS = 30;
+const LOAD_TARGET_MINUTES = 12 * 60;
+
 export default async function BookingsPage() {
-  await requireStaffPermission("bookings.read");
-  const bookings = await listBookings(200);
+  const session = await requireStaffPermission("bookings.read");
 
-  const now = Date.now();
-  const upcoming = bookings.filter(
-    (b) => new Date(b.scheduled_for).getTime() >= now && ["REQUESTED", "CONFIRMED"].includes(b.status),
-  );
-  const past = bookings
-    .filter((b) => !upcoming.includes(b))
-    .slice(0, 40);
+  // Two scoped queries rather than one capped list: history fills a descending
+  // list up and pushes the far-future rows off the end, which are precisely
+  // the rows this page exists to show.
+  const [counts, open, past] = await Promise.all([
+    getBookingCounts(),
+    listOpenBookings(200),
+    listClosedBookings(40),
+  ]);
 
-  const totalMinutes = upcoming.reduce((sum, b) => sum + b.duration_mins, 0);
+  const scheduledHours = round1(counts.openMinutes / 60);
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,126 +43,114 @@ export default async function BookingsPage() {
         <div>
           <h1 className="rv-page-title">Bookings</h1>
           <p className="rv-page-sub">
-            {upcoming.length} upcoming · {Math.round(totalMinutes / 60 * 10) / 10} hours scheduled
+            {pluralise(counts.open, "booking")} ahead · {scheduledHours}h scheduled
           </p>
         </div>
       </header>
 
-      <BookingTable
-        title="Upcoming"
-        rows={upcoming}
-        empty="Nothing scheduled ahead."
-        showCountdown
-      />
+      {/* What needs a decision, before the list itself. */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label="Upcoming"
+          value={String(counts.open)}
+          meta={`${scheduledHours}h of calls`}
+        />
+        <Stat
+          label="Awaiting confirmation"
+          value={String(counts.awaiting)}
+          meta={counts.awaiting > 0 ? "still to confirm" : "nothing waiting"}
+        />
+        <Stat
+          label="Missing a location"
+          value={String(counts.missingLocation)}
+          meta={counts.missingLocation > 0 ? "where will it happen?" : "all have one"}
+        />
+        <Stat
+          label="Closed"
+          value={String(counts.closed)}
+          meta="completed or cancelled"
+        />
+      </div>
 
-      <BookingTable title="Past and cancelled" rows={past} empty="No past bookings." />
+      <BookingBrowser csrfToken={session.csrfToken} upcoming={open} past={past} all={[...open, ...past]} />
 
+      {/* Below the list: it answers a question you only ask once you have read
+          what is already booked. */}
       <UpcomingLoad />
     </div>
   );
 }
 
-function BookingTable({
-  title,
-  rows,
-  empty,
-  showCountdown = false,
-}: {
-  title: string;
-  rows: Awaited<ReturnType<typeof listBookings>>;
-  empty: string;
-  showCountdown?: boolean;
-}) {
+/** How scheduled time is spread across the team, to spot an overloaded month. */
+async function UpcomingLoad() {
+  const rows = await getHostLoad(LOAD_WINDOW_DAYS);
+  const targetHours = LOAD_TARGET_MINUTES / 60;
+  const overbooked = rows.filter((r) => r.minutes > LOAD_TARGET_MINUTES);
+
   return (
-    <Panel title={title} flush>
+    <Panel
+      title={`Host load, next ${LOAD_WINDOW_DAYS} days`}
+      action={<span className="rv-panel-note">target {targetHours}h each</span>}
+      flush
+    >
       {rows.length === 0 ? (
-        <EmptyState>{empty}</EmptyState>
+        <EmptyState>Nothing scheduled in the next {LOAD_WINDOW_DAYS} days.</EmptyState>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="rv-table">
-            <caption className="sr-only">{title}</caption>
-            <thead>
-              <tr>
-                <th scope="col">Title</th>
-                <th scope="col">With</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Status</th>
-                <th scope="col">When</th>
-                {showCountdown ? <th scope="col" className="text-right">In</th> : null}
-                <th scope="col" className="text-right">Min</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((booking) => {
-                return (
-                  <tr key={booking.id}>
-                    <td className="font-medium text-rhymvex-white">{booking.title}</td>
-                    <td className="whitespace-nowrap text-rhymvex-white/60">
-                      {booking.client_name ?? booking.lead_name ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/55">
-                      {humanise(booking.kind)}
-                    </td>
-                    <td>
-                      <StatusPill
-                        value={humanise(booking.status)}
-                        tone={bookingStatusTone(booking.status)}
-                      />
-                    </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/60">
-                      {formatDateTime(booking.scheduled_for)}
-                    </td>
-                    {showCountdown ? (
-                      <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-volt">
-                        {untilTime(booking.scheduled_for)}
-                      </td>
-                    ) : null}
-                    <td className="rv-table-num text-right text-rhymvex-white/50">
-                      {booking.duration_mins}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="px-4 py-2">
+            {rows.map((row) => (
+              <LoadRow key={row.id ?? "unassigned"} row={row} />
+            ))}
+          </div>
+          {/* The bar has to be read against something, and so does the colour. */}
+          <p className="border-t border-rhymvex-white/5 px-4 py-2.5 rv-panel-note">
+            {overbooked.length > 0
+              ? `Full bar is ${targetHours}h. Over target: ${overbooked
+                  .map((r) => r.name)
+                  .join(", ")}.`
+              : `Full bar is ${targetHours}h. Everyone is inside it.`}
+          </p>
+        </>
       )}
     </Panel>
   );
 }
 
-/** How scheduled time is spread across the team, to spot an overloaded week. */
-async function UpcomingLoad() {
-  const rows = await query<{ name: string; count: number; minutes: number }>(
-    `SELECT COALESCE(s.name, 'Unassigned') AS name,
-            count(*)::int AS count,
-            sum(b.duration_mins)::int AS minutes
-       FROM bookings b LEFT JOIN staff s ON s.id = b.host_id
-      WHERE b.scheduled_for >= now() AND b.status IN ('REQUESTED','CONFIRMED')
-      GROUP BY s.name ORDER BY minutes DESC`,
-  );
-
-  if (rows.length === 0) return null;
-  const max = Math.max(...rows.map((r) => r.minutes));
+function LoadRow({ row }: { row: { name: string; count: number; minutes: number } }) {
+  const hours = round1(row.minutes / 60);
+  const over = row.minutes > LOAD_TARGET_MINUTES;
+  // Clamped so an overbooked host reads as "past full" rather than drawing a
+  // bar that runs off the end of its track.
+  const percent = Math.min(100, (row.minutes / LOAD_TARGET_MINUTES) * 100);
 
   return (
-    <Panel title="Load, next 30 days">
-      <div className="flex flex-col gap-1">
-        {rows.map((row) => (
-          <div key={row.name} className="rv-meter-row">
-            <span className="truncate text-rhymvex-white/60">{row.name}</span>
-            <span className="rv-meter-track">
-              <span
-                className="rv-meter-fill"
-                style={{ width: `${Math.max(4, (row.minutes / max) * 100)}%` }}
-              />
-            </span>
-            <span className="rv-table-num text-right text-rhymvex-white/55">
-              {Math.round((row.minutes / 60) * 10) / 10}h
-            </span>
-          </div>
-        ))}
-      </div>
-    </Panel>
+    <div className="rv-meter-row">
+      <span className="truncate text-rhymvex-white/60" title={row.name}>
+        {row.name}
+      </span>
+      <span
+        className="rv-meter-track"
+        role="progressbar"
+        aria-valuenow={Math.round(percent)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${row.name}: ${hours} hours across ${pluralise(row.count, "booking")}${
+          over ? ", over the target" : ""
+        }`}
+      >
+        <span className="rv-meter-fill" data-over={over} style={{ width: `${percent}%` }} />
+      </span>
+      <span
+        className={`rv-table-num text-right ${
+          over ? "text-rhymvex-ember" : "text-rhymvex-white/55"
+        }`}
+      >
+        {hours}h
+      </span>
+    </div>
   );
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
 }

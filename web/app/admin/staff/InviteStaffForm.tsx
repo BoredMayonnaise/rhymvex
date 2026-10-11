@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Loader2, UserPlus, X } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
+import { FormModal } from "@/components/ui/Modal";
 import { inviteStaffAction, type ActionResult } from "@/app/admin/actions";
 import { PERMISSIONS, ROLES, describeRole, type Role } from "@/lib/auth/rbac";
 import { humanise } from "@/lib/format";
@@ -14,7 +15,6 @@ import { humanise } from "@/lib/format";
  * key against the known permission list before storing it.
  */
 export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; invitedBy: string }) {
-  const [open, setOpen] = useState(false);
   const [role, setRole] = useState<Role>(ROLES[2]);
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     inviteStaffAction,
@@ -22,26 +22,17 @@ export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; i
   );
 
   return (
-    <div className="rv-panel">
-      <header className="rv-panel-head">
-        <h2 className="rv-panel-title">Invite a team member</h2>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="rv-btn rv-btn-primary rv-btn-sm"
-          aria-expanded={open}
-        >
-          {open ? (
-            <X className="size-3.5" aria-hidden="true" />
-          ) : (
-            <UserPlus className="size-3.5" aria-hidden="true" />
-          )}
-          {open ? "Close" : "New invitation"}
+    <FormModal
+      trigger={(open) => (
+        <button type="button" onClick={open} className="rv-btn rv-btn-primary rv-btn-sm">
+          <UserPlus className="size-3.5" aria-hidden="true" />
+          New invitation
         </button>
-      </header>
-
-      {open ? (
-        <div className="rv-panel-body">
+      )}
+      title="Invite a team member"
+      eyebrow="Staff & access"
+      success={state?.ok === true}
+    >
           <form action={formAction} className="flex flex-col gap-4">
             <input type="hidden" name="csrf" value={csrfToken} />
 
@@ -151,8 +142,6 @@ export function InviteStaffForm({ csrfToken, invitedBy }: { csrfToken: string; i
 
             <p className="m-0 text-[11px] text-rhymvex-white/50">Invited by {invitedBy}</p>
           </form>
-        </div>
-      ) : null}
-    </div>
+    </FormModal>
   );
 }

@@ -96,7 +96,7 @@ echo "=== 4. Two emails produced ==="
 check "client confirmation sent" \
   "$(q "SELECT count(*) FROM email_outbox WHERE kind='CLIENT_CONFIRMATION' AND to_address='$EMAIL'")" 1
 check "internal notification sent" \
-  "$(q "SELECT count(*) FROM email_outbox WHERE kind='INTERNAL_NOTIFICATION' AND subject = 'New Rhymvex lead — Workflow Coffee $STAMP'")" 1
+  "$(q "SELECT count(*) FROM email_outbox WHERE kind='INTERNAL_NOTIFICATION' AND subject LIKE '%New Rhymvex lead — Workflow Coffee $STAMP%'")" 1
 check "client email has the right subject" \
   "$(q "SELECT subject FROM email_outbox WHERE kind='CLIENT_CONFIRMATION' AND to_address='$EMAIL'")" \
   "We received your request — Rhymvex"

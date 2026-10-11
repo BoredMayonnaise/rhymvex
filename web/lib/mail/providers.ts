@@ -171,12 +171,26 @@ export function resolveSmtpConfig(overrides?: {
   user?: string;
   pass?: string;
   from?: string;
+  /**
+   * Whether the shared `SMTP_*` variables may stand in for an absent user or
+   * password. True for the standalone and legacy path, which has no second
+   * channel to keep away from. The channel resolvers below pass `false` because
+   * they decide that for themselves — without the opt-out, "this channel has no
+   * user of its own" and "no user anywhere" were the same expression, so a
+   * Zoho-only deployment would hand Zoho credentials to `smtp.gmail.com`.
+   */
+  useGenericCredentials?: boolean;
 }): ResolvedSmtpConfig {
+  const useGeneric = overrides?.useGenericCredentials !== false;
   const rawProvider = overrides?.provider || process.env.SMTP_PROVIDER;
-  const rawHost = overrides?.host || process.env.SMTP_HOST;
-  const rawUser = overrides?.user || process.env.SMTP_USER || "";
-  const rawPass = (overrides?.pass || process.env.SMTP_PASSWORD || "").trim();
-  const rawFrom = overrides?.from || process.env.SMTP_FROM || "";
+  const rawHost = overrides?.host || (useGeneric ? process.env.SMTP_HOST : undefined);
+  const rawUser = overrides?.user || (useGeneric ? process.env.SMTP_USER : undefined) || "";
+  const rawPass = (
+    overrides?.pass ||
+    (useGeneric ? process.env.SMTP_PASSWORD : undefined) ||
+    ""
+  ).trim();
+  const rawFrom = overrides?.from || (useGeneric ? process.env.SMTP_FROM : undefined) || "";
 
   const providerId = detectProvider(rawProvider, rawHost, rawUser);
   const preset = SMTP_PROVIDERS[providerId];

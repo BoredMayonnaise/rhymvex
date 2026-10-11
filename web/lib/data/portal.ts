@@ -244,6 +244,38 @@ export async function getPortalProposal(session: ClientSession, proposalId: stri
   );
 }
 
+/**
+ * One contract for this client, if it exists.
+ *
+ * Scoped by the session's client id at the query level, so a guessed id cannot
+ * reach another tenant's contract. Drafts are excluded: nothing the client has
+ * not been sent is visible to them.
+ */
+export async function getPortalContract(
+  session: ClientSession,
+  contractId: string,
+) {
+  if (!isRecordId(contractId)) return null;
+  return queryOne<{
+    id: string;
+    reference: string;
+    title: string;
+    body: string | null;
+    status: string;
+    value_total: number | null;
+    currency: string;
+    sent_at: Date | null;
+    signed_at: Date | null;
+    signed_by_name: string | null;
+  }>(
+    `SELECT id, reference, title, body, status, value_total, currency,
+            sent_at, signed_at, signed_by_name
+       FROM contracts
+      WHERE id = $1 AND client_id = $2 AND status <> 'DRAFT'`,
+    [contractId, session.clientId],
+  );
+}
+
 export async function listPortalContracts(
   session: ClientSession,
   limit = 200,
@@ -259,8 +291,11 @@ export async function listPortalContracts(
     currency: string;
     sent_at: Date | null;
     signed_at: Date | null;
+    /** Who signed it, so the client sees their own name recorded back. */
+    signed_by_name: string | null;
   }>(
-    `SELECT id, reference, title, body, status, value_total, currency, sent_at, signed_at
+    `SELECT id, reference, title, body, status, value_total, currency,
+            sent_at, signed_at, signed_by_name
        FROM contracts WHERE client_id = $1 AND status <> 'DRAFT'
       ORDER BY sent_at DESC NULLS LAST, created_at DESC
       LIMIT $2 OFFSET $3`,
@@ -283,9 +318,11 @@ export async function listPortalBookings(
     location: string | null;
     host_name: string | null;
     agenda: string | null;
+    /** What was decided on the call, recorded by staff when closing it out. */
+    outcome: string | null;
   }>(
     `SELECT b.id, b.title, b.kind, b.status, b.scheduled_for, b.duration_mins,
-            b.location, b.agenda, s.name AS host_name
+            b.location, b.agenda, b.outcome, s.name AS host_name
        FROM bookings b LEFT JOIN staff s ON s.id = b.host_id
       WHERE b.client_id = $1
       ORDER BY b.scheduled_for DESC

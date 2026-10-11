@@ -4,6 +4,13 @@
  * Authorisation is resolved here on the server. The client renders links based
  * on `can()` for usability, but no UI check is a security boundary: every
  * protected action re-checks through `requirePermission` / `requireStaff`.
+ *
+ * On `audit.read`, which used to exist: nothing gated on it — the security page
+ * checked `security.read` — so it granted nothing while reading like it did.
+ * Anything that needs the audit trail already needs `security.read`, which is
+ * the same ADMIN-only grant. `effectivePermissions` filters unknown values out
+ * of `extra_permissions`, so rows that had it stored lose it quietly rather than
+ * breaking a session.
  */
 
 export const ROLES = [
@@ -47,9 +54,9 @@ export const PERMISSIONS = [
   "staff.invite",
   "staff.manage",
   "security.read",
+  "security.manage",
   "settings.read",
   "settings.write",
-  "audit.read",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

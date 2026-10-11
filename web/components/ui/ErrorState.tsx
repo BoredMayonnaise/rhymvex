@@ -12,22 +12,23 @@ import type { ReactNode } from "react";
  * This keeps the reader inside the workspace and gives them a way to retry
  * without reloading.
  *
- * The error's own message is deliberately not rendered. It reaches this
- * component only in development; in production Next replaces it with a digest.
- * Surfacing `error.message` would put whatever the driver or the pool said into
- * the page, which is the one thing the intake and sign-in handlers are careful
- * never to do. The digest is a hash, so it is safe to show and is what support
- * needs to find the entry in the server log.
+ * The full stack trace is never rendered. The one-line message is shown
+ * (truncated) together with the digest; the stack stays in the server log,
+ * keyed by that same digest. In production the message is Next's generic
+ * placeholder and only the digest is meaningful.
  */
 export function ErrorState({
   context,
   digest,
+  message,
   reset,
   children,
 }: {
   /** Which workspace, so the wording does not have to guess. */
   context: "admin" | "portal";
   digest?: string;
+  /** One-line error summary; never a stack trace. */
+  message?: string;
   reset: () => void;
   children?: ReactNode;
 }) {
@@ -48,8 +49,14 @@ export function ErrorState({
 
         {children}
 
+        {message ? (
+          <p className="mt-5 break-words rounded-md border border-rhymvex-white/10 bg-rhymvex-black/40 px-3 py-2 text-xs text-rhymvex-white/60">
+            {message.split("\n")[0].slice(0, 200)}
+          </p>
+        ) : null}
+
         {digest ? (
-          <p className="mt-5 text-xs text-rhymvex-white/50">
+          <p className="mt-3 text-xs text-rhymvex-white/50">
             Reference <code className="font-mono">{digest}</code>
           </p>
         ) : null}

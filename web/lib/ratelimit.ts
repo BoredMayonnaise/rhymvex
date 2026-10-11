@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { headers } from "next/headers";
-import { envInt } from "@/lib/env";
+import { getSecuritySettings } from "@/lib/security-settings";
 
 /**
  * Rate limiting for public, unauthenticated endpoints.
@@ -84,11 +84,10 @@ export async function consumeRateLimit(
 }
 
 export async function checkIntakeRateLimit(ip: string | null): Promise<RateLimitResult> {
-  const limit = envInt("INTAKE_RATE_LIMIT", 5);
-  const window = envInt("INTAKE_RATE_WINDOW_SECONDS", 3600);
+  const { intakeRateLimit, intakeWindowSeconds } = await getSecuritySettings();
   // Scope by IP. An absent IP falls back to a shared bucket rather than
   // bypassing the limit entirely.
-  return consumeRateLimit(`intake:${ip ?? "unknown"}`, limit, window);
+  return consumeRateLimit(`intake:${ip ?? "unknown"}`, intakeRateLimit, intakeWindowSeconds);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -119,9 +118,8 @@ export async function consumeSignInAttempt(
   scope: "staff" | "client",
   ip: string | null,
 ): Promise<RateLimitResult> {
-  const limit = envInt("SIGN_IN_IP_LIMIT", 20);
-  const window = envInt("SIGN_IN_WINDOW_SECONDS", 900);
-  return consumeRateLimit(`signin:${scope}:ip:${ip ?? "unknown"}`, limit, window);
+  const { signinIpLimit, signinWindowSeconds } = await getSecuritySettings();
+  return consumeRateLimit(`signin:${scope}:ip:${ip ?? "unknown"}`, signinIpLimit, signinWindowSeconds);
 }
 
 /**
@@ -140,13 +138,12 @@ export async function consumeSignInFailure(
   scope: "staff" | "client",
   email: string,
 ): Promise<RateLimitResult> {
-  const limit = envInt("SIGN_IN_ACCOUNT_LIMIT", 5);
-  const window = envInt("SIGN_IN_WINDOW_SECONDS", 900);
+  const { signinAccountLimit, signinWindowSeconds } = await getSecuritySettings();
   const digest = createHash("sha256")
     .update(`${scope}:${email.trim().toLowerCase()}`)
     .digest("hex")
     .slice(0, 32);
-  return consumeRateLimit(`signin:${scope}:account:${digest}`, limit, window);
+  return consumeRateLimit(`signin:${scope}:account:${digest}`, signinAccountLimit, signinWindowSeconds);
 }
 
 /** Drop windows that are long past, so the table does not grow forever. */

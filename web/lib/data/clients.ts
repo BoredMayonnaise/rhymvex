@@ -144,10 +144,12 @@ export async function listClientContracts(clientId: string) {
     status: string;
     value_total: number | null;
     currency: string;
+    sent_at: Date | null;
     signed_at: Date | null;
+    signed_by_name: string | null;
     created_at: Date;
   }>(
-    `SELECT id, reference, title, status, value_total, currency, signed_at, created_at
+    `SELECT id, reference, title, status, value_total, currency, sent_at, signed_at, signed_by_name, created_at
        FROM contracts WHERE client_id = $1 ORDER BY created_at DESC`,
     [clientId],
   );

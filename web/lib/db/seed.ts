@@ -282,6 +282,42 @@ async function main() {
       [harbourlight, amId],
     );
 
+    // A second proposal, already accepted, so the contract flow has something
+    // real to hang off in development and in the verify suite.
+    await query(
+      `INSERT INTO proposals (reference, client_id, title, summary, model, scope, deliverables, exclusions, timeline, investment, status, sent_at, decided_at, created_by)
+       VALUES ('PROP-DEMO02', $1, 'Rhythm Retainer', 'Ongoing brand and content rhythm, month to month.', 'RHYTHM_RETAINER',
+               'Monthly positioning reviews, content production and channel maintenance.',
+               ARRAY['Monthly strategy review','Content production','Channel maintenance'],
+               ARRAY['Paid media spend','Third-party licensing'],
+               'Rolling, 3-month minimum', 2400, 'ACCEPTED',
+               now() - interval '12 days', now() - interval '9 days', $2)
+       ON CONFLICT DO NOTHING`,
+      [harbourlight, amId],
+    );
+
+    // The contract that follows it: sent, waiting on the client's signature.
+    await query(
+      `INSERT INTO contracts (reference, client_id, proposal_id, title, body, status, value_total, currency, sent_at, created_by)
+       VALUES ('CON-DEMO01', $1,
+               (SELECT id FROM proposals WHERE reference = 'PROP-DEMO02'),
+               'Rhythm Retainer — agreement',
+               E'RHYTHM RETAINER AGREEMENT\n\n1. Scope\nMonthly positioning reviews, content production and channel maintenance.\n\n2. Deliverables\n• Monthly strategy review\n• Content production\n• Channel maintenance\n\n3. Not included\n• Paid media spend\n• Third-party licensing\n\n4. Fees\nTotal EUR 2,400 per month, payable monthly in advance.\n\n5. Term\nRolling, three-month minimum. Either party may end with 30 days written notice.',
+               'AWAITING_SIGNATURE', 2400, 'EUR', now() - interval '8 days', $2)
+       ON CONFLICT DO NOTHING`,
+      [harbourlight, amId],
+    );
+
+    // And one already signed, so the workspace shows both states of the flow.
+    await query(
+      `INSERT INTO contracts (reference, client_id, title, body, status, value_total, currency, sent_at, signed_at, signed_by_name, created_by)
+       VALUES ('CON-DEMO02', $1, 'Brand System — agreement',
+               E'BRAND SYSTEM AGREEMENT\n\n1. Scope\nDiscovery, positioning, identity system, component library, documentation and handover.\n\n2. Deliverables\n• Identity system\n• Component library\n• Brand guidelines\n• Handover session\n\n3. Fees\nTotal EUR 7,800, payable 50% on signature and 50% on delivery.',
+               'SIGNED', 7800, 'EUR', now() - interval '20 days', now() - interval '18 days', 'Rina Sato', $2)
+       ON CONFLICT DO NOTHING`,
+      [harbourlight, amId],
+    );
+
     await query(
       `INSERT INTO bookings (client_id, title, kind, status, scheduled_for, duration_mins, host_id, location, agenda)
        VALUES ($1, 'Discovery consultation', 'DISCOVERY', 'CONFIRMED', now() + interval '3 days', 45, $2, 'Video call', 'Understand the business and what is in the way.')
@@ -304,18 +340,27 @@ async function main() {
     );
   }
 
+  // The Acme task hangs off the inbound lead, not a client: nobody has been
+  // assigned to it yet, which is the whole point of the task. The Harbourlight
+  // task hangs off its project as well as the client, because "related to" can
+  // carry both and a project link is the more specific of the two.
   await query(
-    `INSERT INTO tasks (title, detail, status, priority, assignee_id, client_id, due_at)
-     SELECT 'Follow up with Arthur at Acme Coffee', 'New intake, unassigned. Review the request and decide who responds.', 'OPEN', 'HIGH', $1, NULL, now() + interval '1 day'
+    `INSERT INTO tasks (title, detail, status, priority, assignee_id, lead_id, due_at)
+     SELECT 'Follow up with Arthur at Acme Coffee', 'New intake, unassigned. Review the request and decide who responds.', 'OPEN', 'HIGH', $1, $2, now() + interval '1 day'
      WHERE NOT EXISTS (SELECT 1 FROM tasks WHERE title = 'Follow up with Arthur at Acme Coffee')`,
-    [opsId],
+    [opsId, leadIds["LEAD-DEMO01"] || null],
+  );
+
+  const harbourlightProject = await queryOne<{ id: string }>(
+    "SELECT id FROM projects WHERE client_id = $1 LIMIT 1",
+    [harbourlight],
   );
 
   await query(
-    `INSERT INTO tasks (title, detail, status, priority, assignee_id, client_id, due_at)
-     SELECT 'Build component library tokens', 'Extract the colour and type scales into reusable tokens.', 'IN_PROGRESS', 'NORMAL', $1, $2, now() + interval '6 days'
+    `INSERT INTO tasks (title, detail, status, priority, assignee_id, client_id, project_id, due_at)
+     SELECT 'Build component library tokens', 'Extract the colour and type scales into reusable tokens.', 'IN_PROGRESS', 'NORMAL', $1, $2, $3, now() + interval '6 days'
      WHERE NOT EXISTS (SELECT 1 FROM tasks WHERE title = 'Build component library tokens')`,
-    [designerId, harbourlight],
+    [designerId, harbourlight, harbourlightProject?.id ?? null],
   );
 
   await query(

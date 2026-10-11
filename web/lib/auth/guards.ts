@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { can, getClientSession, getStaffSession, type ClientSession, type StaffSession } from "./session";
+import { CLIENT_HOME, SIGN_IN_PATH, STAFF_HOME } from "./workspace";
 import type { Permission } from "./rbac";
 
 /**
@@ -60,6 +61,7 @@ const PERMISSION_PURPOSE: Partial<Record<Permission, string>> = {
   "proposals.send": "send proposals",
   "contracts.read": "see contracts",
   "contracts.write": "change contracts",
+  "contracts.send": "send contracts for signature",
   "projects.read": "see projects",
   "projects.write": "update projects",
   "tasks.read": "see team tasks",
@@ -75,15 +77,27 @@ const PERMISSION_PURPOSE: Partial<Record<Permission, string>> = {
   "staff.invite": "invite team members",
   "staff.manage": "manage team access",
   "security.read": "see the security overview",
+  "security.manage": "end live sessions",
   "settings.read": "see settings",
   "settings.write": "change settings",
-  "audit.read": "read the audit trail",
 };
 
-/** Staff-only page guard. Redirects an anonymous visitor to sign-in. */
+/**
+ * Staff-only page guard. Redirects an anonymous visitor to sign-in.
+ *
+ * A signed-in *client* is sent to their own workspace rather than to sign-in.
+ * They are not anonymous, and the sign-in form cannot help them: their
+ * credentials would only resolve back to `/portal`, bouncing them here again. The
+ * refusal they were getting was correct, but the page it came from was wrong —
+ * it asked an authenticated person with a working session to authenticate again.
+ */
 export async function requireStaff(): Promise<StaffSession> {
   const session = await getStaffSession();
-  if (!session) redirect("/login");
+  if (!session) {
+    const client = await getClientSession();
+    if (client) redirect(CLIENT_HOME);
+    redirect(SIGN_IN_PATH);
+  }
   return session;
 }
 
@@ -107,14 +121,28 @@ export async function requireStaffPermission(permission: Permission): Promise<St
   return session;
 }
 
-/** Client portal page guard. */
+/**
+ * Client portal page guard.
+ *
+ * The mirror of `requireStaff`: a signed-in staff member who lands in the portal
+ * is redirected into the workspace they actually have a session for, rather than
+ * being told to sign in again with credentials that would send them right back
+ * to `/admin`.
+ *
+ * The sign-in route lives in the `(auth)` group as `/login`. This guard is the
+ * real boundary, so it fires on every session death — expiry, a deactivated
+ * portal user, a churned client — and has to name a route that exists.
+ * `proxy.ts` covers the cold request; this covers the live one.
+ */
 export async function requireClientSession(): Promise<ClientSession> {
   const session = await getClientSession();
-  // The sign-in route lives in the `(auth)` group as `/portal-sign-in`. This
-  // guard is the real boundary, so it fires on every session death — expiry, a
-  // deactivated portal user, a churned client — and has to name a route that
-  // exists. `proxy.ts` covers the cold request; this covers the live one.
-  if (!session) redirect("/portal-sign-in");
+  if (!session) {
+    const staff = await getStaffSession();
+    if (staff) redirect(STAFF_HOME);
+    // Deep links are preserved by `proxy.ts` on the cold request that got here;
+    // this guard is the live one, and it has no query string to forward.
+    redirect(SIGN_IN_PATH);
+  }
   return session;
 }
 

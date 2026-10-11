@@ -77,35 +77,35 @@ export default async function AccountingPage() {
               <tbody>
                 {invoices.map((invoice) => (
                   <tr key={invoice.id}>
-                    <td className="whitespace-nowrap font-mono text-[11px] text-rhymvex-white/50">
+                    <td data-label="Reference" className="whitespace-nowrap font-mono text-[11px] text-rhymvex-white/50">
                       {invoice.reference}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/65">{invoice.client_name}</td>
-                    <td className="max-w-xs truncate text-rhymvex-white/60">
+                    <td data-label="Client" className="whitespace-nowrap text-rhymvex-white/65">{invoice.client_name}</td>
+                    <td data-label="Description" className="max-w-xs truncate text-rhymvex-white/60">
                       {invoice.description}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <StatusPill
                         value={humanise(invoice.status)}
                         tone={invoiceStatusTone(invoice.status)}
                       />
                     </td>
-                    <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/75">
+                    <td data-label="Amount" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/75">
                       {formatMoney(invoice.amount, invoice.currency || currency)}
                     </td>
-                    <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/55">
+                    <td data-label="Paid" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/55">
                       {formatMoney(invoice.amount_paid, invoice.currency || currency)}
                     </td>
-                    <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
+                    <td data-label="Balance" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
                       {formatMoney(
                         Math.max(0, invoice.amount - invoice.amount_paid),
                         invoice.currency || currency,
                       )}
                     </td>
-                    <td className="whitespace-nowrap text-rhymvex-white/55">
+                    <td data-label="Issued" className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(invoice.issued_at)}
                     </td>
-                    <td
+                    <td data-label="Due"
                       className={`whitespace-nowrap ${
                         invoice.status === "OVERDUE" ? "text-rhymvex-ember" : "text-rhymvex-white/55"
                       }`}

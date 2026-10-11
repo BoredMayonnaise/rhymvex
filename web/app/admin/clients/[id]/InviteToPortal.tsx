@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Ban, Loader2, Send, UserPlus, X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Ban, Loader2, Send, UserPlus } from "lucide-react";
 import { inviteToPortalAction, revokeInvitationAction, type ActionResult } from "@/app/admin/actions";
 import {
   EmptyState,
@@ -48,33 +49,24 @@ export function InviteToPortal({
     existingUsers.some((u) => u.email.toLowerCase() === email.toLowerCase());
 
   return (
-    <div className={open ? "w-full" : "w-full sm:w-auto"}>
+    <>
       <div className="flex sm:justify-end">
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(true)}
           className="rv-btn rv-btn-primary rv-btn-sm w-full sm:w-auto"
-          aria-expanded={open}
         >
           <UserPlus className="size-3.5" aria-hidden="true" />
           Invite to portal
         </button>
       </div>
 
-      {open ? (
-        <div className="mt-3 rounded-xl border border-rhymvex-white/10 bg-rhymvex-slate/40 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="rv-panel-title">Give {clientName} portal access</p>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close"
-              className="text-rhymvex-white/50 hover:text-rhymvex-white"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={`Give ${clientName} portal access`}
+        eyebrow="Client portal"
+      >
           <form action={inviteAction} className="flex flex-col gap-3">
             <input type="hidden" name="csrf" value={csrfToken} />
             <input type="hidden" name="client_id" value={clientId} />
@@ -182,9 +174,8 @@ export function InviteToPortal({
               </ul>
             )}
           </div>
-        </div>
-      ) : null}
-    </div>
+      </Modal>
+    </>
   );
 }
 

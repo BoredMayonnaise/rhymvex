@@ -55,7 +55,9 @@ export default async function ProjectsPage() {
                   >
                     {project.client_name}
                   </Link>
-                  <h2 className="mt-0.5 text-sm font-semibold text-rhymvex-white">{project.name}</h2>
+                  <h2 className="mt-0.5 text-sm font-semibold text-rhymvex-white">
+                    <Link href={`/admin/projects/${project.id}`} className="hover:text-rhymvex-volt">{project.name}</Link>
+                  </h2>
                 </div>
                 <StatusPill
                   value={humanise(project.status)}

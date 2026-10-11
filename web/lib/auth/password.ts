@@ -1,5 +1,6 @@
 import { randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import { getSecuritySettings, type SecuritySettings } from "@/lib/security-settings";
 
 /**
  * Password hashing with scrypt from node:crypto.
@@ -9,6 +10,11 @@ import { promisify } from "node:util";
  * each digest so they can be raised later without invalidating existing hashes.
  *
  * Digest format:  scrypt$N$r$p$<salt-b64url>$<hash-b64url>
+ *
+ * Cost comes from the security policy, so it can be raised from the security
+ * page without a deploy. `verifyPassword` reads N/r/p back out of the stored
+ * digest rather than from current policy — that is what lets the cost go up and
+ * every hash written under the old value still verify.
  */
 
 const scrypt = promisify(scryptCb) as (
@@ -18,34 +24,89 @@ const scrypt = promisify(scryptCb) as (
   options: { N: number; r: number; p: number; maxmem: number },
 ) => Promise<Buffer>;
 
-// ~64 MiB of memory per hash. Tuned to Node's default maxmem of 32 MiB plus
-// headroom; raising N requires raising maxmem with it.
-const PARAMS = { N: 16384, r: 8, p: 1 };
-const MAXMEM = 128 * PARAMS.N * PARAMS.r * 2; // 32 MiB
+// scrypt rejects N above 32, and wants headroom over its working set. Computed
+// per call from whatever the policy says rather than frozen at import, so
+// raising the cost in the UI does not fail against a stale ceiling.
+function maxmemFor(N: number, r: number): number {
+  return 128 * N * r * 2;
+}
+
+/**
+ * NFKC normalisation, so a password typed with a composed or decomposed accent
+ * hashes to the same value either way. Buffer input has nothing to normalise —
+ * it arrives already encoded, from invitation-token derivation.
+ */
+function normalise(password: string | Buffer): string | Buffer {
+  return typeof password === "string" ? password.normalize("NFKC") : password;
+}
+
 const KEY_LENGTH = 64;
 const SALT_LENGTH = 16;
 
-/** Rejects inputs that are obviously not a real password, to avoid wasted work. */
-export function validatePasswordStrength(password: string): string | null {
-  if (password.length < 10) return "Password must be at least 10 characters.";
-  if (password.length > 200) return "Password must be under 200 characters.";
-  if (!/[a-z]/.test(password)) return "Password must include a lowercase letter.";
-  if (!/[A-Z]/.test(password)) return "Password must include an uppercase letter.";
-  if (!/[0-9]/.test(password)) return "Password must include a number.";
+/** The cost parameters in force, for the security page to report. */
+export async function scryptParameters(): Promise<{ N: number; r: number; p: number }> {
+  const { scryptN, scryptR, scryptP } = await getSecuritySettings();
+  return { N: scryptN, r: scryptR, p: scryptP };
+}
+
+/**
+ * The policy check, separated from the lookup so a form can render live
+ * feedback against an already-resolved policy without a query per keystroke.
+ */
+export function checkPasswordAgainstPolicy(
+  password: string,
+  policy: Pick<
+    SecuritySettings,
+    | "passwordMinLength"
+    | "passwordMaxLength"
+    | "passwordRequireLower"
+    | "passwordRequireUpper"
+    | "passwordRequireDigit"
+  >,
+): string | null {
+  if (password.length < policy.passwordMinLength) {
+    return `Password must be at least ${policy.passwordMinLength} characters.`;
+  }
+  if (password.length > policy.passwordMaxLength) {
+    return `Password must be under ${policy.passwordMaxLength} characters.`;
+  }
+  if (policy.passwordRequireLower && !/[a-z]/.test(password)) {
+    return "Password must include a lowercase letter.";
+  }
+  if (policy.passwordRequireUpper && !/[A-Z]/.test(password)) {
+    return "Password must include an uppercase letter.";
+  }
+  if (policy.passwordRequireDigit && !/[0-9]/.test(password)) {
+    return "Password must include a number.";
+  }
   return null;
 }
 
-export async function hashPassword(password: string): Promise<string> {
+/**
+ * Rejects inputs that are obviously not a real password, to avoid wasted work.
+ *
+ * The rules are the policy's, not this function's — so a workspace on managed
+ * devices that already enforce length and complexity elsewhere can turn the
+ * character-class requirements off without a code change.
+ */
+export async function validatePasswordStrength(password: string): Promise<string | null> {
+  return checkPasswordAgainstPolicy(password, await getSecuritySettings());
+}
+
+export async function hashPassword(password: string | Buffer): Promise<string> {
+  const { scryptN: N, scryptR: r, scryptP: p } = await getSecuritySettings();
   const salt = randomBytes(SALT_LENGTH);
-  const derived = await scrypt(password.normalize("NFKC"), salt, KEY_LENGTH, {
-    ...PARAMS,
-    maxmem: MAXMEM,
+  const derived = await scrypt(normalise(password), salt, KEY_LENGTH, {
+    N,
+    r,
+    p,
+    maxmem: maxmemFor(N, r),
   });
   return [
     "scrypt",
-    PARAMS.N,
-    PARAMS.r,
-    PARAMS.p,
+    N,
+    r,
+    p,
     salt.toString("base64url"),
     derived.toString("base64url"),
   ].join("$");
@@ -74,11 +135,11 @@ export async function verifyPassword(password: string, stored: string | null): P
 
   let derived: Buffer;
   try {
-    derived = await scrypt(password.normalize("NFKC"), salt, expected.length, {
+    derived = await scrypt(normalise(password), salt, expected.length, {
       N,
       r,
       p,
-      maxmem: Math.max(MAXMEM, 256 * N * r),
+      maxmem: maxmemFor(N, r),
     });
   } catch {
     return false;
@@ -92,8 +153,11 @@ export async function verifyPassword(password: string, stored: string | null): P
  * matches, so response timing does not reveal whether an email is registered.
  */
 export async function fakeVerifyDelay(): Promise<void> {
+  const { scryptN: N, scryptR: r, scryptP: p } = await getSecuritySettings();
   await scrypt("timing-equaliser", randomBytes(SALT_LENGTH), KEY_LENGTH, {
-    ...PARAMS,
-    maxmem: MAXMEM,
+    N,
+    r,
+    p,
+    maxmem: maxmemFor(N, r),
   }).catch(() => undefined);
 }

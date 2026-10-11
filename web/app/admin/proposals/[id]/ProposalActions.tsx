@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Send } from "lucide-react";
 import { updateProposalStatusAction, type ActionResult } from "@/app/admin/actions";
 
@@ -8,7 +9,9 @@ import { updateProposalStatusAction, type ActionResult } from "@/app/admin/actio
  * Move a proposal through its states.
  *
  * Transitions are recorded in the audit trail, and accepting one advances the
- * originating lead so the pipeline does not need re-keying.
+ * originating lead so the pipeline does not need re-keying. Note that viewing
+ * and deciding are now automated by the client's own portal, so the buttons
+ * here are the manual override, not the normal path.
  */
 export function ProposalActions({
   proposalId,
@@ -23,10 +26,17 @@ export function ProposalActions({
   canSend: boolean;
   canWrite: boolean;
 }) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     updateProposalStatusAction,
     null,
   );
+
+  // Accepting a proposal reveals the "Create contract" button, which is rendered
+  // by the parent, so the page has to re-render rather than just re-post.
+  useEffect(() => {
+    if (state?.ok) router.refresh();
+  }, [state, router]);
 
   if (!canWrite) return null;
 

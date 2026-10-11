@@ -371,3 +371,69 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Security policy                                                            */
+/* -------------------------------------------------------------------------- */
+
+/** An integer form field within an inclusive range. */
+const boundedInt = (min: number, max: number, label: string) =>
+  z.coerce
+    .number()
+    .int(`${label} must be a whole number.`)
+    .min(min, `${label} must be at least ${min}.`)
+    .max(max, `${label} must be at most ${max}.`);
+
+/** A checkbox: absent means off, so presence alone carries the value. */
+const checkbox = z
+  .union([z.literal("on"), z.literal("true"), z.literal("")])
+  .transform((v) => v === "on" || v === "true")
+  .default(false);
+
+/**
+ * scrypt's N must be a power of two greater than one, and Node caps it at 2^32.
+ * The error says so in words, because "N must be a power of 2" is a strange
+ * thing to read next to a number input with no explanation.
+ */
+const scryptCost = z.coerce
+  .number()
+  .int("Hashing cost must be a whole number.")
+  .refine((n) => n >= 2 && n <= 2 ** 20, "Hashing cost must be between 2 and 1048576.")
+  .refine(
+    (n) => (n & (n - 1)) === 0,
+    "Hashing cost must be a power of two — 16384, 32768, 65536 and so on.",
+  );
+
+export const securitySettingsSchema = z
+  .object({
+    // Sessions
+    staffSessionHours: boundedInt(1, 720, "Staff session length"),
+    staffRememberedDays: boundedInt(1, 365, "Staff remembered length"),
+    clientSessionDays: boundedInt(1, 365, "Client session length"),
+    clientRememberedDays: boundedInt(1, 365, "Client remembered length"),
+    cookieSamesite: z.enum(["lax", "strict"], "SameSite must be Lax or Strict."),
+
+    // Passwords
+    passwordMinLength: boundedInt(8, 128, "Minimum password length"),
+    passwordMaxLength: boundedInt(32, 512, "Maximum password length"),
+    passwordRequireLower: checkbox,
+    passwordRequireUpper: checkbox,
+    passwordRequireDigit: checkbox,
+
+    // Hashing cost
+    scryptN: scryptCost,
+    scryptR: boundedInt(1, 32, "Hashing block size"),
+    scryptP: boundedInt(1, 16, "Hashing parallelism"),
+
+    // Throttling
+    signinIpLimit: boundedInt(1, 10000, "Sign-in attempts per address"),
+    signinAccountLimit: boundedInt(1, 1000, "Failed sign-ins per account"),
+    signinWindowSeconds: boundedInt(30, 86400, "Sign-in window"),
+    intakeRateLimit: boundedInt(1, 10000, "Intake submissions per address"),
+    intakeWindowSeconds: boundedInt(30, 86400, "Intake window"),
+    intakeMinSeconds: boundedInt(0, 300, "Fastest allowed form fill"),
+  })
+  .refine((v) => v.passwordMinLength <= v.passwordMaxLength, {
+    message: "Minimum password length cannot exceed the maximum.",
+    path: ["passwordMinLength"],
+  });

@@ -142,7 +142,7 @@ export async function changePasswordAction(
     return { ok: false, error: "The new passwords don't match.", fields: { confirm_password: "Doesn't match." } };
   }
 
-  const strength = validatePasswordStrength(next);
+  const strength = await validatePasswordStrength(next);
   if (strength) {
     return { ok: false, error: strength, fields: { new_password: strength } };
   }
@@ -202,4 +202,195 @@ export async function changePasswordAction(
           }.`
         : "Password changed.",
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Proposals: view tracking + client decision                                 */
+/* -------------------------------------------------------------------------- */
+
+export async function markProposalViewedAction(
+  _prev: PortalActionResult | null,
+  formData: FormData,
+): Promise<PortalActionResult> {
+  const session = await getClientSession();
+  if (!session) return { ok: false, error: "Please sign in again." };
+  if (!csrfValid(session, formData.get("csrf"))) {
+    return { ok: false, error: "Your session expired. Reload the page and try again." };
+  }
+
+  const proposalId = String(formData.get("proposal_id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(proposalId)) return { ok: false, error: "Bad proposal." };
+
+  // Only a proposal that was sent and belongs to this client can move to
+  // VIEWED. Anything already decided stays as it is.
+  const updated = await query<{ id: string }>(
+    `UPDATE proposals
+        SET status = 'VIEWED', viewed_at = COALESCE(viewed_at, now()), updated_at = now()
+      WHERE id = $1 AND client_id = $2 AND status = 'SENT'
+      RETURNING id`,
+    [proposalId, session.clientId],
+  );
+
+  if (updated.length > 0) {
+    await recordAudit(
+      { type: "client", id: session.clientUserId, label: session.name },
+      { action: "proposal.viewed", entityType: "proposal", entityId: proposalId, metadata: {}, ...(await requestMeta()) },
+    );
+    revalidatePath("/portal/proposals");
+    revalidatePath("/portal");
+  }
+
+  return { ok: true, message: "Noted." };
+}
+
+export async function decideProposalAction(
+  _prev: PortalActionResult | null,
+  formData: FormData,
+): Promise<PortalActionResult> {
+  const session = await getClientSession();
+  if (!session) return { ok: false, error: "Please sign in again." };
+  if (!csrfValid(session, formData.get("csrf"))) {
+    return { ok: false, error: "Your session expired. Reload the page and try again." };
+  }
+
+  const proposalId = String(formData.get("proposal_id") ?? "");
+  const decision = String(formData.get("decision") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(proposalId) || !["ACCEPTED", "DECLINED"].includes(decision)) {
+    return { ok: false, error: "Bad request." };
+  }
+
+  const proposal = await queryOne<{ id: string; lead_id: string | null; reference: string }>(
+    `SELECT id, lead_id, reference FROM proposals
+      WHERE id = $1 AND client_id = $2 AND status IN ('SENT','VIEWED')`,
+    [proposalId, session.clientId],
+  );
+  if (!proposal) {
+    return { ok: false, error: "This proposal is no longer waiting on your decision." };
+  }
+
+  await tx(async (client) => {
+    await client.query(
+      `UPDATE proposals SET status = $1::proposal_status, decided_at = now(), updated_at = now()
+        WHERE id = $2`,
+      [decision, proposalId],
+    );
+
+    // Accepting advances the lead, mirroring the staff-side transition, so the
+    // pipeline moves itself instead of being re-keyed by hand.
+    if (decision === "ACCEPTED" && proposal.lead_id) {
+      await client.query(
+        `UPDATE leads SET status = 'NEGOTIATION', updated_at = now()
+          WHERE id = $1 AND status IN ('PROPOSAL','CONSULTATION','QUALIFIED','REVIEWING')`,
+        [proposal.lead_id],
+      );
+    }
+
+    await addClientActivity({
+      clientId: session.clientId,
+      kind: "proposal",
+      title: `Proposal ${decision === "ACCEPTED" ? "accepted" : "declined"}`,
+      detail: proposal.reference,
+    });
+  });
+
+  await recordAudit(
+    { type: "client", id: session.clientUserId, label: session.name },
+    {
+      action: decision === "ACCEPTED" ? "proposal.accepted" : "proposal.declined",
+      entityType: "proposal",
+      entityId: proposalId,
+      metadata: { reference: proposal.reference },
+      ...(await requestMeta()),
+    },
+  );
+
+  revalidatePath("/portal/proposals");
+  revalidatePath("/portal");
+
+  return { ok: true, message: decision === "ACCEPTED" ? "Accepted — thank you." : "Declined. Noted." };
+}
+
+/**
+ * The client signs a contract.
+ *
+ * The id is resolved against the session's client and only a contract already in
+ * front of them can be signed, so a guessed id cannot sign anything. The typed
+ * name and the IP are stored: there should be a record of who agreed to what,
+ * and from where.
+ */
+export async function signContractAction(
+  _prev: PortalActionResult | null,
+  formData: FormData,
+): Promise<PortalActionResult> {
+  const session = await getClientSession();
+  if (!session) return { ok: false, error: "Please sign in again." };
+  if (!csrfValid(session, formData.get("csrf"))) {
+    return { ok: false, error: "Your session expired. Reload the page and try again." };
+  }
+
+  const contractId = String(formData.get("contract_id") ?? "");
+  const signerName = String(formData.get("signer_name") ?? "").trim().slice(0, 200);
+  const consent = formData.get("consent");
+
+  if (!/^[0-9a-f-]{36}$/i.test(contractId)) {
+    return { ok: false, error: "That contract could not be found." };
+  }
+  if (signerName.length < 2) {
+    return { ok: false, error: "Type your full name to sign." };
+  }
+  if (consent !== "on") {
+    return { ok: false, error: "Tick the box to confirm you are authorised to sign." };
+  }
+
+  const contract = await queryOne<{
+    id: string;
+    reference: string;
+    title: string;
+    client_id: string;
+  }>(
+    `SELECT id, reference, title, client_id
+       FROM contracts
+      WHERE id = $1 AND client_id = $2 AND status IN ('SENT','AWAITING_SIGNATURE')`,
+    [contractId, session.clientId],
+  );
+  if (!contract) {
+    return { ok: false, error: "This contract is not waiting on your signature." };
+  }
+
+  const meta = await requestMeta();
+
+  await query(
+    `UPDATE contracts
+        SET status = 'SIGNED'::contract_status,
+            signed_at = now(),
+            signed_by_name = $2,
+            signature_ip = $3,
+            updated_at = now()
+      WHERE id = $1`,
+    [contractId, signerName, meta.ipAddress ?? null],
+  );
+
+  await addClientActivity({
+    clientId: session.clientId,
+    kind: "contract",
+    title: "Contract signed",
+    detail: contract.title,
+  });
+
+  await recordAudit(
+    { type: "client", id: session.clientUserId, label: session.name },
+    {
+      action: "contract.signed",
+      entityType: "contract",
+      entityId: contractId,
+      metadata: { reference: contract.reference, signer: signerName },
+      ...meta,
+    },
+  );
+
+  revalidatePath("/portal/contracts");
+  revalidatePath("/portal");
+  revalidatePath("/admin/contracts");
+
+  return { ok: true, message: "Signed. A copy is on file." };
 }

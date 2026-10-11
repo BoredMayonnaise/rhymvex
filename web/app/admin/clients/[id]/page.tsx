@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { requireStaffPermission } from "@/lib/auth/guards";
 import { can } from "@/lib/auth/session";
+import { ClientMessages } from "./ClientMessages";
 import { getClient, listClientActivity, listClientBookings, listClientContacts, listClientContracts, listClientEmails, listClientEngagements, listClientFiles, listClientInvoices, listClientMessages, listClientProjects, listClientProposals, listClientUsers } from "@/lib/data/clients";
 import { auditForEntity, describeAuditAction } from "@/lib/audit";
 import { listInvitations, type Invitation } from "@/lib/auth/invitations";
@@ -23,6 +25,40 @@ import {
 } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
 import { InviteToPortal } from "./InviteToPortal";
+import { UploadFileForm } from "./UploadFileForm";
+
+/**
+ * One line in the commercial spine: proposals → contracts → invoices, each
+ * linking to its section. Presentational, so it lives here rather than in the
+ * data layer, and rendered on the server because it needs no state.
+ */
+function StageRow({
+  label,
+  count,
+  href,
+  empty,
+}: {
+  label: string;
+  count: number;
+  href: string;
+  empty: string;
+}) {
+  return (
+    <li className="border-b border-rhymvex-white/5 last:border-b-0">
+      <Link
+        href={href}
+        className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-rhymvex-white/[0.03]"
+      >
+        <span className="text-xs text-rhymvex-white/70">{label}</span>
+        {count > 0 ? (
+          <span className="rv-table-num text-xs font-semibold text-rhymvex-volt">{count}</span>
+        ) : (
+          <span className="text-[11px] text-rhymvex-white/40">{empty}</span>
+        )}
+      </Link>
+    </li>
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +83,7 @@ export default async function ClientDetailPage({
   const client = await getClient(id);
   if (!client) notFound();
 
-  const [settings, contacts, users, projects, engagements, proposals, contracts, bookings, invoices, files, messages, emails, activity, audit, invitations] =
+  const [settings, contacts, users, projects, engagements, proposals, contracts, bookings, invoices, files, messages, invitations] =
     await Promise.all([
       getOrgSettings(),
       listClientContacts(client.id),
@@ -60,9 +96,6 @@ export default async function ClientDetailPage({
       listClientInvoices(client.id),
       listClientFiles(client.id),
       listClientMessages(client.id),
-      listClientEmails(client.id, true),
-      listClientActivity(client.id),
-      auditForEntity("client", client.id),
       listInvitations("CLIENT_PORTAL"),
     ]);
 
@@ -148,10 +181,42 @@ export default async function ClientDetailPage({
           <p className="rv-stat-label">Portal users</p>
           <p className="rv-stat-value">{users.length}</p>
         </div>
+        <div className="rv-stat min-w-0">
+          <p className="rv-stat-label">Unsigned contracts</p>
+          <p className="rv-stat-value">
+            {
+              contracts.filter((c) => ["SENT", "AWAITING_SIGNATURE"].includes(c.status)).length
+            }
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-2">
+          {/* The commercial spine, in the order it happens. */}
+          <Panel title="Commercial" flush>
+            <ul>
+              <StageRow
+                label="Proposals"
+                count={proposals.length}
+                href="/admin/proposals"
+                empty="None drafted."
+              />
+              <StageRow
+                label="Contracts"
+                count={contracts.length}
+                href="/admin/contracts"
+                empty="None drafted."
+              />
+              <StageRow
+                label="Invoices"
+                count={invoices.length}
+                href="/admin/accounting"
+                empty="None raised."
+              />
+            </ul>
+          </Panel>
+
           <Panel title="Engagements" flush>
             {engagements.length === 0 ? (
               <EmptyState>No engagement recorded.</EmptyState>
@@ -200,7 +265,12 @@ export default async function ClientDetailPage({
                     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2 sm:block">
-                          <p className="text-sm font-semibold text-rhymvex-white">{project.name}</p>
+                          <Link
+                            href={`/admin/projects/${project.id}`}
+                            className="text-sm font-semibold text-rhymvex-white hover:text-rhymvex-volt"
+                          >
+                            {project.name}
+                          </Link>
                           <div className="flex shrink-0 items-center gap-2 sm:hidden">
                             <span className="rv-table-num text-xs text-rhymvex-white/50">
                               {project.progress}%
@@ -246,6 +316,31 @@ export default async function ClientDetailPage({
           </Panel>
 
           <div className="grid gap-6 sm:grid-cols-2">
+            <Panel title="Bookings" flush>
+              {bookings.length === 0 ? (
+                <EmptyState>None scheduled.</EmptyState>
+              ) : (
+                <ul>
+                  {bookings.map((b) => (
+                    <li
+                      key={b.id}
+                      className="border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0"
+                    >
+                      <p className="text-xs font-medium text-rhymvex-white">{b.title}</p>
+                      <p className="mt-0.5 text-[11px] text-rhymvex-volt">
+                        {formatDateTime(b.scheduled_for)}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-rhymvex-white/50">
+                        {humanise(b.kind)} · {b.duration_mins} min
+                        {b.host_name ? ` · ${b.host_name}` : ""}
+                        {b.location ? ` · ${b.location}` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
             <Panel title="Proposals" flush>
               {proposals.length === 0 ? (
                 <EmptyState>None.</EmptyState>
@@ -283,7 +378,20 @@ export default async function ClientDetailPage({
                 <ul>
                   {contracts.map((ct) => (
                     <li key={ct.id} className="border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0">
-                      <p className="text-xs font-medium text-rhymvex-white">{ct.title}</p>
+                      <Link
+                        href={`/admin/contracts/${ct.id}`}
+                        className="text-xs font-medium text-rhymvex-white hover:text-rhymvex-volt"
+                      >
+                        {ct.title}
+                      </Link>
+                      <p className="mt-0.5 font-mono text-[10px] text-rhymvex-white/50">
+                        {ct.reference}
+                      </p>
+                      {ct.signed_by_name ? (
+                        <p className="mt-0.5 text-[10px] text-rhymvex-white/50">
+                          Signed by {ct.signed_by_name}
+                        </p>
+                      ) : null}
                       <div className="mt-1.5 flex items-center justify-between gap-2">
                         <StatusPill
                           value={humanise(ct.status)}
@@ -365,23 +473,23 @@ export default async function ClientDetailPage({
                     <tbody>
                       {invoices.map((invoice) => (
                         <tr key={invoice.id}>
-                          <td className="font-mono text-[11px] text-rhymvex-white/50">
+                          <td data-label="Reference" className="font-mono text-[11px] text-rhymvex-white/50">
                             {invoice.reference}
                           </td>
-                          <td className="text-rhymvex-white/70">{invoice.description}</td>
-                          <td>
+                          <td data-label="Description" className="text-rhymvex-white/70">{invoice.description}</td>
+                          <td data-label="Status">
                             <StatusPill
                               value={humanise(invoice.status)}
                               tone={invoiceStatusTone(invoice.status)}
                             />
                           </td>
-                          <td className="rv-table-num text-right text-rhymvex-white/75">
+                          <td data-label="Amount" className="rv-table-num text-right text-rhymvex-white/75">
                             {formatMoney(invoice.amount, invoice.currency || settings.currency)}
                           </td>
-                          <td className="rv-table-num text-right text-rhymvex-white/55">
+                          <td data-label="Paid" className="rv-table-num text-right text-rhymvex-white/55">
                             {formatMoney(invoice.amount_paid, invoice.currency || settings.currency)}
                           </td>
-                          <td className="whitespace-nowrap text-rhymvex-white/55">
+                          <td data-label="Due" className="whitespace-nowrap text-rhymvex-white/55">
                             {formatDate(invoice.due_at)}
                           </td>
                         </tr>
@@ -394,7 +502,17 @@ export default async function ClientDetailPage({
           </Panel>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <Panel title="Files" flush>
+            <Panel
+              title="Files"
+              flush
+              action={
+                <UploadFileForm
+                  clientId={client.id}
+                  projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+                  csrfToken={session.csrfToken}
+                />
+              }
+            >
               {files.length === 0 ? (
                 <EmptyState>Nothing shared yet.</EmptyState>
               ) : (
@@ -405,7 +523,12 @@ export default async function ClientDetailPage({
                       className="flex items-start justify-between gap-2 border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs text-rhymvex-white/75">{file.name}</p>
+                        <a
+                          href={`/admin/files/${file.id}/download`}
+                          className="block truncate text-xs text-rhymvex-white/75 hover:text-rhymvex-volt"
+                        >
+                          {file.name}
+                        </a>
                         <p className="truncate text-[10px] text-rhymvex-white/50">
                           {file.uploader_name ?? "Rhymvex"} · {relativeTime(file.uploaded_at)}
                           {file.project_name ? ` · ${file.project_name}` : ""}
@@ -430,64 +553,14 @@ export default async function ClientDetailPage({
               {messages.length === 0 ? (
                 <EmptyState>No portal messages.</EmptyState>
               ) : (
-                <ul>
-                  {messages.map((message) => (
-                    <li
-                      key={message.id}
-                      className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0 min-w-0"
-                    >
-                      <p className="truncate text-xs font-medium text-rhymvex-white">
-                        {message.subject || "(no subject)"}
-                      </p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] text-rhymvex-white/50 break-words">
-                        {message.body}
-                      </p>
-                      <p className="mt-1 text-[10px] text-rhymvex-white/50">
-                        {message.from_staff ?? message.from_client} ·{" "}
-                        {relativeTime(message.created_at)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+                <ClientMessages messages={messages} />
               )}
             </Panel>
           </div>
 
-          <Panel title="Business email" flush>
-            {emails.length === 0 ? (
-              <EmptyState>No email recorded for this client.</EmptyState>
-            ) : (
-              <ul>
-                {emails.map((email) => (
-                  <li
-                    key={email.id}
-                    className="flex flex-col gap-1.5 border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-2 sm:py-2.5"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="rv-status shrink-0" data-tone="idle">
-                        <span className="rv-status-dot" aria-hidden="true" />
-                        {email.direction === "OUTBOUND" ? "Out" : "In"}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-xs text-rhymvex-white/70">
-                        {email.subject}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                      {!email.client_visible ? (
-                        <span className="rounded-full border border-rhymvex-ember/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-ember">
-                          Internal
-                        </span>
-                      ) : null}
-                      <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
-                      <span className="text-[10px] text-rhymvex-white/50 whitespace-nowrap">
-                        {relativeTime(email.created_at)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+          <Suspense fallback={<PanelShell title="Business email" />}>
+            <AsyncBusinessEmailPanel clientId={client.id} />
+          </Suspense>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -595,55 +668,131 @@ export default async function ClientDetailPage({
             )}
           </Panel>
 
-          <Panel title="Activity" flush>
-            {activity.length === 0 ? (
-              <EmptyState>Nothing recorded.</EmptyState>
-            ) : (
-              <ul>
-                {activity.map((item) => (
-                  <li
-                    key={item.id}
-                    className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
-                  >
-                    <p className="text-xs text-rhymvex-white/75">{item.title}</p>
-                    {item.detail ? (
-                      <p className="text-[11px] text-rhymvex-white/50">{item.detail}</p>
-                    ) : null}
-                    <p className="text-[10px] text-rhymvex-white/50">
-                      {formatDateTime(item.occurred_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+          <Suspense fallback={<PanelShell title="Activity" />}>
+            <AsyncActivityPanel clientId={client.id} />
+          </Suspense>
 
-          <Panel title="Audit" flush>
-            {audit.length === 0 ? (
-              <EmptyState>Nothing recorded.</EmptyState>
-            ) : (
-              <ul className="max-h-72 overflow-y-auto">
-                {audit.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="border-b border-rhymvex-white/5 px-4 py-2 last:border-b-0"
-                  >
-                    <p className="text-[11px] text-rhymvex-white/70">
-                      <span className="font-semibold text-rhymvex-white">
-                        {entry.actor_label ?? humanise(entry.actor_type)}
-                      </span>{" "}
-                      {describeAuditAction(entry.action).toLowerCase()}
-                    </p>
-                    <p className="text-[10px] text-rhymvex-white/50">
-                      {formatDateTime(entry.occurred_at)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+          <Suspense fallback={<PanelShell title="Audit" />}>
+            <AsyncAuditPanel clientId={client.id} />
+          </Suspense>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Skeleton placeholder for lazy-loaded panels. */
+function PanelShell({ title }: { title: string }) {
+  return (
+    <Panel title={title}>
+      <div className="animate-pulse space-y-3" aria-busy="true">
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <div className="h-8 rounded bg-rhymvex-white/10" />
+        <span className="sr-only">Loading.</span>
+      </div>
+    </Panel>
+  );
+}
+
+/** Lazy-loaded activity panel. Fetches its own data. */
+async function AsyncActivityPanel({ clientId }: { clientId: string }) {
+  const activity = await listClientActivity(clientId);
+  return (
+    <Panel title="Activity" flush>
+      {activity.length === 0 ? (
+        <EmptyState>Nothing recorded.</EmptyState>
+      ) : (
+        <ul>
+          {activity.map((item) => (
+            <li
+              key={item.id}
+              className="border-b border-rhymvex-white/5 px-4 py-2.5 last:border-b-0"
+            >
+              <p className="text-xs text-rhymvex-white/75">{item.title}</p>
+              {item.detail ? (
+                <p className="text-[11px] text-rhymvex-white/50">{item.detail}</p>
+              ) : null}
+              <p className="text-[10px] text-rhymvex-white/50">
+                {formatDateTime(item.occurred_at)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+/** Lazy-loaded audit panel. Fetches its own data. */
+async function AsyncAuditPanel({ clientId }: { clientId: string }) {
+  const audit = await auditForEntity("client", clientId);
+  return (
+    <Panel title="Audit" flush>
+      {audit.length === 0 ? (
+        <EmptyState>Nothing recorded.</EmptyState>
+      ) : (
+        <ul className="max-h-72 overflow-y-auto">
+          {audit.map((entry) => (
+            <li
+              key={entry.id}
+              className="border-b border-rhymvex-white/5 px-4 py-2 last:border-b-0"
+            >
+              <p className="text-[11px] text-rhymvex-white/70">
+                <span className="font-semibold text-rhymvex-white">
+                  {entry.actor_label ?? humanise(entry.actor_type)}
+                </span>{" "}
+                {describeAuditAction(entry.action).toLowerCase()}
+              </p>
+              <p className="text-[10px] text-rhymvex-white/50">
+                {formatDateTime(entry.occurred_at)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+
+/** Lazy-loaded business email panel. Fetches its own data. */
+async function AsyncBusinessEmailPanel({ clientId }: { clientId: string }) {
+  const emails = await listClientEmails(clientId, true);
+  return (
+    <Panel title="Business email" flush>
+      {emails.length === 0 ? (
+        <EmptyState>No email recorded for this client.</EmptyState>
+      ) : (
+        <ul>
+          {emails.map((email) => (
+            <li
+              key={email.id}
+              className="flex flex-col gap-1.5 border-b border-rhymvex-white/5 px-4 py-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-2 sm:py-2.5"
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="rv-status shrink-0" data-tone="idle">
+                  <span className="rv-status-dot" aria-hidden="true" />
+                  {email.direction === "OUTBOUND" ? "Out" : "In"}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-xs text-rhymvex-white/70">
+                  {email.subject}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                {!email.client_visible ? (
+                  <span className="rounded-full border border-rhymvex-ember/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-rhymvex-ember">
+                    Internal
+                  </span>
+                ) : null}
+                <StatusPill value={humanise(email.status)} tone={emailStatusTone(email.status)} />
+                <span className="text-[10px] text-rhymvex-white/50 whitespace-nowrap">
+                  {relativeTime(email.created_at)}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
   );
 }

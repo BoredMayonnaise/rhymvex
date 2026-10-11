@@ -118,31 +118,31 @@ export default async function PortalInvoicesPage() {
                 <tbody>
                   {invoices.map((invoice) => (
                     <tr key={invoice.id}>
-                      <td className="whitespace-nowrap font-mono text-[11px] text-rhymvex-white/50">
+                      <td data-label="Reference" className="whitespace-nowrap font-mono text-[11px] text-rhymvex-white/50">
                         {invoice.reference}
                       </td>
-                      <td className="max-w-xs truncate text-rhymvex-white/70">
+                      <td data-label="Description" className="max-w-xs truncate text-rhymvex-white/70">
                         {invoice.description}
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <StatusPill
                           value={humanise(invoice.status)}
                           tone={invoiceStatusTone(invoice.status)}
                         />
                       </td>
-                      <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/75">
+                      <td data-label="Amount" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/75">
                         {formatMoney(invoice.amount, invoice.currency || settings.currency)}
                       </td>
-                      <td className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
+                      <td data-label="Balance" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
                         {formatMoney(
                           Math.max(0, invoice.amount - invoice.amount_paid),
                           invoice.currency || settings.currency,
                         )}
                       </td>
-                      <td className="whitespace-nowrap text-rhymvex-white/55">
+                      <td data-label="Issued" className="whitespace-nowrap text-rhymvex-white/55">
                         {formatDate(invoice.issued_at)}
                       </td>
-                      <td className="whitespace-nowrap text-rhymvex-white/55">
+                      <td data-label="Due" className="whitespace-nowrap text-rhymvex-white/55">
                         {formatDate(invoice.due_at)}
                       </td>
                     </tr>
