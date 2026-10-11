@@ -129,7 +129,7 @@ export default async function LeadsPage({
                     </td>
                     <td data-label="Value" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
                       {lead.estimated_value
-                        ? formatMoney(lead.estimated_value, settings.currency)
+                        ? formatMoney(lead.estimated_value, lead.currency || settings.currency)
                         : "—"}
                     </td>
                     <td data-label="Received"

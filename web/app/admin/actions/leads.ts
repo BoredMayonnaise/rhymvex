@@ -68,6 +68,7 @@ export async function updateLeadStatusAction(
     assigned_to: formData.get("assigned_to") || null,
     recommended_model: formData.get("recommended_model") || null,
     estimated_value: formData.get("estimated_value") || null,
+    currency: formData.get("currency") || undefined,
     lost_reason: formData.get("lost_reason") || null,
   });
 
@@ -91,15 +92,17 @@ export async function updateLeadStatusAction(
          assigned_to = CASE WHEN $2::boolean THEN $3 ELSE assigned_to END,
          recommended_model = COALESCE($4, recommended_model),
          estimated_value = COALESCE($5, estimated_value),
-         lost_reason = COALESCE($6, lost_reason),
+         currency = COALESCE($6, currency),
+         lost_reason = COALESCE($7, lost_reason),
          updated_at = now()
-       WHERE id = $7`,
+       WHERE id = $8`,
       [
         data.status ?? null,
         formData.has("assigned_to"),
         data.assigned_to ?? null,
         data.recommended_model ?? null,
         data.estimated_value ?? null,
+        data.currency ?? null,
         data.lost_reason ?? null,
         leadId,
       ],

@@ -1,4 +1,5 @@
 import { query, queryOne } from "@/lib/db/client";
+import type { CurrencyTotal } from "@/lib/format";
 
 /**
  * Workspace queries.
@@ -16,13 +17,21 @@ import { query, queryOne } from "@/lib/db/client";
 /* -------------------------------------------------------------------------- */
 
 export type Overview = {
-  pipelineValue: number;
+  /** Open-lead pipe, grouped: a sum across currencies is not a number. */
+  pipeline: CurrencyTotal[];
   openLeadCount: number;
   newLeadCount: number;
   activeProjectCount: number;
-  collectedRevenue: number;
-  outstandingRevenue: number;
-  wonThisQuarter: number;
+  /** Money collected, grouped by the invoice's own currency. */
+  collected: CurrencyTotal[];
+  /** Money owed, grouped by the invoice's own currency. */
+  outstanding: CurrencyTotal[];
+  /** Money owed and overdue, grouped by the invoice's own currency. */
+  overdue: CurrencyTotal[];
+  /** Draft invoices not yet issued, grouped by currency. */
+  draft: CurrencyTotal[];
+  /** Leads won this quarter, grouped by the lead's own currency. */
+  won: CurrencyTotal[];
   upcomingBookings: BookingSummary[];
   newLeads: NewLeadSummary[];
   recentActivity: ActivityItem[];
@@ -51,6 +60,7 @@ export type NewLeadSummary = {
   status: string;
   submitted_at: Date;
   estimated_value: number | null;
+  currency: string | null;
 };
 
 export type ActivityItem = {
@@ -80,7 +90,7 @@ export type DeliveryPulse = {
   byOwner: Array<{ name: string; active: number }>;
 };
 
-export type StatusMixRow = { status: string; count: number; value: number };
+export type StatusMixRow = { status: string; currency: string; count: number; value: number };
 
 export async function getOverview(
   staffId: string,
@@ -90,7 +100,7 @@ export async function getOverview(
     pipeline,
     leadCounts,
     projectCount,
-    revenue,
+    won,
     totals,
     bookings,
     newLeads,
@@ -99,9 +109,14 @@ export async function getOverview(
     pulse,
     statusMix,
   ] = await Promise.all([
-    queryOne<{ total: number | null; count: number }>(
-      `SELECT sum(estimated_value)::float AS total, count(*)::int AS count
-         FROM leads WHERE status = ANY($1::lead_status[]) AND estimated_value IS NOT NULL`,
+    query<CurrencyTotal>(
+      `SELECT coalesce(currency, 'USD') AS currency,
+              sum(estimated_value)::float AS total,
+              count(*)::int AS count
+         FROM leads
+        WHERE status = ANY($1::lead_status[]) AND estimated_value IS NOT NULL
+        GROUP BY currency
+        ORDER BY total DESC`,
       [["RECEIVED", "REVIEWING", "QUALIFIED", "CONSULTATION", "PROPOSAL", "NEGOTIATION"]],
     ),
     queryOne<{ open: number; fresh: number }>(
@@ -114,10 +129,16 @@ export async function getOverview(
     queryOne<{ count: number }>(
       `SELECT count(*)::int AS count FROM projects WHERE status IN ('PLANNING','DISCOVERY','IN_PROGRESS','IN_REVIEW')`,
     ),
-    queryOne<{ won: number | null }>(
-      `SELECT coalesce(sum(estimated_value), 0)::float AS won
-         FROM leads WHERE status = 'WON'
-           AND updated_at > date_trunc('quarter', now())`,
+    query<CurrencyTotal>(
+      `SELECT coalesce(currency, 'USD') AS currency,
+              sum(estimated_value)::float AS total,
+              count(*)::int AS count
+         FROM leads
+        WHERE status = 'WON'
+          AND updated_at > date_trunc('quarter', now())
+          AND estimated_value IS NOT NULL
+        GROUP BY currency
+        ORDER BY total DESC`,
     ),
     getAccountingTotals(),
     options.light
@@ -135,10 +156,10 @@ export async function getOverview(
         LIMIT 6`,
     ),
     query<NewLeadSummary>(
-      `SELECT id, name, company, situation, status, submitted_at, estimated_value
+      `SELECT id, name, company, situation, status, submitted_at, estimated_value, currency
          FROM leads WHERE status = 'RECEIVED'
-        ORDER BY submitted_at ASC
-        LIMIT 6`,
+         ORDER BY submitted_at ASC
+         LIMIT 6`,
     ),
     options.light
       ? Promise.resolve([] as ActivityItem[])
@@ -149,23 +170,27 @@ export async function getOverview(
     getMyFocus(staffId),
     getDeliveryPulse(),
     query<StatusMixRow>(
-      `SELECT status, count(*)::int AS count,
+      `SELECT status, coalesce(currency, 'USD') AS currency,
+              count(*)::int AS count,
               coalesce(sum(estimated_value), 0)::float AS value
          FROM leads
         WHERE status = ANY($1::lead_status[])
-        GROUP BY status ORDER BY count DESC`,
+        GROUP BY status, currency
+        ORDER BY count DESC`,
       [["RECEIVED", "REVIEWING", "QUALIFIED", "CONSULTATION", "PROPOSAL", "NEGOTIATION"]],
     ),
   ]);
 
   return {
-    pipelineValue: pipeline?.total ?? 0,
+    pipeline,
     openLeadCount: leadCounts?.open ?? 0,
     newLeadCount: leadCounts?.fresh ?? 0,
     activeProjectCount: projectCount?.count ?? 0,
-    collectedRevenue: totals.collected,
-    outstandingRevenue: totals.outstanding + totals.overdue,
-    wonThisQuarter: revenue?.won ?? 0,
+    collected: totals.collected,
+    outstanding: totals.outstanding,
+    overdue: totals.overdue,
+    draft: totals.draft,
+    won,
     upcomingBookings: bookings,
     newLeads,
     recentActivity: activity,
@@ -320,7 +345,8 @@ export type ClientSummary = {
   status: string;
   account_manager: string | null;
   project_count: number;
-  outstanding: number;
+  /** Money owed, grouped by the invoice's own currency. */
+  outstanding: CurrencyTotal[];
   portal_users: number;
   created_at: Date;
 };
@@ -331,7 +357,7 @@ export async function listClients(limit = 200, offset = 0): Promise<ClientSummar
             s.name AS account_manager,
             coalesce(pr.project_count, 0) AS project_count,
             coalesce(pu.portal_users, 0) AS portal_users,
-            coalesce(inv.outstanding, 0)::float AS outstanding
+            coalesce(inv.outstanding, '[]'::json) AS outstanding
        FROM clients c
        LEFT JOIN staff s ON s.id = c.account_manager
        LEFT JOIN (
@@ -341,8 +367,15 @@ export async function listClients(limit = 200, offset = 0): Promise<ClientSummar
          SELECT client_id, count(*)::int AS portal_users FROM client_users GROUP BY client_id
        ) pu ON pu.client_id = c.id
        LEFT JOIN (
-         SELECT client_id, sum(amount - amount_paid) AS outstanding FROM invoices
-          WHERE status IN ('SENT','VIEWED','OVERDUE') GROUP BY client_id
+         SELECT client_id,
+                json_agg(json_build_object(
+                  'currency', coalesce(currency, 'USD'),
+                  'total', sum(amount - amount_paid),
+                  'count', 0
+                )) AS outstanding
+           FROM invoices
+          WHERE status IN ('SENT','VIEWED','OVERDUE')
+          GROUP BY client_id
        ) inv ON inv.client_id = c.id
       ORDER BY c.name ASC
       LIMIT $1 OFFSET $2`,
@@ -797,39 +830,54 @@ export async function listInvoices(limit = 200, offset = 0): Promise<InvoiceSumm
 }
 
 export type AccountingTotals = {
-  collected: number;
-  outstanding: number;
-  overdue: number;
-  draft: number;
+  /** Grouped by the invoice's own currency: these are never converted. */
+  collected: CurrencyTotal[];
+  outstanding: CurrencyTotal[];
+  overdue: CurrencyTotal[];
+  draft: CurrencyTotal[];
   invoiceCount: number;
   paidCount: number;
 };
 
 export async function getAccountingTotals(): Promise<AccountingTotals> {
-  const row = await queryOne<{
-    collected: number;
-    outstanding: number;
-    overdue: number;
-    draft: number;
-    invoice_count: number;
-    paid_count: number;
-  }>(
-    `SELECT
-       coalesce(sum(amount_paid) FILTER (WHERE status IN ('PAID','PART_PAID')), 0)::float AS collected,
-       coalesce(sum(amount - amount_paid) FILTER (WHERE status IN ('SENT','VIEWED')), 0)::float AS outstanding,
-       coalesce(sum(amount - amount_paid) FILTER (WHERE status = 'OVERDUE'), 0)::float AS overdue,
-       coalesce(sum(amount) FILTER (WHERE status = 'DRAFT'), 0)::float AS draft,
-       count(*)::int AS invoice_count,
-       count(*) FILTER (WHERE status = 'PAID')::int AS paid_count
-     FROM invoices`,
-  );
+  const [rows, counts] = await Promise.all([
+    query<{
+      currency: string;
+      collected: number | null;
+      outstanding: number | null;
+      overdue: number | null;
+      draft: number | null;
+    }>(
+      `SELECT coalesce(currency, 'USD') AS currency,
+              sum(amount_paid) FILTER (WHERE status IN ('PAID','PART_PAID'))::float AS collected,
+              sum(amount - amount_paid) FILTER (WHERE status IN ('SENT','VIEWED'))::float AS outstanding,
+              sum(amount - amount_paid) FILTER (WHERE status = 'OVERDUE')::float AS overdue,
+              sum(amount) FILTER (WHERE status = 'DRAFT')::float AS draft
+         FROM invoices
+        GROUP BY currency
+        ORDER BY currency`,
+    ),
+    queryOne<{ invoice_count: number; paid_count: number }>(
+      `SELECT count(*)::int AS invoice_count,
+              count(*) FILTER (WHERE status = 'PAID')::int AS paid_count
+         FROM invoices`,
+    ),
+  ]);
+
+  const pivot = (
+    pick: (row: (typeof rows)[number]) => number | null,
+  ): CurrencyTotal[] =>
+    rows
+      .filter((row) => pick(row) !== null)
+      .map((row) => ({ currency: row.currency, total: pick(row) ?? 0, count: 0 }));
+
   return {
-    collected: row?.collected ?? 0,
-    outstanding: row?.outstanding ?? 0,
-    overdue: row?.overdue ?? 0,
-    draft: row?.draft ?? 0,
-    invoiceCount: row?.invoice_count ?? 0,
-    paidCount: row?.paid_count ?? 0,
+    collected: pivot((r) => r.collected),
+    outstanding: pivot((r) => r.outstanding),
+    overdue: pivot((r) => r.overdue),
+    draft: pivot((r) => r.draft),
+    invoiceCount: counts?.invoice_count ?? 0,
+    paidCount: counts?.paid_count ?? 0,
   };
 }
 

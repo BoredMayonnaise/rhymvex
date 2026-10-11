@@ -185,6 +185,9 @@ export const leadUpdateSchema = z.object({
     .nullable()
     .optional(),
   estimated_value: z.coerce.number().min(0).max(10_000_000).nullable().optional(),
+  currency: z.string().trim().toUpperCase().refine(isCurrency, {
+    message: "Unknown currency code.",
+  }).optional(),
   lost_reason: trimmed(500).nullable().optional(),
 });
 

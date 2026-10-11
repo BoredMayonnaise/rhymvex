@@ -119,8 +119,52 @@ export function formatMoney(
   }
 }
 
+/**
+ * A sum that is only ever valid inside one currency.
+ *
+ * Amounts are never converted here, so a total is meaningless unless it names
+ * the currency it was taken in. Every aggregate returns these grouped, and a
+ * caller picks the one it wants to lead with rather than adding across them.
+ */
+export type CurrencyTotal = { currency: string; total: number; count: number };
+
+/**
+ * The totals ordered so the preferred currency leads.
+ *
+ * The preferred currency is the one already displayed elsewhere on the page,
+ * so the headline figure agrees with the table beneath it. When nothing was
+ * recorded in it, the largest total leads instead: showing zero because the
+ * setting happens to differ from the data is worse than showing the biggest
+ * real number with its own symbol.
+ */
+export function preferCurrencyTotals(
+  totals: CurrencyTotal[],
+  preferred: string,
+): CurrencyTotal[] {
+  return [...totals].sort((a, b) => {
+    if (a.currency === preferred && b.currency !== preferred) return -1;
+    if (b.currency === preferred && a.currency !== preferred) return 1;
+    return b.total - a.total;
+  });
+}
+
+/**
+ * The single total to lead with, and whether the rest are worth naming.
+ *
+ * `others` is the sum of everything not led with, so a page can say "and X more
+ * in other currencies" without pretending those amounts are the same money.
+ */
+export function leadTotal(
+  totals: CurrencyTotal[],
+  preferred: string,
+): { primary: CurrencyTotal | null; others: CurrencyTotal[] } {
+  const ordered = preferCurrencyTotals(totals, preferred);
+  const primary = ordered[0] ?? null;
+  return { primary, others: ordered.slice(1) };
+}
+
 /* -------------------------------------------------------------------------- */
-/* Labels                                                                     */
+/* Labels                                                                      */
 /* -------------------------------------------------------------------------- */
 
 /** "BRAND_SYSTEM" → "Brand system". Used wherever an enum meets a human. */

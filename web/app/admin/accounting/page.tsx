@@ -1,6 +1,6 @@
 import { requireStaffPermission } from "@/lib/auth/guards";
 import { getAccountingTotals, listInvoices } from "@/lib/data/workspace";
-import { formatDate, formatMoney, humanise } from "@/lib/format";
+import { formatDate, formatMoney, humanise, leadTotal } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, invoiceStatusTone } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
 
@@ -15,10 +15,13 @@ export default async function AccountingPage() {
   ]);
 
   const currency = settings.currency;
-  const collectionRate =
-    totals.collected + totals.outstanding > 0
-      ? Math.round((totals.collected / (totals.collected + totals.outstanding)) * 100)
-      : 0;
+
+  // Each headline is led with the preferred currency and names anything else,
+  // because a collected figure taken across two currencies is not a number.
+  const collected = leadTotal(totals.collected, currency);
+  const outstanding = leadTotal(totals.outstanding, currency);
+  const overdue = leadTotal(totals.overdue, currency);
+  const draft = leadTotal(totals.draft, currency);
 
   return (
     <div className="flex flex-col gap-6">
@@ -34,23 +37,23 @@ export default async function AccountingPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Collected"
-          value={formatMoney(totals.collected, currency)}
-          meta={`${collectionRate}% of everything invoiced`}
+          value={collected.primary ? formatMoney(collected.primary.total, collected.primary.currency) : "—"}
+          meta={collected.others.length > 0 ? `plus ${collected.others.map((o) => o.currency).join(", ")}` : "settled invoices"}
         />
         <Stat
           label="Outstanding"
-          value={formatMoney(totals.outstanding, currency)}
-          meta="sent or viewed, not yet paid"
+          value={outstanding.primary ? formatMoney(outstanding.primary.total, outstanding.primary.currency) : "—"}
+          meta={outstanding.others.length > 0 ? `plus ${outstanding.others.map((o) => o.currency).join(", ")}` : "sent or viewed, not yet paid"}
         />
         <Stat
           label="Overdue"
-          value={formatMoney(totals.overdue, currency)}
-          meta={totals.overdue > 0 ? "needs chasing" : "nothing overdue"}
+          value={overdue.primary ? formatMoney(overdue.primary.total, overdue.primary.currency) : "—"}
+          meta={overdue.others.length > 0 ? `plus ${overdue.others.map((o) => o.currency).join(", ")}` : overdue.primary && overdue.primary.total > 0 ? "needs chasing" : "nothing overdue"}
         />
         <Stat
           label="Draft"
-          value={formatMoney(totals.draft, currency)}
-          meta="not yet issued"
+          value={draft.primary ? formatMoney(draft.primary.total, draft.primary.currency) : "—"}
+          meta={draft.others.length > 0 ? `plus ${draft.others.map((o) => o.currency).join(", ")}` : "not yet issued"}
         />
       </div>
 

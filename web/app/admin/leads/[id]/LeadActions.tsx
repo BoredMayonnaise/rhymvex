@@ -20,6 +20,7 @@ import {
 } from "@/app/admin/actions";
 import type { Lead } from "@/lib/data/leads";
 import { Modal } from "@/components/ui/Modal";
+import { CURRENCIES, CURRENCY_CODES } from "@/lib/currency";
 
 /**
  * Lead actions.
@@ -265,6 +266,16 @@ function StatusForm({
             placeholder="0"
             className="rv-input"
           />
+        </div>
+        <div>
+          <label htmlFor="currency" className="rv-label">Currency</label>
+          <select id="currency" name="currency" defaultValue={lead.currency || "USD"} className="rv-select">
+            {CURRENCY_CODES.map((code) => (
+              <option key={code} value={code}>
+                {code} — {CURRENCIES[code].label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

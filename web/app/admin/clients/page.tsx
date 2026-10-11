@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { requireStaffPermission } from "@/lib/auth/guards";
 import { listClients } from "@/lib/data/workspace";
-import { formatDate, formatMoney, humanise } from "@/lib/format";
+import { formatDate, formatMoney, humanise, preferCurrencyTotals } from "@/lib/format";
 import { EmptyState, Panel, StatusPill } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
 
@@ -85,9 +85,17 @@ export default async function ClientsPage() {
                       )}
                     </td>
                     <td data-label="Outstanding" className="rv-table-num whitespace-nowrap text-right text-rhymvex-white/70">
-                      {client.outstanding > 0
-                        ? formatMoney(client.outstanding, settings.currency)
-                        : "—"}
+                      {client.outstanding.length === 0 ? (
+                        "—"
+                      ) : (
+                        <span className="flex flex-col items-end gap-0.5">
+                          {preferCurrencyTotals(client.outstanding, settings.currency)
+                            .filter((o) => o.total > 0)
+                            .map((o) => (
+                              <span key={o.currency}>{formatMoney(o.total, o.currency)}</span>
+                            ))}
+                        </span>
+                      )}
                     </td>
                     <td data-label="Since" className="whitespace-nowrap text-rhymvex-white/55">
                       {formatDate(client.created_at)}

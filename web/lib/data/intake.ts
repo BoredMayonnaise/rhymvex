@@ -60,6 +60,9 @@ export async function submitIntake(
     timeline: input.timeline || null,
     referral_source: input.referral_source || null,
     source: leadSource(input.region, band.currency.code),
+    // The currency the bands were actually offered in, recorded on the lead so a
+    // figure is never re-labelled into a currency it was never quoted in.
+    currency: band.currency.code,
     submissionIp: meta.ipAddress,
     userAgent: meta.userAgent,
   });

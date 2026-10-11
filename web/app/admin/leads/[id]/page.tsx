@@ -249,7 +249,7 @@ export default async function LeadDetailPage({
               ) : null}
               <Field label="Estimate">
                 {lead.estimated_value
-                  ? formatMoney(lead.estimated_value, settings.currency)
+                  ? formatMoney(lead.estimated_value, lead.currency || settings.currency)
                   : "—"}
               </Field>
               <Field label="Submitted">

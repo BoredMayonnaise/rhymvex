@@ -8,7 +8,7 @@ import { ClientMessages } from "./ClientMessages";
 import { getClient, listClientActivity, listClientBookings, listClientContacts, listClientContracts, listClientEmails, listClientEngagements, listClientFiles, listClientInvoices, listClientMessages, listClientProjects, listClientProposals, listClientUsers } from "@/lib/data/clients";
 import { auditForEntity, describeAuditAction } from "@/lib/audit";
 import { listInvitations, type Invitation } from "@/lib/auth/invitations";
-import { formatDate, formatDateTime, formatMoney, humanise, relativeTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney, humanise, relativeTime, type CurrencyTotal } from "@/lib/format";
 import {
   Dots,
   EmptyState,
@@ -105,11 +105,23 @@ export default async function ClientDetailPage({
     (i): i is Invitation => i.client_id === client.id,
   );
 
-  const outstanding = invoices.reduce(
-    (sum, i) => sum + (i.status === "PAID" || i.status === "VOID" ? 0 : i.amount - i.amount_paid),
-    0,
+  // Grouped per currency, because an outstanding balance is only a number
+  // within one currency: a client invoiced in two has two balances.
+  const groupBy = (predicate: (i: (typeof invoices)[number]) => number): CurrencyTotal[] => {
+    const map = new Map<string, number>();
+    for (const i of invoices) {
+      const key = i.currency || "USD";
+      map.set(key, (map.get(key) ?? 0) + predicate(i));
+    }
+    return [...map.entries()]
+      .map(([currency, total]) => ({ currency, total, count: 0 }))
+      .filter((t) => t.total > 0);
+  };
+
+  const outstanding = groupBy((i) =>
+    i.status === "PAID" || i.status === "VOID" ? 0 : i.amount - i.amount_paid,
   );
-  const collected = invoices.reduce((sum, i) => sum + i.amount_paid, 0);
+  const collected = groupBy((i) => i.amount_paid);
 
   return (
     <div className="flex flex-col gap-6">
@@ -161,11 +173,27 @@ export default async function ClientDetailPage({
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
         <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Collected</p>
-          <p className="rv-stat-value truncate">{formatMoney(collected, settings.currency)}</p>
+          <p className="rv-stat-value truncate">
+            {collected.length === 0
+              ? "—"
+              : collected.map((c) => (
+                  <span key={c.currency} className="block">
+                    {formatMoney(c.total, c.currency)}
+                  </span>
+                ))}
+          </p>
         </div>
         <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Outstanding</p>
-          <p className="rv-stat-value truncate">{formatMoney(outstanding, settings.currency)}</p>
+          <p className="rv-stat-value truncate">
+            {outstanding.length === 0
+              ? "—"
+              : outstanding.map((c) => (
+                  <span key={c.currency} className="block">
+                    {formatMoney(c.total, c.currency)}
+                  </span>
+                ))}
+          </p>
         </div>
         <div className="rv-stat min-w-0">
           <p className="rv-stat-label">Active projects</p>

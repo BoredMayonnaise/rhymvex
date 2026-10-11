@@ -14,7 +14,7 @@ import {
 import { requireStaffPermission } from "@/lib/auth/guards";
 import { getOverview, listRecentActivity, listUpcomingBookings } from "@/lib/data/workspace";
 import { describeAuditAction } from "@/lib/audit";
-import { formatDateTime, formatMoney, humanise, relativeTime, untilTime } from "@/lib/format";
+import { formatDateTime, formatMoney, humanise, leadTotal, relativeTime, untilTime } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, bookingStatusTone, leadStatusTone } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
 import { PwaInstallButton } from "@/components/pwa/PwaInstallButton";
@@ -29,6 +29,14 @@ export default async function AdminOverviewPage() {
   ]);
 
   const pipelineMax = Math.max(1, ...overview.statusMix.map((r) => r.value));
+
+  // Each headline names its own currency and flags any others, so a total is
+  // never a sum of pounds and pesos presented as one figure.
+  const pipeline = leadTotal(overview.pipeline, settings.currency);
+  const collected = leadTotal(overview.collected, settings.currency);
+  const won = leadTotal(overview.won, settings.currency);
+  const othersIn = (t: { others: { currency: string }[] }) =>
+    t.others.length > 0 ? ` + ${t.others.map((o) => o.currency).join(", ")}` : "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,8 +66,8 @@ export default async function AdminOverviewPage() {
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Pipeline value"
-          value={formatMoney(overview.pipelineValue, settings.currency)}
-          meta={`${overview.openLeadCount} open leads`}
+          value={pipeline.primary ? formatMoney(pipeline.primary.total, pipeline.primary.currency) : "—"}
+          meta={`${pipeline.primary?.count ?? 0} open leads${othersIn(pipeline)}`}
           href="/admin/leads"
         />
         <Stat
@@ -80,14 +88,14 @@ export default async function AdminOverviewPage() {
         />
         <Stat
           label="Collected"
-          value={formatMoney(overview.collectedRevenue, settings.currency)}
-          meta={`${formatMoney(overview.outstandingRevenue, settings.currency)} outstanding`}
+          value={collected.primary ? formatMoney(collected.primary.total, collected.primary.currency) : "—"}
+          meta={`in ${collected.primary?.currency ?? settings.currency}${othersIn(collected)}`}
           href="/admin/accounting"
         />
         <Stat
           label="Won this quarter"
-          value={formatMoney(overview.wonThisQuarter, settings.currency)}
-          meta="from converted leads"
+          value={won.primary ? formatMoney(won.primary.total, won.primary.currency) : "—"}
+          meta={`from converted leads${othersIn(won)}`}
         />
         <Stat
           label="Delivery"
@@ -157,8 +165,13 @@ export default async function AdminOverviewPage() {
                   <EmptyState>No open leads.</EmptyState>
                 ) : (
                   overview.statusMix.map((row) => (
-                    <div key={row.status} className="rv-meter-row">
-                      <span className="truncate text-rhymvex-white/60">{humanise(row.status)}</span>
+                    <div key={`${row.status}-${row.currency}`} className="rv-meter-row">
+                      <span className="truncate text-rhymvex-white/60">
+                        {humanise(row.status)}
+                        {row.currency !== settings.currency ? (
+                          <span className="ml-1 font-mono text-[10px] text-rhymvex-white/35">{row.currency}</span>
+                        ) : null}
+                      </span>
                       <span className="rv-meter-track">
                         <span
                           className="rv-meter-fill"

@@ -1,4 +1,5 @@
 import { query, queryOne, tx } from "@/lib/db/client";
+import type { CurrencyTotal } from "@/lib/format";
 import { isRecordId } from "@/lib/db/ids";
 import { uniqueReference } from "@/lib/db/reference";
 
@@ -51,6 +52,7 @@ export type Lead = {
   client_id: string | null;
   recommended_model: string | null;
   estimated_value: number | null;
+  currency: string | null;
   score: number | null;
   source: string;
   submitted_at: Date;
@@ -63,7 +65,7 @@ const LEAD_COLUMNS = `
   l.id, l.reference, l.name, l.email, l.phone, l.company, l.role_title, l.website,
   l.situation, l.message, l.budget_band, l.timeline, l.referral_source,
   l.status, l.assigned_to, s.name AS assigned_name, l.client_id,
-  l.recommended_model, l.estimated_value, l.score, l.source,
+  l.recommended_model, l.estimated_value, l.currency, l.score, l.source,
   l.submitted_at, l.updated_at, l.last_contacted_at, l.lost_reason
 `;
 
@@ -80,6 +82,7 @@ export type NewLead = {
   timeline?: string | null;
   referral_source?: string | null;
   source?: string;
+  currency?: string;
   submissionIp?: string | null;
   userAgent?: string | null;
 };
@@ -96,8 +99,8 @@ export async function createLead(input: NewLead): Promise<Lead> {
       `INSERT INTO leads
          (reference, name, email, phone, company, role_title, website,
           situation, message, budget_band, timeline, referral_source,
-          status, source, submission_ip, user_agent)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'RECEIVED',$13,$14,$15)
+          status, source, currency, submission_ip, user_agent)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'RECEIVED',$13,$14,$15,$16)
        RETURNING id`,
       [
         reference,
@@ -113,6 +116,7 @@ export async function createLead(input: NewLead): Promise<Lead> {
         input.timeline || null,
         input.referral_source || null,
         input.source || "website-intake",
+        input.currency || "USD",
         input.submissionIp ?? null,
         input.userAgent ?? null,
       ],
@@ -261,13 +265,21 @@ export async function listLeadNotes(leadId: string): Promise<LeadNote[]> {
   );
 }
 
-/** Pipeline value: open leads with an estimate, plus anything awaiting decision. */
-export async function pipelineValue(): Promise<{ total: number; count: number }> {
-  const row = await queryOne<{ total: number | null; count: number }>(
-    `SELECT sum(estimated_value)::float AS total, count(*)::int AS count
+/**
+ * Pipeline value, grouped by the currency each lead was recorded in.
+ *
+ * A sum across currencies is not a number, so this returns one row per
+ * currency and leaves the choice of which to lead with to the caller.
+ */
+export async function pipelineValue(): Promise<CurrencyTotal[]> {
+  return query<CurrencyTotal>(
+    `SELECT coalesce(currency, 'USD') AS currency,
+            sum(estimated_value)::float AS total,
+            count(*)::int AS count
        FROM leads
-      WHERE status = ANY($1::lead_status[]) AND estimated_value IS NOT NULL`,
+      WHERE status = ANY($1::lead_status[]) AND estimated_value IS NOT NULL
+      GROUP BY currency
+      ORDER BY total DESC`,
     [OPEN_LEAD_STATUSES],
   );
-  return { total: row?.total ?? 0, count: row?.count ?? 0 };
 }
