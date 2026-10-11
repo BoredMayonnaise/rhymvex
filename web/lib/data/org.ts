@@ -19,7 +19,7 @@ const FALLBACK: OrgSettings = {
   notification_email: "support@rhymvex.space",
   response_sla_minutes: null,
   timezone: "Europe/Lisbon",
-  currency: "EUR",
+  currency: "USD",
 };
 
 // Wrapped in React's per-request cache: every page reads org settings, and

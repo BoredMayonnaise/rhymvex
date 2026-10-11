@@ -6,6 +6,7 @@ import { FormModal } from "@/components/ui/Modal";
 import { updateSettingsAction, type ActionResult } from "@/app/admin/actions";
 import type { OrgSettings } from "@/lib/data/org";
 import type { EffectMap } from "@/lib/org-setting-effects";
+import { CURRENCIES, CURRENCY_CODES } from "@/lib/currency";
 
 /**
  * Settings form.
@@ -91,15 +92,19 @@ export function SettingsForm({
             <label htmlFor="currency" className="rv-label">
               Currency
             </label>
-            <input
+            <select
               id="currency"
               name="currency"
-              type="text"
               required
-              maxLength={8}
               defaultValue={settings.currency}
-              className="rv-input"
-            />
+              className="rv-select"
+            >
+              {CURRENCY_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {code} — {CURRENCIES[code].label}
+                </option>
+              ))}
+            </select>
             {fields?.currency ? <p className="rv-error">{fields.currency}</p> : null}
             {note("currency")}
           </div>

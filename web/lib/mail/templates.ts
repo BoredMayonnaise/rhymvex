@@ -265,7 +265,7 @@ export function contractSentEmail(input: {
     input.valueTotal !== null
       ? new Intl.NumberFormat("en-GB", {
           style: "currency",
-          currency: input.currency || "EUR",
+          currency: input.currency || "USD",
           maximumFractionDigits: 0,
         }).format(input.valueTotal)
       : null;

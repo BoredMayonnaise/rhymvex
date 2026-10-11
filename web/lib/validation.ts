@@ -58,7 +58,7 @@ export const intakeSchema = z.object({
     .trim()
     .refine(isCurrency, { message: "Unknown currency." })
     .optional()
-    .default("EUR"),
+    .default("USD"),
   // Normalised band. Preferred over the label, because it is comparable across
   // markets. `budget_band` is still accepted on its own so an older client, or
   // a hand-rolled request, is not rejected over a field it was never given.
@@ -257,7 +257,7 @@ export const proposalSchema = z.object({
   exclusions: z.array(trimmed(300)).max(40).default([]),
   timeline: trimmed(200).optional().default(""),
   investment: z.coerce.number().min(0).max(10_000_000).nullable().optional(),
-  currency: trimmed(8).default("EUR"),
+  currency: trimmed(8).default("USD"),
 });
 
 export const contractSchema = z.object({
@@ -267,7 +267,7 @@ export const contractSchema = z.object({
   value_total: z.coerce.number().min(0).max(10_000_000).nullable().optional(),
   proposal_id: uuidLike.nullable().optional(),
   project_id: uuidLike.nullable().optional(),
-  currency: trimmed(8).default("EUR"),
+  currency: trimmed(8).default("USD"),
 });
 
 export const projectSchema = z.object({
@@ -296,7 +296,7 @@ export const invoiceSchema = z.object({
   project_id: uuidLike.nullable().optional(),
   engagement_id: uuidLike.nullable().optional(),
   payment_reference: trimmed(120).optional().default(""),
-  currency: trimmed(8).default("EUR"),
+  currency: trimmed(8).default("USD"),
 });
 
 export const taskSchema = z.object({

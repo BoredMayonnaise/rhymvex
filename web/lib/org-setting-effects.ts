@@ -62,14 +62,11 @@ export function describeSettings(settings: OrgSettings): EffectMap {
     },
 
     currency: {
-      // Not "live". It is read — and read incorrectly, because the amounts it
-      // formats were never converted. Labelling this as working is how a
-      // pipeline total ends up reading ₱29,000 when the pipeline is €29,000.
-      status: "unsafe",
+      status: "live",
       applies:
         "Formats amounts that carry no currency of their own — the lead pipeline, the dashboard, and reports. It does not convert them.",
       caveat:
-        "Amounts are never converted. Invoices, proposals and contracts keep their own currency and are unaffected, but everything else is re-labelled on save, so a pipeline recorded in EUR will start displaying in whatever is set here. This should match the currency your existing figures are actually in.",
+        "Amounts are never converted. Invoices, proposals and contracts keep their own currency and are unaffected. This should match the currency your existing figures are actually in.",
     },
 
     contact_email: {

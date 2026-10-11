@@ -79,7 +79,7 @@ export function CreateContractForm({
     investment !== null
       ? `Total ${new Intl.NumberFormat("en-GB", {
           style: "currency",
-          currency: currency || "EUR",
+          currency: currency || "USD",
         }).format(investment)}, payable as agreed.`
       : "As agreed in the proposal.",
     "",
@@ -151,7 +151,7 @@ export function CreateContractForm({
                 name="currency"
                 type="text"
                 maxLength={8}
-                defaultValue={currency || "EUR"}
+                defaultValue={currency || "USD"}
                 className="rv-input"
               />
             </div>

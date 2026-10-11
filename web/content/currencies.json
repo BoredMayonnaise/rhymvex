@@ -1,6 +1,6 @@
 {
   "$comment": "Rhymvex currencies. Canonical source consumed by web/ via scripts/sync-content.mjs. A currency is its own preference, remembered in the `rv_currency` cookie, and is deliberately SEPARATE from the language in the URL: someone reading the site in English may be budgeting in yen, and someone reading it in Japanese may be quoted in pounds. One URL segment now carries the language only. Bands are AUTHORED per currency, never converted from EUR: an agency prices what a market will bear, there is no honest exchange rate between EUR and NGN for a retainer, and a rate table is a number that is wrong by the time it ships. The four boundaries keep the 1 : 2.6 : 5 shape of the EUR bands so the question asked is comparable across markets. `unsure` is absent on purpose: it is language, not money, and lives in the message catalogue as `form.notSureYet`. `symbol` is stored rather than derived: Intl renders USD as \"US$\" and CNY as \"CN¥\" for a reader in en-GB, which would contradict the $ and ¥ written in these bands, and one source of truth is what keeps the switcher label and the form agreeing. Adding a currency is one entry here, nothing in the app changes.",
-  "default": "EUR",
+  "default": "USD",
   "currencies": [
     {
       "code": "EUR",

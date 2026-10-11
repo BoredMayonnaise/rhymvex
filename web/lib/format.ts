@@ -94,7 +94,7 @@ export function untilTime(value: Date | string | null | undefined): string {
 
 export function formatMoney(
   amount: number | string | null | undefined,
-  currency = "EUR",
+  currency = "USD",
 ): string {
   if (amount === null || amount === undefined) return "—";
   const value = typeof amount === "string" ? Number(amount) : amount;

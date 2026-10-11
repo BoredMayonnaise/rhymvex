@@ -2,7 +2,7 @@
   "$comment": "Rhymvex service packages. Canonical source consumed by web/ and mirrored in docs/business/services-and-pricing.md. The site is client-first: each package leads with the client's situation (`situation`, `forWhen`, `body`) and what it helps them solve (`outcomes`), not with a list of deliverables. `price` is internal-only: the public site leads with scope and does not publish figures. `outcomes` items flagged core are always part of the engagement; the rest are only recommended when they genuinely help. `note` is the tempo glyph shown on the card. Copy rules: no em dashes in prose, no 'X, not Y' constructions, one triad per page at most, and every absolute negative replaced by the mechanism that makes it true. DRAFT pricing, revise before quoting.",
   "meta": {
     "status": "draft",
-    "currency": "EUR",
+    "currency": "USD",
     "publishedPricing": false,
     "note": "Prices are proposed, not approved, and are not published on the site. Cards show the situation, the outcomes and the shape of the engagement; the figure is quoted in a written scope. Update here, then re-run node scripts/sync-content.mjs."
   },
@@ -177,6 +177,6 @@
   "payment": {
     "deposit": "50% to book, 50% on delivery",
     "retainer": "Billed monthly in advance",
-    "currency": "EUR"
+    "currency": "USD"
   }
 }
