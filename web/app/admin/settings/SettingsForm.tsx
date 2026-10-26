@@ -110,6 +110,29 @@ export function SettingsForm({
           </div>
 
           <div>
+            <label htmlFor="reporting_currency" className="rv-label">
+              Reporting currency
+            </label>
+            <select
+              id="reporting_currency"
+              name="reporting_currency"
+              defaultValue={settings.reporting_currency ?? ""}
+              className="rv-select"
+            >
+              <option value="">Off — totals stay per currency</option>
+              {CURRENCY_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {code} — {CURRENCIES[code].label}
+                </option>
+              ))}
+            </select>
+            {fields?.reporting_currency ? (
+              <p className="rv-error">{fields.reporting_currency}</p>
+            ) : null}
+            {note("reporting_currency")}
+          </div>
+
+          <div>
             <label htmlFor="contact_email" className="rv-label">
               Public contact address
             </label>

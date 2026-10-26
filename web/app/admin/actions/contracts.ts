@@ -5,6 +5,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { csrfValid, getStaffSession } from "@/lib/auth/session";
 import { isRecordId } from "@/lib/db/ids";
 import { recordAudit } from "@/lib/audit";
+import { convert, reportingCurrency } from "@/lib/fx";
 import { humanise } from "@/lib/format";
 import { requestMeta } from "@/lib/ratelimit";
 import { uniqueReference } from "@/lib/db/reference";
@@ -93,12 +94,24 @@ export async function createContractFromProposalAction(
   const reference = await uniqueReference("contracts", "CON");
   const meta = await requestMeta();
 
+  // Snapshot the reporting-currency equivalent at today's rate, exactly as the
+  // proposal path does, so a signed contract contributes a fixed figure to a
+  // cross-currency total rather than one that drifts with the market.
+  const fx = await convert(
+    data.value_total,
+    data.currency,
+    await reportingCurrency(),
+    new Date().toISOString().slice(0, 10),
+  );
+
   const contract = await queryOne<{ id: string }>(
-    `INSERT INTO contracts (reference, client_id, proposal_id, project_id, title, body, value_total, currency, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+    `INSERT INTO contracts (reference, client_id, proposal_id, project_id, title, body, value_total, currency, created_by,
+                            reporting_currency, reporting_amount, fx_rate, fx_rate_date)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
     [
       reference, data.client_id, proposal.id, data.project_id, data.title, data.body,
       data.value_total, data.currency, session.staffId,
+      fx?.currency ?? null, fx?.amount ?? null, fx?.rate ?? null, fx?.rateDate ?? null,
     ],
   );
 

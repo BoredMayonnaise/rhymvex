@@ -1,6 +1,6 @@
 import { requireClientSession } from "@/lib/auth/guards";
 import { listPortalInvoices } from "@/lib/data/portal";
-import { formatDate, formatMoney, humanise } from "@/lib/format";
+import { formatMoney, formatDate, humanise, leadTotal, sumByCurrency } from "@/lib/format";
 import { EmptyState, Panel, Stat, StatusPill, invoiceStatusTone } from "@/components/ui/primitives";
 import { getOrgSettings } from "@/lib/data/org";
 
@@ -13,10 +13,25 @@ export default async function PortalInvoicesPage() {
     getOrgSettings(),
   ]);
 
-  const outstanding = invoices
-    .filter((i) => ["SENT", "VIEWED", "OVERDUE"].includes(i.status))
-    .reduce((sum, i) => sum + (i.amount - i.amount_paid), 0);
-  const paid = invoices.reduce((sum, i) => sum + i.amount_paid, 0);
+  // A client can be invoiced in more than one currency, and this workspace
+  // already supports that: `invoice.currency || settings.currency` is used per
+  // row below. A single `reduce` here would add those rows together and label
+  // the result with one symbol, so the headline would contradict the table it
+  // sits above. Grouped instead, led with the client's own currency.
+  const open = invoices.filter((i) => ["SENT", "VIEWED", "OVERDUE"].includes(i.status));
+  const outstanding = leadTotal(
+    sumByCurrency(open, (i) => i.amount - i.amount_paid, (i) => i.currency, settings.currency),
+    settings.currency,
+  );
+  const paid = leadTotal(
+    sumByCurrency(invoices, (i) => i.amount_paid, (i) => i.currency, settings.currency),
+    settings.currency,
+  );
+
+  const outstandingValue = outstanding.primary
+    ? formatMoney(outstanding.primary.total, outstanding.primary.currency)
+    : "—";
+  const paidValue = paid.primary ? formatMoney(paid.primary.total, paid.primary.currency) : "—";
 
   return (
     <div className="flex flex-col gap-6">
@@ -35,13 +50,23 @@ export default async function PortalInvoicesPage() {
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-2">
           <Stat
             label="Outstanding"
-            value={formatMoney(outstanding, settings.currency)}
-            meta={outstanding > 0 ? "payment due" : "nothing due"}
+            value={outstandingValue}
+            meta={
+              outstanding.others.length > 0
+                ? `plus ${outstanding.others.map((o) => o.currency).join(", ")}`
+                : outstanding.primary && outstanding.primary.total > 0
+                  ? "payment due"
+                  : "nothing due"
+            }
           />
           <Stat
             label="Paid to date"
-            value={formatMoney(paid, settings.currency)}
-            meta="across all engagements"
+            value={paidValue}
+            meta={
+              paid.others.length > 0
+                ? `plus ${paid.others.map((o) => o.currency).join(", ")}`
+                : "across all engagements"
+            }
           />
         </div>
       ) : null}

@@ -23,6 +23,21 @@ export default async function AccountingPage() {
   const overdue = leadTotal(totals.overdue, currency);
   const draft = leadTotal(totals.draft, currency);
 
+  // The converted figure, when a reporting currency is configured. It sits
+  // beside the per-currency groups rather than replacing them: the groups are
+  // what is actually owed, the converted figure is what that adds up to in one
+  // currency, at rates frozen on the day each invoice was raised.
+  const rep = totals.reporting;
+  const convertedMeta = (value: number | null): string => {
+    if (!rep) return "";
+    const dates = rep.rateDates.length > 0 ? `rates ${rep.rateDates.join(", ")}` : "no rates used";
+    const gap =
+      rep.unconverted.length > 0
+        ? ` · excludes ${rep.unconverted.map((u) => u.currency).join(", ")} (no rate)`
+        : "";
+    return value === null ? "nothing converted" : `${dates}${gap}`;
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <header className="rv-page-head">
@@ -30,6 +45,7 @@ export default async function AccountingPage() {
           <h1 className="rv-page-title">Accounting</h1>
           <p className="rv-page-sub">
             {totals.invoiceCount} invoices · {totals.paidCount} settled
+            {rep ? ` · reporting in ${rep.currency}` : ""}
           </p>
         </div>
       </header>
@@ -56,6 +72,45 @@ export default async function AccountingPage() {
           meta={draft.others.length > 0 ? `plus ${draft.others.map((o) => o.currency).join(", ")}` : "not yet issued"}
         />
       </div>
+
+      {rep ? (
+        <Panel title={`In ${rep.currency}`}>
+          <p className="m-0 mb-3 text-xs leading-relaxed text-rhymvex-white/50">
+            Every figure above, converted into {rep.currency} at the rate published on the day
+            each invoice was raised. The rate is fixed to the invoice, so a total does not change
+            when the market moves.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              label="Collected"
+              value={rep.collected === null ? "—" : formatMoney(rep.collected, rep.currency)}
+              meta={convertedMeta(rep.collected)}
+            />
+            <Stat
+              label="Outstanding"
+              value={rep.outstanding === null ? "—" : formatMoney(rep.outstanding, rep.currency)}
+              meta={convertedMeta(rep.outstanding)}
+            />
+            <Stat
+              label="Overdue"
+              value={rep.overdue === null ? "—" : formatMoney(rep.overdue, rep.currency)}
+              meta={convertedMeta(rep.overdue)}
+            />
+            <Stat
+              label="Draft"
+              value={rep.draft === null ? "—" : formatMoney(rep.draft, rep.currency)}
+              meta={convertedMeta(rep.draft)}
+            />
+          </div>
+          {rep.unconverted.length > 0 ? (
+            <p className="m-0 mt-3 text-xs leading-relaxed text-rhymvex-ember/80">
+              {rep.unconverted.map((u) => `${u.currency} ${formatMoney(u.total, u.currency)}`).join(", ")}{" "}
+              could not be converted — no published rate. These are excluded above rather than
+              estimated. Run <span className="font-mono">npm run fx:backfill</span> to retry.
+            </p>
+          ) : null}
+        </Panel>
+      ) : null}
 
       <Panel title="Invoices" flush>
         {invoices.length === 0 ? (

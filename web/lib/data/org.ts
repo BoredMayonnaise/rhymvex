@@ -11,6 +11,12 @@ export type OrgSettings = {
   response_sla_minutes: number | null;
   timezone: string;
   currency: string;
+  /**
+   * The currency cross-currency totals are converted into. Null means conversion
+   * is switched off and every total stays grouped in its own currency, which is
+   * the safe default: nothing is converted unless somebody asks for it.
+   */
+  reporting_currency: string | null;
 };
 
 const FALLBACK: OrgSettings = {
@@ -20,13 +26,14 @@ const FALLBACK: OrgSettings = {
   response_sla_minutes: null,
   timezone: "Europe/Lisbon",
   currency: "USD",
+  reporting_currency: null,
 };
 
 // Wrapped in React's per-request cache: every page reads org settings, and
 // without this each one triggers its own query for the same row.
 export const getOrgSettings = cache(async (): Promise<OrgSettings> => {
   const row = await queryOne<OrgSettings>(
-    "SELECT company_name, contact_email, notification_email, response_sla_minutes, timezone, currency FROM org_settings WHERE id = true",
+    "SELECT company_name, contact_email, notification_email, response_sla_minutes, timezone, currency, reporting_currency FROM org_settings WHERE id = true",
   );
   return row ?? FALLBACK;
 });

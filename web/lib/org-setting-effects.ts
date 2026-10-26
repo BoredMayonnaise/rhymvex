@@ -69,6 +69,14 @@ export function describeSettings(settings: OrgSettings): EffectMap {
         "Amounts are never converted. Invoices, proposals and contracts keep their own currency and are unaffected. This should match the currency your existing figures are actually in.",
     },
 
+    reporting_currency: {
+      status: "live",
+      applies:
+        "The converted totals on the accounting page. Empty means no conversion happens at all and every total stays grouped in its own currency.",
+      caveat:
+        "Conversion uses the rate published on the day each document was raised, and that rate is stored against the document. A total therefore does not move when the market does. Run `npm run fx:backfill` after setting this to convert documents that predate it.",
+    },
+
     contact_email: {
       status: "partial",
       applies: "The contact address on the intake form, and nowhere else.",

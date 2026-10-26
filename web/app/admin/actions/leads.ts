@@ -6,6 +6,7 @@ import { query, queryOne, tx } from "@/lib/db/client";
 import { csrfValid, getStaffSession } from "@/lib/auth/session";
 import { isRecordId } from "@/lib/db/ids";
 import { recordAudit } from "@/lib/audit";
+import { convert, reportingCurrency } from "@/lib/fx";
 import { humanise } from "@/lib/format";
 import { requestMeta } from "@/lib/ratelimit";
 import { uniqueReference } from "@/lib/db/reference";
@@ -441,6 +442,7 @@ export async function createProposalForLeadAction(
     exclusions: splitLines(formData.get("exclusions")),
     timeline: formData.get("timeline") || "",
     investment: formData.get("investment") || null,
+    currency: formData.get("currency") || undefined,
   });
 
   if (!parsed.success) {
@@ -451,13 +453,26 @@ export async function createProposalForLeadAction(
   const data = parsed.data;
   const reference = await uniqueReference("proposals", "PROP");
 
+  // Snapshot the reporting-currency equivalent now, at today's rate, so the
+  // proposal's contribution to a cross-currency total never changes afterwards.
+  // A failure here leaves the reporting columns null, which excludes the
+  // proposal from the converted total rather than guessing at a rate.
+  const fx = await convert(
+    data.investment,
+    data.currency,
+    await reportingCurrency(),
+    new Date().toISOString().slice(0, 10),
+  );
+
   const proposal = await queryOne<{ id: string }>(
-    `INSERT INTO proposals (reference, client_id, lead_id, title, summary, model, scope, deliverables, exclusions, timeline, investment, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+    `INSERT INTO proposals (reference, client_id, lead_id, title, summary, model, scope, deliverables, exclusions, timeline, investment, currency, created_by,
+                            reporting_currency, reporting_amount, fx_rate, fx_rate_date)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
     [
       reference, data.client_id, data.lead_id, data.title, data.summary, data.model,
       data.scope, data.deliverables, data.exclusions, data.timeline, data.investment,
-      session.staffId,
+      data.currency, session.staffId,
+      fx?.currency ?? null, fx?.amount ?? null, fx?.rate ?? null, fx?.rateDate ?? null,
     ],
   );
 

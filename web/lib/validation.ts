@@ -249,6 +249,28 @@ export const bookingSchema = z.object({
   outcome: trimmed(4000).optional().default(""),
 });
 
+/**
+ * Schema for a booking request submitted by a client from the portal.
+ *
+ * Narrower than the staff `bookingSchema`: no status (always REQUESTED), no
+ * host (staff assigns), no location (staff sets), no outcome (post-call).
+ * The `scheduled_for` must be in the future — a client cannot request a
+ * booking in the past.
+ */
+export const bookingRequestSchema = z.object({
+  title: trimmed(160).min(1, "Give the booking a title."),
+  kind: z.enum(["DISCOVERY", "CONSULTATION", "REVIEW", "WORKSHOP", "CHECK_IN", "OTHER"]),
+  scheduled_for: z
+    .string()
+    .min(1, "Pick a date and time.")
+    .refine((v) => {
+      const d = new Date(v);
+      return !Number.isNaN(d.getTime()) && d.getTime() > Date.now();
+    }, "That time is in the past. Choose a future date."),
+  duration_mins: z.coerce.number().int().min(15).max(480).default(45),
+  agenda: trimmed(4000).optional().default(""),
+});
+
 export const proposalSchema = z.object({
   client_id: uuidLike.nullable().optional(),
   lead_id: uuidLike.nullable().optional(),
@@ -355,6 +377,16 @@ export const settingsSchema = z.object({
   currency: z.string().trim().toUpperCase().refine(isCurrency, {
     message: "Unknown currency code.",
   }),
+  // The currency cross-currency totals are converted into. Optional and empty by
+  // default: an unset value means totals stay grouped per currency and nothing is
+  // converted, which is the safe default for a workspace that operates in one
+  // currency. Only when set does any conversion happen at all.
+  reporting_currency: z
+    .union([z.literal(""), z.string().trim().toUpperCase().refine(isCurrency, {
+      message: "Unknown currency code.",
+    })])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? null : v)),
 });
 
 export const milestoneSchema = z.object({

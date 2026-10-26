@@ -2,6 +2,7 @@ import { requireClientSession } from "@/lib/auth/guards";
 import { listPortalBookings } from "@/lib/data/portal";
 import { formatDateTime, humanise } from "@/lib/format";
 import { EmptyState, Panel, StatusPill, bookingStatusTone } from "@/components/ui/primitives";
+import { BookingRequestModal } from "./BookingRequestModal";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function PortalBookingsPage() {
             {upcoming.length} upcoming
           </p>
         </div>
+        <BookingRequestModal csrfToken={session.csrfToken} />
       </header>
 
       <Panel title="Upcoming" flush>

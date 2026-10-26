@@ -51,6 +51,7 @@ export default async function SettingsPage() {
   const display: Record<keyof typeof settings, string> = {
     response_sla_minutes: slaMinutes ? `${slaMinutes} min` : "None",
     currency: settings.currency,
+    reporting_currency: settings.reporting_currency ?? "Off",
     contact_email: settings.contact_email,
     notification_email: settings.notification_email,
     company_name: settings.company_name,
@@ -63,6 +64,7 @@ export default async function SettingsPage() {
     "notification_email",
     "timezone",
     "currency",
+    "reporting_currency",
     "response_sla_minutes",
   ];
 

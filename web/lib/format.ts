@@ -129,6 +129,48 @@ export function formatMoney(
 export type CurrencyTotal = { currency: string; total: number; count: number };
 
 /**
+ * Group a list of rows into per-currency totals.
+ *
+ * This is the only correct way to total money in this codebase, and it exists
+ * so no page has to hand-roll a `reduce`. A plain `reduce` over mixed rows
+ * silently adds pesos to pounds and labels the result with one symbol, which is
+ * not a number at all — it is a number-shaped lie. Every aggregate here is
+ * grouped, and the caller leads with one currency and names the rest.
+ *
+ * Rows with no currency of their own fall back to `fallback`, which is the org
+ * setting. That matches how the same rows are rendered individually, so a
+ * single-currency workspace totals to exactly what it always did.
+ *
+ * `value` returns null for a row that has no amount (an unset `investment`, for
+ * instance); those rows are skipped rather than counted as zero, so a count
+ * always means "rows that actually contributed money".
+ */
+export function sumByCurrency<T>(
+  rows: readonly T[],
+  value: (row: T) => number | null | undefined,
+  currency: (row: T) => string | null | undefined,
+  fallback: string,
+): CurrencyTotal[] {
+  const byCurrency = new Map<string, { total: number; count: number }>();
+
+  for (const row of rows) {
+    const amount = value(row);
+    if (amount === null || amount === undefined || !Number.isFinite(amount)) continue;
+    const code = currency(row) || fallback;
+    const entry = byCurrency.get(code) ?? { total: 0, count: 0 };
+    entry.total += amount;
+    entry.count += 1;
+    byCurrency.set(code, entry);
+  }
+
+  return [...byCurrency].map(([code, entry]) => ({
+    currency: code,
+    total: entry.total,
+    count: entry.count,
+  }));
+}
+
+/**
  * The totals ordered so the preferred currency leads.
  *
  * The preferred currency is the one already displayed elsewhere on the page,

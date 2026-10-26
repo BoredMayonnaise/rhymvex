@@ -50,7 +50,81 @@ Seeded credentials (development only):
 | `npm run db:migrate` | Apply pending migrations |
 | `npm run db:seed` | Seed demo data (idempotent) |
 | `npm run db:reset` | Drop the volume, migrate, seed |
+| `npm run admin:status` | Show what is demo data and what is real |
+| `npm run admin:purge` | Delete every seeded row (keeps `audit_log`) |
+| `npm run admin:create` | Create the first administrator |
+| `npm run admin:reset` | Create the administrator, then purge the seed |
+| `npm run live:reset` | Restart the production systemd unit |
+| `npm run fx:backfill` | Convert existing documents to the reporting currency |
 | `npm run verify` | Run all three verification suites |
+
+### Multi-currency
+
+Money is stored in the currency it was agreed in and is never rewritten. A total
+across currencies is only meaningful if each amount is converted at a rate
+somebody can point at, so:
+
+- **Per-currency groups are always shown, and are always correct.** They depend
+  on no rate. The client portal and every admin list show these.
+- **A converted total appears only when a reporting currency is set.** Set it in
+  Settings → Reporting currency. Left empty, nothing is converted and every total
+  stays grouped.
+- **The rate is frozen to the document.** When an invoice, proposal or contract
+  is created, the reporting-currency equivalent and the rate used are stored on
+  that row. A report therefore shows the same number every time it is opened,
+  and a rate move does not silently restate last quarter.
+- **An amount with no published rate is left unconverted and named**, never
+  treated as parity and never silently dropped from the total.
+
+Rates come from `open.er-api.com` (no API key) and are cached in `fx_rates` per
+date, so one fetch covers every pair in use that day. Documents created before a
+reporting currency was set are converted by:
+
+```bash
+npm run fx:backfill     # idempotent; only touches rows with no snapshot
+```
+
+The database enforces the rule: a row either has a complete conversion snapshot
+(currency, amount, rate and rate date together) or none at all. A partially
+converted row cannot be stored, because a converted figure with no rate behind it
+is a number nobody can justify.
+
+### Going live
+
+The seed is development scaffolding and sets a password that is published in
+this file. Before the platform is exposed, replace it with a real account and
+remove the demo rows:
+
+```bash
+npm run admin:create -- --email you@example.com --name "Your Name"   # prompts for the password
+npm run admin:purge
+```
+
+`admin:create` prompts for the password with the echo suppressed, so it does
+not land in your shell history; `--password` exists for scripted use and should
+not be used interactively. `admin:reset` does both in one command.
+
+`admin:create` and `admin:reset` need a terminal to prompt for the password.
+Run them from your shell, not from a script or a piped command — with no
+terminal they refuse rather than hanging. `admin:purge` and `admin:status` never
+prompt and are safe to run anywhere.
+
+Three things this deliberately does not do:
+
+- **`audit_log` is kept.** It is append-only, enforced by a database trigger,
+  and the trail is the point. Entries referencing purged rows are a normal
+  consequence of an append-only log. `tsx scripts/admin.ts --purge --purge-audit`
+  drops the trigger and wipes it, at the cost of unverifiable history.
+- **`org_settings` is kept.** It is a single row the platform needs to run, not
+  demo data. Change the company name, contact address and currency from
+  Settings once you are signed in.
+- **`admin:purge` refuses to run if it would remove every account that can sign
+  in.** There is no self-service signup and no password reset, so the seeded
+  staff are the only way in until a real account exists. Create first.
+
+`npm run verify` still expects the seed: it signs in as `sam@rhymvex.com` and
+builds fixtures against `CLI-DEMO01` / `CLI-DEMO02`. Run it before purging, or
+re-seed a development database with `npm run db:reset`.
 
 ---
 

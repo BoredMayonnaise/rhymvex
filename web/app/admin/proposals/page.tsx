@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { requireStaffPermission } from "@/lib/auth/guards";
 import { listContracts, listProposals } from "@/lib/data/workspace";
-import { formatDate, formatMoney, humanise, relativeTime } from "@/lib/format";
+import { formatDate, formatMoney, humanise, leadTotal, relativeTime, sumByCurrency } from "@/lib/format";
 import {
   EmptyState,
   Panel,
@@ -23,7 +23,13 @@ export default async function ProposalsPage() {
   ]);
 
   const live = proposals.filter((p) => ["SENT", "VIEWED"].includes(p.status));
-  const liveValue = live.reduce((sum, p) => sum + (p.investment ?? 0), 0);
+  // Proposals are quoted in whichever currency the client's market prices in, so
+  // "in play" is grouped by currency rather than summed. `investment` is
+  // nullable and unset proposals are skipped rather than counted as zero.
+  const liveValue = leadTotal(
+    sumByCurrency(live, (p) => p.investment, (p) => p.currency, settings.currency),
+    settings.currency,
+  );
   const accepted = proposals.filter((p) => p.status === "ACCEPTED");
   // An accepted proposal with no contract behind it is the gap that costs money,
   // so it is surfaced here as well as on the contracts page.
@@ -36,8 +42,14 @@ export default async function ProposalsPage() {
         <div>
           <h1 className="rv-page-title">Proposals</h1>
           <p className="rv-page-sub">
-            {live.length} awaiting a decision · {formatMoney(liveValue, settings.currency)} in play ·{" "}
-            {accepted.length} accepted
+            {live.length} awaiting a decision ·{" "}
+            {liveValue.primary
+              ? formatMoney(liveValue.primary.total, liveValue.primary.currency)
+              : "—"}{" "}
+            in play · {accepted.length} accepted
+            {liveValue.others.length > 0
+              ? ` · plus ${liveValue.others.map((o) => o.currency).join(", ")}`
+              : ""}
           </p>
         </div>
       </header>
@@ -50,8 +62,14 @@ export default async function ProposalsPage() {
         />
         <Stat
           label="In play"
-          value={formatMoney(liveValue, settings.currency)}
-          meta="across live proposals"
+          value={
+            liveValue.primary ? formatMoney(liveValue.primary.total, liveValue.primary.currency) : "—"
+          }
+          meta={
+            liveValue.others.length > 0
+              ? `plus ${liveValue.others.map((o) => o.currency).join(", ")}`
+              : "across live proposals"
+          }
         />
         <Stat
           label="Accepted"

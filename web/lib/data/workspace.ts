@@ -1,5 +1,6 @@
 import { query, queryOne } from "@/lib/db/client";
 import type { CurrencyTotal } from "@/lib/format";
+import { getReportingCurrency } from "@/lib/reporting";
 
 /**
  * Workspace queries.
@@ -845,9 +846,28 @@ export type AccountingTotals = {
   draft: CurrencyTotal[];
   invoiceCount: number;
   paidCount: number;
+  /**
+   * The same money converted into the reporting currency, for the admin who
+   * needs one figure. Null when no reporting currency is set. Each entry also
+   * carries what could not be converted, so an incomplete total is visible as
+   * incomplete rather than quietly short.
+   */
+  reporting: {
+    currency: string;
+    collected: number | null;
+    outstanding: number | null;
+    overdue: number | null;
+    draft: number | null;
+    /** Amounts with no published rate, grouped in their own currencies. */
+    unconverted: CurrencyTotal[];
+    /** The rate dates used, so the figure can be justified. */
+    rateDates: string[];
+  } | null;
 };
 
 export async function getAccountingTotals(): Promise<AccountingTotals> {
+  const reporting = await getReportingCurrency();
+
   const [rows, counts] = await Promise.all([
     query<{
       currency: string;
@@ -855,12 +875,25 @@ export async function getAccountingTotals(): Promise<AccountingTotals> {
       outstanding: number | null;
       overdue: number | null;
       draft: number | null;
+      // Converted counterparts, summed from the per-document snapshot columns.
+      // NULL for a document that was never converted, which is what makes the
+      // gap visible rather than counted as zero.
+      collected_fx: number | null;
+      outstanding_fx: number | null;
+      overdue_fx: number | null;
+      draft_fx: number | null;
+      fx_dates: string[] | null;
     }>(
       `SELECT coalesce(currency, 'USD') AS currency,
               sum(amount_paid) FILTER (WHERE status IN ('PAID','PART_PAID'))::float AS collected,
               sum(amount - amount_paid) FILTER (WHERE status IN ('SENT','VIEWED'))::float AS outstanding,
               sum(amount - amount_paid) FILTER (WHERE status = 'OVERDUE')::float AS overdue,
-              sum(amount) FILTER (WHERE status = 'DRAFT')::float AS draft
+              sum(amount) FILTER (WHERE status = 'DRAFT')::float AS draft,
+              sum(reporting_amount) FILTER (WHERE status IN ('PAID','PART_PAID'))::float AS collected_fx,
+              sum(reporting_amount) FILTER (WHERE status IN ('SENT','VIEWED'))::float AS outstanding_fx,
+              sum(reporting_amount) FILTER (WHERE status = 'OVERDUE')::float AS overdue_fx,
+              sum(reporting_amount) FILTER (WHERE status = 'DRAFT')::float AS draft_fx,
+              array_remove(array_agg(DISTINCT fx_rate_date::text), NULL) AS fx_dates
          FROM invoices
         GROUP BY currency
         ORDER BY currency`,
@@ -879,6 +912,33 @@ export async function getAccountingTotals(): Promise<AccountingTotals> {
       .filter((row) => pick(row) !== null)
       .map((row) => ({ currency: row.currency, total: pick(row) ?? 0, count: 0 }));
 
+  // A group whose converted sum is null while its raw sum is not means some
+  // invoices in that currency have no rate. Reported so the converted figure is
+  // never presented as complete when it is not.
+  const unconverted: CurrencyTotal[] = reporting
+    ? rows
+        .filter((row) => {
+          const raw = row.outstanding ?? row.collected ?? row.overdue ?? row.draft;
+          const fx = row.outstanding_fx ?? row.collected_fx ?? row.overdue_fx ?? row.draft_fx;
+          return raw !== null && fx === null;
+        })
+        .map((row) => ({
+          currency: row.currency,
+          total: row.outstanding ?? row.collected ?? row.overdue ?? row.draft ?? 0,
+          count: 0,
+        }))
+    : [];
+
+  const rateDates = [
+    ...new Set(rows.flatMap((row) => row.fx_dates ?? [])),
+  ].sort().reverse();
+
+  const sumOf = (pick: (row: (typeof rows)[number]) => number | null): number | null => {
+    const values = rows.map(pick).filter((v): v is number => v !== null);
+    if (values.length === 0) return null;
+    return Math.round(values.reduce((a, b) => a + b, 0) * 100) / 100;
+  };
+
   return {
     collected: pivot((r) => r.collected),
     outstanding: pivot((r) => r.outstanding),
@@ -886,6 +946,17 @@ export async function getAccountingTotals(): Promise<AccountingTotals> {
     draft: pivot((r) => r.draft),
     invoiceCount: counts?.invoice_count ?? 0,
     paidCount: counts?.paid_count ?? 0,
+    reporting: reporting
+      ? {
+          currency: reporting,
+          collected: sumOf((r) => r.collected_fx),
+          outstanding: sumOf((r) => r.outstanding_fx),
+          overdue: sumOf((r) => r.overdue_fx),
+          draft: sumOf((r) => r.draft_fx),
+          unconverted,
+          rateDates,
+        }
+      : null,
   };
 }
 

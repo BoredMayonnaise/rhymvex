@@ -34,6 +34,7 @@ export async function updateSettingsAction(
     response_sla_minutes: rawSla === "" ? null : Number(rawSla),
     timezone: formData.get("timezone"),
     currency: formData.get("currency"),
+    reporting_currency: formData.get("reporting_currency") ?? "",
   });
 
   if (!parsed.success) {
@@ -62,8 +63,8 @@ export async function updateSettingsAction(
 
   await query(
     `INSERT INTO org_settings
-       (id, company_name, contact_email, notification_email, response_sla_minutes, timezone, currency, updated_at)
-     VALUES (true, $1, $2, $3, $4, $5, $6, now())
+       (id, company_name, contact_email, notification_email, response_sla_minutes, timezone, currency, reporting_currency, updated_at)
+     VALUES (true, $1, $2, $3, $4, $5, $6, $7, now())
      ON CONFLICT (id) DO UPDATE SET
        company_name = EXCLUDED.company_name,
        contact_email = EXCLUDED.contact_email,
@@ -71,6 +72,7 @@ export async function updateSettingsAction(
        response_sla_minutes = EXCLUDED.response_sla_minutes,
        timezone = EXCLUDED.timezone,
        currency = EXCLUDED.currency,
+       reporting_currency = EXCLUDED.reporting_currency,
        updated_at = now()`,
     [
       data.company_name,
@@ -80,6 +82,7 @@ export async function updateSettingsAction(
       data.response_sla_minutes ? data.response_sla_minutes : null,
       data.timezone,
       data.currency.toUpperCase(),
+      data.reporting_currency,
     ],
   );
 

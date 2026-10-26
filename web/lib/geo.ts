@@ -91,6 +91,14 @@ export function clientIp(headers: Headers, socketAddress?: string | null): strin
  * Cached per address, because a suggestion shown once does not need to be
  * looked up again on every page view, and the lookup is a network round trip.
  *
+ * The address is passed in the path. `get.geojs.io/v1/ip/country.json` with no
+ * address does not describe the caller — it reports whatever egress the
+ * *provider* saw, and for anything reaching this from a datacenter that is the
+ * datacenter's own country. This deployment runs in Singapore, so asking the
+ * bare endpoint told every visitor in the Philippines that they were in
+ * Singapore and offered them Singapore dollars. The address has to be the
+ * visitor's, and it has to be in the URL.
+ *
  * Every failure path returns null rather than throwing. A suggestion is
  * optional: if the lookup is rate limited, slow or the provider changes shape,
  * the visitor keeps the currency the language defaults to, which is the
@@ -103,10 +111,15 @@ export async function countryForIp(ip: string | null): Promise<string | null> {
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.country;
 
   try {
-    const response = await fetch(`https://get.geojs.io/v1/ip/country.json`, {
-      signal: AbortSignal.timeout(2500),
-      headers: { accept: "application/json" },
-    });
+    // A private or loopback address answers with an empty country, which the
+    // shape check below turns into null. Nothing to special-case here.
+    const response = await fetch(
+      `https://get.geojs.io/v1/ip/country/${encodeURIComponent(ip)}.json`,
+      {
+        signal: AbortSignal.timeout(2500),
+        headers: { accept: "application/json" },
+      },
+    );
     if (!response.ok) return null;
 
     const body: unknown = await response.json();

@@ -47,6 +47,7 @@ export type AuditAction =
   | "task.created"
   | "task.updated"
   | "staff.invited"
+  | "staff.created"
   | "staff.invite_revoked"
   | "staff.access_changed"
   | "staff.role_changed"

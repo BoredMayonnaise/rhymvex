@@ -5,7 +5,7 @@ import {
   listAcceptedProposalsWithoutContract,
   listContracts,
 } from "@/lib/data/workspace";
-import { formatDate, formatMoney, humanise } from "@/lib/format";
+import { formatDate, formatMoney, humanise, leadTotal, sumByCurrency } from "@/lib/format";
 import {
   EmptyState,
   Panel,
@@ -36,7 +36,13 @@ export default async function ContractsPage() {
     ["SENT", "AWAITING_SIGNATURE"].includes(c.status),
   );
   const signed = contracts.filter((c) => ["SIGNED", "ACTIVE", "COMPLETED"].includes(c.status));
-  const signedValue = signed.reduce((sum, c) => sum + (c.value_total ?? 0), 0);
+  // Contracts can be written in different currencies, so the signed value is
+  // grouped rather than added up: the table below shows each contract in its own
+  // currency, and a single figure here would contradict it.
+  const signedValue = leadTotal(
+    sumByCurrency(signed, (c) => c.value_total, (c) => c.currency, settings.currency),
+    settings.currency,
+  );
   const drafts = contracts.filter((c) => c.status === "DRAFT").length;
 
   return (
@@ -45,8 +51,14 @@ export default async function ContractsPage() {
         <div>
           <h1 className="rv-page-title">Contracts</h1>
           <p className="rv-page-sub">
-            {awaiting.length} awaiting signature · {formatMoney(signedValue, settings.currency)}{" "}
+            {awaiting.length} awaiting signature ·{" "}
+            {signedValue.primary
+              ? formatMoney(signedValue.primary.total, signedValue.primary.currency)
+              : "—"}{" "}
             signed
+            {signedValue.others.length > 0
+              ? ` · plus ${signedValue.others.map((o) => o.currency).join(", ")}`
+              : ""}
           </p>
         </div>
       </header>
@@ -76,8 +88,16 @@ export default async function ContractsPage() {
         />
         <Stat
           label="Signed value"
-          value={formatMoney(signedValue, settings.currency)}
-          meta="across signed contracts"
+          value={
+            signedValue.primary
+              ? formatMoney(signedValue.primary.total, signedValue.primary.currency)
+              : "—"
+          }
+          meta={
+            signedValue.others.length > 0
+              ? `plus ${signedValue.others.map((o) => o.currency).join(", ")}`
+              : "across signed contracts"
+          }
         />
       </div>
 
